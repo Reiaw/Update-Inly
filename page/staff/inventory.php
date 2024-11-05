@@ -84,12 +84,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_withdraw'])) {
             $update_stmt->bind_param("ii", $new_quantity, $product['product_id']);
             $update_stmt->execute();
         } else {
-            // Delete if quantity becomes 0
-            $delete_query = "DELETE FROM product WHERE product_id = ?";
-            $delete_stmt = $conn->prepare($delete_query);
-            $delete_stmt->bind_param("i", $product['product_id']);
-            $delete_stmt->execute();
+            // Update status to empty if quantity becomes 0
+            $update_query = "UPDATE product SET quantity = 0, status = 'empty' WHERE product_id = ?";
+            $update_stmt = $conn->prepare($update_query);
+            $update_stmt->bind_param("i", $product['product_id']);
+            $update_stmt->execute();
         }
+        
+        // Record withdrawal in withdrawreport
+        $insert_report = "INSERT INTO withdrawreport (user_id, product_id, store_id, withdraw_quantity) 
+                         VALUES (?, ?, ?, ?)";
+        $report_stmt = $conn->prepare($insert_report);
+        $report_stmt->bind_param("iiii", $user_id, $product['product_id'], $store_id, $current_quantity);
+        $report_stmt->execute();
         
         $remaining_withdraw -= $current_quantity;
     }
@@ -127,12 +134,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['withdraw'])) {
             $update_stmt->bind_param("iii", $new_quantity, $product_id, $store_id);
             $update_stmt->execute();
         } else {
-            // Delete product if quantity becomes 0
-            $delete_query = "DELETE FROM product WHERE product_id = ? AND store_id = ?";
-            $delete_stmt = $conn->prepare($delete_query);
-            $delete_stmt->bind_param("ii", $product_id, $store_id);
-            $delete_stmt->execute();
+            // Update status to empty if quantity becomes 0
+            $update_query = "UPDATE product SET quantity = 0, status = 'empty' WHERE product_id = ? AND store_id = ?";
+            $update_stmt = $conn->prepare($update_query);
+            $update_stmt->bind_param("ii", $product_id, $store_id);
+            $update_stmt->execute();
         }
+        // Record withdrawal in withdrawreport
+        $insert_report = "INSERT INTO withdrawreport (user_id, product_id, store_id, withdraw_quantity) 
+                            VALUES (?, ?, ?, ?)";
+        $report_stmt = $conn->prepare($insert_report);
+        $report_stmt->bind_param("iiii", $user_id, $product_id, $store_id, $withdraw_quantity);
+        $report_stmt->execute();
+
+        // Commit transaction
+        $conn->commit();
         
     } else {
         echo "<script>alert('Invalid withdrawal quantity. Please ensure the quantity does not exceed available stock.');</script>";
@@ -149,10 +165,10 @@ $query = "SELECT p.*, pi.product_name, pi.category
           WHERE p.store_id = ? 
           AND p.status IN ('in_stock', 'expired', 'nearing_expiration', 'issue')
           ORDER BY pi.category, pi.product_name";
-
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $store_id);
 $stmt->execute();
+
 $result = $stmt->get_result();
 $stmt->close();
 $conn->close();
@@ -412,6 +428,19 @@ $conn->close();
                 alert('Please preview the withdrawal first before confirming.');
             }
         });
-            </script>
+        fetch('process_check.php')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // แสดงการแจ้งเตือนที่สร้างขึ้น
+                    data.notifications.forEach(notification => {
+                        console.log(`${notification.type}: ${notification.message}`);
+                    });
+                } else {
+                    console.error('Error:', data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        </script>
 </body>
 </html>

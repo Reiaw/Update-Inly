@@ -3,6 +3,8 @@
 session_start();
 include('../../config/db.php');
 
+$store_id = $_SESSION['store_id'];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $response = ['success' => false, 'message' => ''];
     
@@ -70,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $conn->begin_transaction();
 
             // Define the SQL query for inserting issue
-            $sql = "INSERT INTO issue_orders (order_id, product_id, issue_type, issue_description, issue_image,report_date) 
+            $sql = "INSERT INTO issue_orders (order_id, product_id, issue_type, issue_description, issue_image, report_date) 
                     VALUES (?, ?, ?, ?, ?, NOW())";
 
             // Insert issue into database
@@ -89,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$stmt->execute()) {
                 throw new Exception('Failed to update product status');
             }
+
             // Commit transaction
             $conn->commit();
             
@@ -97,6 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
         } catch (Exception $e) {
             // Rollback transaction if there's an error
+            $conn->rollback();
             
             // Delete uploaded file if it exists and there was an error
             if (isset($upload_path) && file_exists($upload_path)) {
@@ -115,6 +119,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $order_id = intval($_POST['order_id']);
+            $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+
+            if (!$user_id) {
+                throw new Exception('User session not found');
+            }
 
             // Begin transaction
             $conn->begin_transaction();
@@ -140,13 +149,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('Failed to update order status');
             }
 
+            // Insert notification into notiflyreport table
+            $notifyType = 'issue_order';
+            $insertNotifySql = "INSERT INTO notiflyreport (user_id, order_id, notiflyreport_type, store_id) 
+                               VALUES (?, ?, ?, ?)";
+            $stmt = $conn->prepare($insertNotifySql);
+            $stmt->bind_param("iisi", $user_id, $order_id, $notifyType, $store_id);
+            
+            if (!$stmt->execute()) {
+                throw new Exception('Failed to create notification');
+            }
+
             // Commit transaction
             $conn->commit();
 
             $response['success'] = true;
-            $response['message'] = 'Order status updated successfully';
+            $response['message'] = 'Order status and notification updated successfully';
             
         } catch (Exception $e) {
+            // Rollback transaction if there's an error
+            $conn->rollback();
             
             $response['message'] = 'Error: ' . $e->getMessage();
         }

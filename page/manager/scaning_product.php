@@ -50,17 +50,25 @@ if(isset($_POST['barcode'])) {
 
         // Rest of your existing barcode handling code...
         $sql = "SELECT o.order_id, o.order_status, o.total_amount, o.order_date,
-                do.detail_order_id, do.price, do.listproduct_id,
-                pi.product_name, p.status as product_status, 
-                p.quantity as product_quantity, p.location, p.product_id, 
-                p.expiration_date, p.manufacture_date
-            FROM orders o
-            JOIN detail_orders do ON o.order_id = do.order_id
-            JOIN products_info pi ON do.listproduct_id = pi.listproduct_id
-            LEFT JOIN product p ON do.listproduct_id = p.listproduct_id AND p.store_id = ? 
-            WHERE o.barcode = ? AND o.store_id = ? 
-            AND o.order_status != 'completed' AND o.order_status != 'issue'";
-        
+                    do.detail_order_id, do.price, do.listproduct_id,
+                    pi.product_name,
+                    p.status as product_status, 
+                    p.quantity as product_quantity,
+                    p.location,
+                    p.product_id,
+                    p.expiration_date,
+                    p.manufacture_date
+                FROM orders o
+                JOIN detail_orders do ON o.order_id = do.order_id
+                JOIN products_info pi ON do.listproduct_id = pi.listproduct_id
+                LEFT JOIN product p ON p.order_id = o.order_id 
+                    AND p.listproduct_id = do.listproduct_id 
+                    AND p.store_id = ?
+                WHERE o.barcode = ? 
+                    AND o.store_id = ? 
+                    AND o.order_status != 'completed' 
+                    AND o.order_status != 'issue'";
+            
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
             throw new Exception('Database error: ' . $conn->error);
@@ -76,7 +84,7 @@ if(isset($_POST['barcode'])) {
             
             while ($row = $result->fetch_assoc()) {
                 if (!$orderDetails) {
-                    if ($row['order_status'] === 'shipped') {
+                    if ($row['order_status'] === 'shipped' || $row['order_status'] === 'return_shipped') {
                         $updateStatusSql = "UPDATE orders SET order_status = 'delivered', delivered_date = CURRENT_TIMESTAMP WHERE order_id = ?";
                         $updateStmt = $conn->prepare($updateStatusSql);
                         if (!$updateStmt) {
@@ -85,6 +93,17 @@ if(isset($_POST['barcode'])) {
                         $updateStmt->bind_param("i", $row['order_id']);
                         $updateStmt->execute();
                         $row['order_status'] = 'delivered';
+                        $order_id = $row['order_id']; 
+                        // Insert notification into notiflyreport table
+                        $notifyType = 'deli_order';
+                        $insertNotifySql = "INSERT INTO notiflyreport (user_id, order_id, notiflyreport_type, store_id) 
+                                        VALUES (?, ?, ?, ?)";
+                        $stmt = $conn->prepare($insertNotifySql);
+                        $stmt->bind_param("iisi", $user_id, $order_id, $notifyType, $store_id);
+                        
+                        if (!$stmt->execute()) {
+                            throw new Exception('Failed to create notification');
+                        }
                     }
                     
                     $orderDetails = [
@@ -176,42 +195,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['barcode'])) {
         }
 
         // Update order status
-        $updateOrderSql = "UPDATE orders SET order_status = 'completed' WHERE order_id = ?";
-        $stmt = $conn->prepare($updateOrderSql);
-        if (!$stmt) {
-            throw new Exception('Database error: ' . $conn->error);
-        }
-        $stmt->bind_param("i", $data['order_id']);
-        $stmt->execute();
+        // อัปเดตสถานะของคำสั่งซื้อ
+    $updateOrderSql = "UPDATE orders SET order_status = 'completed' WHERE order_id = ?";
+    $orderStmt = $conn->prepare($updateOrderSql);
+    if (!$orderStmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $orderStmt->bind_param("i", $data['order_id']);
+    $orderStmt->execute();
 
-        // Update product locations and status
-        $updateProductSql = "UPDATE product 
-            SET location = ?, 
-                status = CASE 
-                    WHEN status = 'check' THEN 'in_stock'
-                    ELSE status 
-                END,
-                 receipt_date = CURDATE()
-            WHERE product_id = ? AND store_id = ?";
-        $stmt = $conn->prepare($updateProductSql);
-        if (!$stmt) {
-            throw new Exception('Database error: ' . $conn->error);
-        }
+    // insert แจ้งเตือนลงในตาราง notiflyreport
+    $notifyType = 'add_product';
+    $insertNotifySql = "INSERT INTO notiflyreport (user_id, order_id, notiflyreport_type, store_id) 
+                        VALUES (?, ?, ?, ?)";
+    $notiflyStmt = $conn->prepare($insertNotifySql);
+    if (!$notiflyStmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $notiflyStmt->bind_param("iisi", $user_id, $data['order_id'], $notifyType, $store_id);
+    $notiflyStmt->execute();
 
-        foreach ($data['products'] as $product) {
-            if (empty($product['location'])) {
-                throw new Exception('Location cannot be empty');
-            }
-            $stmt->bind_param("sii", 
-                $product['location'],
-                $product['product_id'],
-                $store_id
-            );
-            $stmt->execute();
-        }
+    // อัปเดตตำแหน่งของสินค้าและสถานะ
+    $updateProductSql = "UPDATE product 
+        SET location = ?, 
+            status = CASE 
+                WHEN status = 'check' THEN 'in_stock'
+                ELSE status 
+            END,
+            receipt_date = CURDATE()
+        WHERE product_id = ? AND store_id = ?";
+    $productStmt = $conn->prepare($updateProductSql);
+    if (!$productStmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
 
-        $conn->commit();
-        echo json_encode(['success' => true, 'message' => 'Updates completed successfully']);
+    foreach ($data['products'] as $product) {
+        if (empty($product['location'])) {
+            throw new Exception('Location cannot be empty');
+        }
+        $productStmt->bind_param("sii", 
+            $product['location'],
+            $product['product_id'],
+            $store_id
+        );
+        $productStmt->execute();
+    }
+
+    // Commit ธุรกรรมหลังจากอัปเดตทั้งหมดเสร็จสมบูรณ์
+    $conn->commit();
+    echo json_encode(['success' => true, 'message' => 'Updates completed successfully']);
+       
         
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
@@ -268,6 +301,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['barcode'])) {
         <a href="order.php">Order</a>
         <a href="tracking.php">Tracking</a>
         <a href="scaning_product.php">Scaning Product</a>
+        <a href="resolution.php">product Report</a>
         <a href="inventory.php">Inventory</a>
         <a href="reports.php">Reports </a>
     </div>
@@ -417,7 +451,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['barcode'])) {
                 },
             },
             decoder: {
-                readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader"]
+                readers: ["code_128_reader"]
             }
         }, function (err) {
             if (err) {

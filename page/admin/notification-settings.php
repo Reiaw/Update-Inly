@@ -33,31 +33,52 @@ $stmt->close();
 
 // Fetch all products
 $query = "SELECT p.*, a.low_stock_threshold, a.expiry_alert_days 
-          FROM products_info p
-          LEFT JOIN product_alert_settings a ON p.listproduct_id = a.listproduct_id";
+FROM products_info p
+LEFT JOIN product_alert_settings a ON p.listproduct_id = a.listproduct_id";
 $result = $conn->query($query);
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $product_id = $_POST['product_id'];
-    $low_stock_threshold = $_POST['low_stock_threshold'];
-    $expiry_alert_days = $_POST['expiry_alert_days'];
+$product_id = $_POST['product_id'];
+$low_stock_threshold = $_POST['low_stock_threshold'];
+$expiry_alert_days = $_POST['expiry_alert_days'];
 
-    $update_query = "INSERT INTO product_alert_settings (listproduct_id, low_stock_threshold, expiry_alert_days) 
-                     VALUES (?, ?, ?) 
-                     ON DUPLICATE KEY UPDATE 
-                     low_stock_threshold = VALUES(low_stock_threshold), 
-                     expiry_alert_days = VALUES(expiry_alert_days)";
-    $update_stmt = $conn->prepare($update_query);
-    $update_stmt->bind_param("iii", $product_id, $low_stock_threshold, $expiry_alert_days);
-    $update_stmt->execute();
-    $update_stmt->close();
+// Check if settings exist for this product
+$check_query = "SELECT * FROM product_alert_settings WHERE listproduct_id = ?";
+$check_stmt = $conn->prepare($check_query);
+$check_stmt->bind_param("i", $product_id);
+$check_stmt->execute();
+$check_result = $check_stmt->get_result();
 
-    header("Location: notification-settings.php");
-    exit();
+if ($check_result->num_rows > 0) {
+// Update existing settings
+$update_query = "UPDATE product_alert_settings 
+              SET low_stock_threshold = ?, 
+                  expiry_alert_days = ? 
+              WHERE listproduct_id = ?";
+$update_stmt = $conn->prepare($update_query);
+$update_stmt->bind_param("iii", $low_stock_threshold, $expiry_alert_days, $product_id);
+$update_stmt->execute();
+$update_stmt->close();
+} else {
+// Insert new settings if none exist
+$insert_query = "INSERT INTO product_alert_settings 
+              (listproduct_id, low_stock_threshold, expiry_alert_days) 
+              VALUES (?, ?, ?)";
+$insert_stmt = $conn->prepare($insert_query);
+$insert_stmt->bind_param("iii", $product_id, $low_stock_threshold, $expiry_alert_days);
+$insert_stmt->execute();
+$insert_stmt->close();
+}
+
+$check_stmt->close();
+
+header("Location: notification-settings.php");
+exit();
 }
 
 $conn->close();
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -87,6 +108,7 @@ $conn->close();
         <a href="manage_store.php">Manage Stores</a>
         <a href="product_menu.php">Product Menu</a>
         <a href="order_management.php">Order reqeuest</a>
+        <a href="product_management.php">Product report</a>
         <a href="notification-settings.php">Notification Settings</a>
         <a href="reports.php">Reports</a>
     </div>

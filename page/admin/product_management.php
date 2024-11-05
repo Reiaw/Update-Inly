@@ -28,13 +28,28 @@ if ($result->num_rows > 0) {
     exit();
 }
 
+if (isset($_GET['notiflyreport_id'])) {
+    $notiflyreport_id = $_GET['notiflyreport_id'];
+    
+    $update_status_query = $conn->prepare("UPDATE notiflyreport SET status = 'read' WHERE notiflyreport_id = ?");
+    $update_status_query->bind_param("i", $notiflyreport_id);
+    $update_status_query->execute();
+}
 // Handle resolution submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_resolution'])) {
     $issue_id = $_POST['issue_id'];
     $product_id = $_POST['product_id'];
     $resolution_type = $_POST['resolution_type'];
     $resolution_description = $_POST['resolution_description'];
-    
+
+     // เพิ่มการดึง store_id จาก issue_product
+     $store_id_query = "SELECT store_id FROM product WHERE product_id = ?";
+     $stmt = $conn->prepare($store_id_query);
+     $stmt->bind_param("i", $product_id);
+     $stmt->execute();
+     $store_id_result = $stmt->get_result();
+     $store_id_row = $store_id_result->fetch_assoc();
+     $store_id = $store_id_row['store_id'];
     // Handle file upload
     $image_path = null;
     if (isset($_FILES['resolution_image']) && $_FILES['resolution_image']['error'] === 0) {
@@ -57,6 +72,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_resolution']))
         $stmt = $conn->prepare($resolution_query);
         $stmt->bind_param("isss", $product_id, $resolution_type, $resolution_description, $image_path);
         $stmt->execute();
+        // Insert notification into notiflyreport table
+        $notifyType = 'resolve_product';
+        $insertNotifySql = "INSERT INTO notiflyreport (user_id, product_id, notiflyreport_type, store_id) 
+                           VALUES (?, ?, ?, ?)";
+        $stmt = $conn->prepare($insertNotifySql);
+        $stmt->bind_param("iisi", $user_id, $product_id, $notifyType, $store_id);
+        
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to create notification');
+        }
         
         // Update product status based on resolution type
         $new_status = ($resolution_type === 'replace') ? 'replace' : 'unusable';
@@ -64,7 +89,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_resolution']))
         $stmt = $conn->prepare($update_query);
         $stmt->bind_param("si", $new_status, $product_id);
         $stmt->execute();
-        
+        if ($new_status === 'unusable') {
+            $insert_damaged = "INSERT INTO damaged_products 
+                               ( product_id, store_id, deproduct_type) 
+                               VALUES ( ?, ?, 'reject')";
+            $damaged_stmt = $conn->prepare($insert_damaged);
+            $damaged_stmt->bind_param("ii", $product_id, $store_id);
+            $damaged_stmt->execute();
+        }
         $conn->commit();
         echo "<script>alert('Resolution submitted successfully!');</script>";
     } catch (Exception $e) {
@@ -74,13 +106,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_resolution']))
 }
 
 // Fetch issue data
-$query = "SELECT ip.*, pi.product_name, p.status, s.store_name
-            FROM issue_product ip
-            JOIN product p ON ip.product_id = p.product_id
-            JOIN products_info pi ON p.listproduct_id = pi.listproduct_id
-            JOIN stores s ON p.store_id = s.store_id
-            ORDER BY ip.report_date DESC";
+$query = "SELECT ip.*, pi.product_name, p.status, s.store_name, p.store_id 
+          FROM issue_product ip
+          JOIN product p ON ip.product_id = p.product_id
+          JOIN products_info pi ON p.listproduct_id = pi.listproduct_id
+          JOIN stores s ON p.store_id = s.store_id
+          ORDER BY ip.report_date DESC";
 $result = $conn->query($query);
+
 ?>
 
 <!DOCTYPE html>

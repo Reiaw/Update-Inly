@@ -17,7 +17,13 @@ $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
-
+if (isset($_GET['notiflyreport_id'])) {
+    $notiflyreport_id = $_GET['notiflyreport_id'];
+    
+    $update_status_query = $conn->prepare("UPDATE notiflyreport SET status = 'read' WHERE notiflyreport_id = ?");
+    $update_status_query->bind_param("i", $notiflyreport_id);
+    $update_status_query->execute();
+}
 if ($result->num_rows > 0) {
     $user = $result->fetch_assoc();
     $name = $user['name'];
@@ -74,6 +80,7 @@ $conn->close();
         <a href="order.php">Order</a>
         <a href="tracking.php">Tracking</a>
         <a href="scaning_product.php">Scaning Product</a>
+        <a href="resolution.php">Product Report</a>
         <a href="inventory.php">Inventory</a>
         <a href="reports.php">Reports </a>
     </div>
@@ -119,8 +126,7 @@ $conn->close();
                             <td><?php echo $order['delivered_date'] ? date('Y-m-d H:i', strtotime($order['delivered_date'])) : '-'; ?></td>
                             <td><?php echo $order['total_items']; ?></td>
                             <td>
-                            <?php if ($order['order_status'] !== 'issue') { ?>
-                                <?php if ($order['order_status'] === 'paid' || $order['order_status'] === 'confirm' || $order['order_status'] === 'cancel' || $order['order_status'] === 'shipped' || $order['order_status'] === 'delivered' || $order['order_status'] === 'completed') { ?>
+                                <?php if ($order['order_status'] === 'paid' || $order['order_status'] === 'confirm' || $order['order_status'] === 'cancel' || $order['order_status'] === 'shipped' || $order['order_status'] === 'delivered' || $order['order_status'] === 'issue' || $order['order_status'] === 'refund' || $order['order_status'] === 'return_shipped' || $order['order_status'] === 'completed') { ?>
                                     <button class="btn btn-primary btn-sm view-details" 
                                             data-order-id="<?php echo $order['order_id']; ?>"
                                             data-toggle="modal" 
@@ -128,12 +134,20 @@ $conn->close();
                                         Order Details
                                     </button>
                                 <?php } ?>
-                                <?php if ($order['order_status'] === 'shipped'|| $order['order_status'] === 'delivered' || $order['order_status'] === 'refund' || $order['order_status'] === 'return_shipped' || $order['order_status'] === 'completed') { ?>
+                                <?php if ($order['order_status'] === 'shipped'|| $order['order_status'] === 'delivered' || $order['order_status'] === 'issue' || $order['order_status'] === 'refund' || $order['order_status'] === 'return_shipped' || $order['order_status'] === 'completed') { ?>
                                     <button class="btn btn-info btn-sm view-products" 
                                             data-order-id="<?php echo $order['order_id']; ?>"
                                             data-toggle="modal" 
                                             data-target="#productDetailModal">
                                         Product Details
+                                    </button>
+                                <?php } ?>
+                                <?php if ($order['order_status'] === 'issue' || $order['order_status'] === 'refund' || $order['order_status'] === 'return_shipped')  { ?>
+                                    <button class="btn btn-danger btn-sm view-issue" 
+                                            data-order-id="<?php echo $order['order_id']; ?>"
+                                            data-toggle="modal" 
+                                            data-target="#issueDetailModal">
+                                        Isseue reports
                                     </button>
                                 <?php } ?>
                                 <?php if ($order['order_status'] === 'refund' || $order['order_status'] === 'return_shipped')  { ?>
@@ -142,11 +156,8 @@ $conn->close();
                                             data-toggle="modal" 
                                             data-target="#resolutionDetailModal">
                                         Resolution reports
-                                    </button>
                                 <?php } ?>
-                            <?php } ?>
-                        </td>
-
+                            </td>
                         </tr>
                     <?php } ?>
                 </tbody>

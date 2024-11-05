@@ -5,7 +5,7 @@ require_once('../../vendor/autoload.php');
 use Picqer\Barcode\BarcodeGeneratorPNG;
 use Picqer\Barcode\Exceptions\BarcodeException;
 
-
+$user_id = $_SESSION['user_id'];
 if (!isset($_GET['id'])) {
     header('Location: order_management.php');
     exit;
@@ -84,11 +84,26 @@ if (isset($_POST['process_order'])) {
     // Start transaction
     $conn->begin_transaction();
     try {
+        $get_store_query = "SELECT store_id FROM orders WHERE order_id = ?";
+        $get_store_stmt = $conn->prepare($get_store_query);
+        $get_store_stmt->bind_param("i", $order_id);
+        $get_store_stmt->execute();
+        $store_result = $get_store_stmt->get_result();
+        $store_data = $store_result->fetch_assoc();
+        $store_id = $store_data['store_id']; // Retrieve store_id
         // Update order status to 'processing'
         $update_order = $conn->prepare("UPDATE orders SET order_status = 'shipped', shipping_date = CURRENT_TIMESTAMP, barcode = ?, barcode_pic = ? WHERE order_id = ?");
         $update_order->bind_param("ssi", $order_barcode, $barcode_img_path, $order_id);
         $update_order->execute();
-
+        // Insert notification into notiflyreport table
+            $notifyType = 'ship_order';
+            $insertNotifySql = "INSERT INTO notiflyreport (user_id, order_id, notiflyreport_type, store_id) 
+                            VALUES (?, ?, ?, ?)";
+            $stmt = $conn->prepare($insertNotifySql);
+            $stmt->bind_param("iisi", $user_id, $order_id, $notifyType, $store_id);
+            if (!$stmt->execute()) {
+                throw new Exception('Failed to create notification');
+            }
         // Get order details and store_id
         $get_store = $conn->prepare("SELECT store_id FROM orders WHERE order_id = ?");
         $get_store->bind_param("i", $order_id);
@@ -119,10 +134,10 @@ if (isset($_POST['process_order'])) {
             for ($i = 0; $i < $order_quantity; $i++) {
                 // Insert one record per item in the set
                 $insert_product = $conn->prepare("INSERT INTO product (listproduct_id, store_id, 
-                                               status, quantity, expiration_date, manufacture_date, detail_order_id) 
-                                               VALUES (?, ?, 'check', ?, ?, ?, ?)");
-                $insert_product->bind_param("iiissi", $listproduct_id, $store_id, 
-                                         $product_quantity, $expiration_date, $manufacture_date, $detail_order_id);
+                                           status, quantity, expiration_date, manufacture_date, detail_order_id, order_id) 
+                                           VALUES (?, ?, 'check', ?, ?, ?, ?, ?)");
+                $insert_product->bind_param("iiissii", $listproduct_id, $store_id, 
+                                            $product_quantity, $expiration_date, $manufacture_date, $detail_order_id, $order_id);
                 $insert_product->execute();
             }
         }
@@ -138,29 +153,60 @@ if (isset($_POST['process_order'])) {
     }
 }
 $order_id = $_GET['id'];
+$user_id = $_SESSION['user_id'];
 
 // Handle order status updates
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
+        // Fetch the store_id from the orders table
+        $get_store_query = "SELECT store_id FROM orders WHERE order_id = ?";
+        $get_store_stmt = $conn->prepare($get_store_query);
+        $get_store_stmt->bind_param("i", $order_id);
+        $get_store_stmt->execute();
+        $store_result = $get_store_stmt->get_result();
+        $store_data = $store_result->fetch_assoc();
+        $store_id = $store_data['store_id']; // Retrieve store_id
+
         if ($_POST['action'] === 'confirm') {
             $new_status = 'confirm';
             $update_query = "UPDATE orders SET order_status = ? WHERE order_id = ?";
             $update_stmt = $conn->prepare($update_query);
             $update_stmt->bind_param("si", $new_status, $order_id);
             $update_stmt->execute();
+
+            // Insert notification into notiflyreport table
+            $notifyType = 'con_order';
+            $insertNotifySql = "INSERT INTO notiflyreport (user_id, order_id, notiflyreport_type, store_id) 
+                            VALUES (?, ?, ?, ?)";
+            $stmt = $conn->prepare($insertNotifySql);
+            $stmt->bind_param("iisi", $user_id, $order_id, $notifyType, $store_id);
+            if (!$stmt->execute()) {
+                throw new Exception('Failed to create notification');
+            }
         } elseif ($_POST['action'] === 'cancel') {
             $new_status = 'cancel';
             $cancel_reason = $_POST['cancel_reason'];
-            
+
+            // Insert notification into notiflyreport table
+            $notifyType = 'can_order';
+            $insertNotifySql = "INSERT INTO notiflyreport (user_id, order_id, notiflyreport_type, store_id) 
+                            VALUES (?, ?, ?, ?)";
+            $stmt = $conn->prepare($insertNotifySql);
+            $stmt->bind_param("iisi", $user_id, $order_id, $notifyType, $store_id);
+            if (!$stmt->execute()) {
+                throw new Exception('Failed to create notification');
+            }
+
             // Handle cancel image upload
             $cancel_pic = '';
             if (isset($_FILES['cancel_pic']) && $_FILES['cancel_pic']['error'] === 0) {
-                $target_dir = "../../upload/cancel_payment/"; // กำหนดโฟลเดอร์ที่เก็บรูปภาพ
+                $target_dir = "../../upload/cancel_payment/"; // Define the folder to save images
                 $target_file = $target_dir . basename($_FILES['cancel_pic']['name']);
-                move_uploaded_file($_FILES['cancel_pic']['tmp_name'], $target_file); // บันทึกไฟล์ลงโฟลเดอร์
-                $cancel_pic = basename($_FILES['cancel_pic']['name']); // เก็บชื่อไฟล์ในฐานข้อมูล
+                move_uploaded_file($_FILES['cancel_pic']['tmp_name'], $target_file); // Save file to folder
+                $cancel_pic = basename($_FILES['cancel_pic']['name']); // Save file name to the database
             }
-            // บันทึกลงฐานข้อมูล
+
+            // Update the order with cancellation details
             $update_query = "UPDATE orders SET order_status = ?, cancel_info = ?, cancel_pic = ? WHERE order_id = ?";
             $update_stmt = $conn->prepare($update_query);
             $update_stmt->bind_param("sssi", $new_status, $cancel_reason, $cancel_pic, $order_id);
@@ -168,6 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
 
 // Fetch order details with store information
 $order_query = "SELECT o.*, s.store_name, s.tel_store FROM orders o 

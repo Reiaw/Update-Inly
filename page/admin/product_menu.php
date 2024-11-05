@@ -8,7 +8,7 @@ if ($_SESSION['role'] !== 'admin') {
     exit;
 }
 
-$user_id = $_SESSION['user_id'];
+$use_id = $_SESSION['user_id'];
 
 // ดึงข้อมูลผู้ใช้งาน
 $query = "SELECT u.name, u.surname, u.role, u.store_id, s.store_name 
@@ -16,7 +16,7 @@ $query = "SELECT u.name, u.surname, u.role, u.store_id, s.store_name
           LEFT JOIN stores s ON u.store_id = s.store_id 
           WHERE u.user_id = ?";
 $stmt = $conn->prepare($query);
-$stmt->bind_param("i", $user_id);
+$stmt->bind_param("i", $use_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -50,7 +50,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// ฟังก์ชันสำหรับดึงข้อมูลสินค้าทั้งหมด
 // ฟังก์ชันสำหรับดึงข้อมูลสินค้าทั้งหมด (ค้นหาและตัวกรอง)
 function getProducts($conn, $search = '', $category = '') {
     $sql = "SELECT * FROM products_info WHERE 1";  // เริ่มต้น SQL
@@ -121,6 +120,7 @@ function addProduct($conn) {
     
     if ($stmt->execute()) {
         echo ('เพิ่มสินค้าสำเร็จ');
+        logTransaction($conn, $_SESSION['user_id'], 'add_p');
         exit();
     } else {
         echo ('เกิดข้อผิดพลาดในการเพิ่มสินค้า');
@@ -183,6 +183,7 @@ function editProduct($conn) {
 
     if ($stmt->execute()) {
         echo ('แก้ไขสินค้าสำเร็จ');
+        logTransaction($conn, $_SESSION['user_id'], 'edit_p');
         exit();
     } else {
         echo ('เกิดข้อผิดพลาดในการแก้ไขสินค้า');
@@ -199,6 +200,7 @@ function deleteProduct($conn) {
     
     if ($stmt->execute()) {
         echo ('ลบสินค้าสำเร็จ');
+        logTransaction($conn, $_SESSION['user_id'], 'del_p');
         exit();
     } else {
         echo ('เกิดข้อผิดพลาดในการลบสินค้า');
@@ -222,7 +224,15 @@ function toggleVisibility($conn) {
         exit();
     }
 }
+function logTransaction($conn, $use_id, $transaction_type) {
+    $sql = "INSERT INTO transaction_manage (user_id, transaction_type,created_at) VALUES (?, ?, NOW())";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("is", $use_id, $transaction_type); // ใช้ $use_id เป็นทั้ง user_id และ reporter
 
+    if (!$stmt->execute()) {
+        echo "บันทึก transaction ผิดพลาด: " . $stmt->error;
+    }
+}
 
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 $category = isset($_GET['category']) ? $_GET['category'] : '';
@@ -258,6 +268,7 @@ $products = getProducts($conn, $search, $category);
         <a href="manage_store.php">Manage Stores</a>
         <a href="product_menu.php">Product Menu</a>
         <a href="order_management.php">Order reqeuest</a>
+        <a href="product_management.php">Product report</a>
         <a href="notification-settings.php">Notification Settings</a>
         <a href="reports.php">Reports</a>
     </div>

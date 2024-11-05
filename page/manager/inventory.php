@@ -6,6 +6,13 @@ include('../../config/db.php');
     header('Location: ../../auth/login.php');
     exit;
 }
+if (isset($_GET['notiflyproduct_id'])) {
+    $notiflyproduct_id = $_GET['notiflyproduct_id'];
+    
+    $update_status_query = $conn->prepare("UPDATE notiflyproduct SET status = 'read' WHERE notiflyproduct_id = ?");
+    $update_status_query->bind_param("i", $notiflyproduct_id);
+    $update_status_query->execute();
+}
 
 $user_id = $_SESSION['user_id'];
 $store_id = $_SESSION['store_id'];
@@ -80,6 +87,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare($query);
             $stmt->bind_param("i", $product_id);
             $stmt->execute();
+
+            // Insert notification into notiflyreport table
+            $notifyType = 'issue_product';
+            $insertNotifySql = "INSERT INTO notiflyreport (user_id, product_id, notiflyreport_type, store_id) 
+                            VALUES (?, ?, ?, ?)";
+            $stmt = $conn->prepare($insertNotifySql);
+            $stmt->bind_param("iisi", $user_id, $product_id, $notifyType, $store_id);
+            
+            if (!$stmt->execute()) {
+                throw new Exception('Failed to create notification');
+            }
+ 
             
             $conn->commit();
             echo json_encode(['success' => true]);

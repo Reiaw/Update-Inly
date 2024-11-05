@@ -2,6 +2,7 @@
 // process_issue.php
 session_start();
 include('../../config/db.php');
+$user_id = $_SESSION['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -32,7 +33,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (move_uploaded_file($_FILES['resolution_image']['tmp_name'], $target_file)) {
                 $resolution_image = $new_filename;
             }
+        }        
+        // ดึง store_id จาก order_id
+        $store_id_query = $conn->prepare("SELECT store_id FROM orders WHERE order_id = ?");
+        $store_id_query->bind_param("i", $order_id);
+        $store_id_query->execute();
+        $store_id_result = $store_id_query->get_result();
+        if ($store_id_result->num_rows > 0) {
+            $store_id_row = $store_id_result->fetch_assoc();
+            $store_id = $store_id_row['store_id'];
+        } else {
+            throw new Exception("Store ID not found for the specified order.");
         }
+
 
         // Insert into resolution_orders table
         $insert_resolution = $conn->prepare("INSERT INTO resolution_orders (order_id, resolution_info, 
@@ -42,6 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             $resolution_type, $resolution_image);
         if (!$insert_resolution->execute()) {
             throw new Exception("Failed to insert resolution record.");
+        }
+        // Insert notification into notiflyreport table
+        $notiflyreport_type = 'resolve_order';
+        $insert_notification = $conn->prepare("INSERT INTO notiflyreport (user_id, order_id, notiflyreport_type, store_id) 
+                                            VALUES (?, ?, ?, ?)");
+        $insert_notification->bind_param("iisi", $user_id, $order_id, $notiflyreport_type, $store_id);
+        if (!$insert_notification->execute()) {
+            throw new Exception("Failed to insert notification record.");
         }
 
         // Update order status based on resolution type

@@ -57,6 +57,13 @@ if ($order_status) {
     $orders_result = $conn->query($orders_query);
 }
 
+if (isset($_GET['notiflyreport_id'])) {
+    $notiflyreport_id = $_GET['notiflyreport_id'];
+    
+    $update_status_query = $conn->prepare("UPDATE notiflyreport SET status = 'read' WHERE notiflyreport_id = ?");
+    $update_status_query->bind_param("i", $notiflyreport_id);
+    $update_status_query->execute();
+}
 ?>
 
 <!DOCTYPE html>
@@ -81,6 +88,7 @@ if ($order_status) {
         <a href="manage_store.php">Manage Stores</a>
         <a href="product_menu.php">Product Menu</a>
         <a href="order_management.php">Order reqeuest</a>
+        <a href="product_management.php">Product report</a>
         <a href="notification-settings.php">Notification Settings</a>
         <a href="reports.php">Reports</a>
     </div>

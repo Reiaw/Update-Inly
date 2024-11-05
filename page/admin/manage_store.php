@@ -7,14 +7,14 @@ if ($_SESSION['role'] !== 'admin') {
     exit;
 }
 
-$user_id = $_SESSION['user_id'];
+$use_id = $_SESSION['user_id'];
 
 $query = "SELECT u.name, u.surname, u.role, u.store_id, s.store_name 
           FROM users u
           LEFT JOIN stores s ON u.store_id = s.store_id 
           WHERE u.user_id = ?";
 $stmt = $conn->prepare($query);
-$stmt->bind_param("i", $user_id);
+$stmt->bind_param("i", $use_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -78,6 +78,7 @@ function addStore($conn, $storeName, $telStore, $street, $district, $province, $
     $stmt->bind_param("sis", $storeName, $locationId, $telStore);
     if ($stmt->execute()){
         echo ('เพื่มสาขาสำเร็จ');
+        logTransaction($conn, $_SESSION['user_id'], 'add_s');
         exit();
     } else {
         echo ('ไม่สามารถเพิ่มสาขาได้'). $stmt->error;
@@ -111,6 +112,7 @@ function updateStore($conn, $storeId, $storeName, $telStore, $street, $district,
     $stmt->bind_param("ssi", $storeName, $telStore, $storeId);
     if ($stmt->execute()){
         echo ('ข้อมูลสาขาแก้ไขสำเร็จ');
+        logTransaction($conn, $_SESSION['user_id'], 'edit_s');
         exit();
     } else {
         echo ('ไม่สามารถแก้ข้อมูลสาขาได้'). $stmt->error;
@@ -136,6 +138,7 @@ function deleteStore($conn, $storeId) {
     $stmt->bind_param("i", $storeId);
     if ($stmt->execute()){
         echo ('สาขานี้ถูกลบสำเร็จ');
+        logTransaction($conn, $_SESSION['user_id'], 'del_s');
         exit();
     } else {
         echo ('ไม่สามารถลบสาขานีี้ได้'). $stmt->error;
@@ -143,10 +146,16 @@ function deleteStore($conn, $storeId) {
     }
     exit();
 
-   
-    
 }
+function logTransaction($conn, $use_id, $transaction_type) {
+    $sql = "INSERT INTO transaction_manage (user_id, transaction_type,created_at) VALUES (?, ?, NOW())";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("is", $use_id, $transaction_type); // ใช้ $use_id เป็นทั้ง user_id และ reporter
 
+    if (!$stmt->execute()) {
+        echo "บันทึก transaction ผิดพลาด: " . $stmt->error;
+    }
+}
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 $search_param = "%$search%";
 $search_query = "SELECT s.store_id, s.store_name, s.tel_store, s.update_at, 
@@ -182,6 +191,8 @@ $search_result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         <a href="manage_user.php">Manage Users</a>
         <a href="manage_store.php">Manage Stores</a>
         <a href="product_menu.php">Product Menu</a>
+        <a href="order_management.php">Order reqeuest</a>
+        <a href="product_management.php">Product report</a>
         <a href="notification-settings.php">Notification Settings</a>
         <a href="reports.php">Reports</a>
     </div>

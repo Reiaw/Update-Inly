@@ -73,6 +73,7 @@ $conn->close();
         <a href="order.php">Order</a>
         <a href="tracking.php">Tracking</a>
         <a href="scaning_product.php">Scaning Product</a>
+        <a href="resolution.php">Product Report</a>
         <a href="inventory.php">Inventory</a>
         <a href="reports.php">Reports </a>
     </div>

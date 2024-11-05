@@ -30,7 +30,13 @@ if ($result->num_rows > 0) {
     header("Location: login.php");
     exit();
 }
-
+if (isset($_GET['notiflyreport_id'])) {
+    $notiflyreport_id = $_GET['notiflyreport_id'];
+    
+    $update_status_query = $conn->prepare("UPDATE notiflyreport SET status = 'read' WHERE notiflyreport_id = ?");
+    $update_status_query->bind_param("i", $notiflyreport_id);
+    $update_status_query->execute();
+}
 // Handle AJAX request for status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_status') {
     $product_id = $_POST['product_id'] ?? null;

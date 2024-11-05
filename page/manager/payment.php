@@ -8,7 +8,7 @@ require_once('../../vendor/autoload.php');
 
 // Initialize response array
 $response = [];
-
+$user_id = $_SESSION['user_id'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if this is an AJAX request for payment intent
     if (isset($_POST['create_payment_intent'])) {
@@ -47,7 +47,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param("id", $store_id, $total);
             $stmt->execute();
             $order_id = $conn->insert_id;
+            // Insert notification into notiflyreport table
+            $notifyType = 'order_product';
+            $insertNotifySql = "INSERT INTO notiflyreport (user_id, order_id, notiflyreport_type, store_id) 
+                            VALUES (?, ?, ?, ?)";
+            $stmt = $conn->prepare($insertNotifySql);
+            $stmt->bind_param("iisi", $user_id, $order_id, $notifyType, $store_id);
             
+            if (!$stmt->execute()) {
+                throw new Exception('Failed to create notification');
+            }
             // Insert order details
             $detail_stmt = $conn->prepare("INSERT INTO detail_orders (order_id, listproduct_id, quantity_set, price) VALUES (?, ?, ?, ?)");
             
@@ -57,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             if ($payment_method === 'promptpay' && isset($_FILES['payment_proof'])) {
-                $target_dir = "../../upload/payment_proofs/"; // ปรับเส้นทางให้อยู่ระดับเดียวกับ picture_product
+                $target_dir = "../../upload/payment_proofs/"; 
                 
                 // เก็บชื่อไฟล์เดิมเหมือน product_menu
                 $payment_pic = basename($_FILES["payment_proof"]["name"]);

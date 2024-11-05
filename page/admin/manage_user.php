@@ -8,22 +8,22 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-$user_id = $_SESSION['user_id'];
+$use_id = $_SESSION['user_id'];
 
 $query = "SELECT u.name, u.surname, u.role, s.store_name 
           FROM users u
           LEFT JOIN stores s ON u.store_id = s.store_id 
           WHERE u.user_id = ?";
 $stmt = $conn->prepare($query);
-$stmt->bind_param("i", $user_id);
+$stmt->bind_param("i", $use_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
-    $user = $result->fetch_assoc();
-    $name = $user['name'];
-    $surname = $user['surname'];
-    $role = $user['role'];
+    $use = $result->fetch_assoc();
+    $name = $use['name'];
+    $surname = $use['surname'];
+    $role = $use['role'];
 } else {
     header("Location: login.php");
     exit();
@@ -89,7 +89,7 @@ function addUser($conn) {
     $stmt->execute();
     
     if ($stmt->get_result()->num_rows > 0) {
-        echo ('อีเมลนี้มีอยู่แล้ว');
+        echo "อีเมลนี้มีอยู่แล้ว";
         exit();
     }
 
@@ -100,6 +100,8 @@ function addUser($conn) {
     
     if ($stmt->execute()) {
         echo "เพิ่มผู้ใช้สำเร็จ";
+        // บันทึก transaction
+        logTransaction($conn, $_SESSION['user_id'], 'add_u');
         exit();
     } else {
         echo "ผิดพลาด: " . $stmt->error;
@@ -131,8 +133,11 @@ function editUser($conn) {
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ssssii", $name, $surname, $tel_user, $role, $store_id, $user_id);
 
+
     if ($stmt->execute()) {
-        echo ('ข้อมูลผู้ใช้แก้ไขสำเร็จ');
+        echo "ข้อมูลผู้ใช้แก้ไขสำเร็จ";
+        // บันทึก transaction
+        logTransaction($conn, $_SESSION['user_id'], 'edit_u');
         exit();
     } else {
         echo "แก้ไขผิดพลาด: " . $stmt->error;
@@ -151,6 +156,8 @@ function deleteUser($conn) {
     
     if ($stmt->execute()) {
         echo "ลบผู้ใช้สำเร็จ";
+        // บันทึก transaction
+        logTransaction($conn, $_SESSION['user_id'], 'del_u');
         exit();
     } else {
         echo "ลบผู้ใช้ไม่สำเร็จ: " . $stmt->error;
@@ -158,10 +165,20 @@ function deleteUser($conn) {
     }
     exit();
 }
+function logTransaction($conn, $use_id, $transaction_type) {
+    $sql = "INSERT INTO transaction_manage (user_id, transaction_type,created_at) VALUES (?, ?, NOW())";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("is", $use_id, $transaction_type); // ใช้ $use_id เป็นทั้ง user_id และ reporter
+
+    if (!$stmt->execute()) {
+        echo "บันทึก transaction ผิดพลาด: " . $stmt->error;
+    }
+}
+
 
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 $search_param = "%$search%";
-$search_query = "SELECT u.user_id, u.name, u.surname, u.email, u.tel_user, u.role, s.store_name, u.update_at
+$search_query = "SELECT u.user_id, u.name, u.surname, u.email, u.tel_user, u.role, s.store_id, s.store_name, u.update_at
                  FROM users u
                  LEFT JOIN stores s ON u.store_id = s.store_id
                  WHERE (u.user_id LIKE ? OR u.name LIKE ?)";
@@ -196,6 +213,8 @@ $stores = getStores($conn);
         <a href="manage_user.php">Manage Users</a>
         <a href="manage_store.php">Manage Stores</a>
         <a href="product_menu.php">Product Menu</a>
+        <a href="order_management.php">Order reqeuest</a>
+        <a href="product_management.php">Product report</a>
         <a href="notification-settings.php">Notification Settings</a>
         <a href="reports.php">Reports</a>
     </div>
@@ -301,7 +320,9 @@ $stores = getStores($conn);
                             <select class="form-control" id="store_id" name="store_id">
                                 <option value="null">No store</option>
                                 <?php foreach ($stores as $store): ?>
-                                <option value="<?php echo htmlspecialchars($store['store_id']); ?>"><?php echo htmlspecialchars($store['store_name']); ?></option>
+                                    <option value="<?php echo htmlspecialchars($store['store_id']); ?>">
+                                        <?php echo htmlspecialchars($store['store_name']); ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
