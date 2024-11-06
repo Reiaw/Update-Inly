@@ -248,12 +248,6 @@ $conn->close();
         .export-buttons {
             margin: 20px 0;
         }
-        .status-check { color: #28a745; }
-        .status-expired { color: #dc3545; }
-        .status-nearing_expiration { color: #ffc107; }
-        .status-completed { color: #28a745; }
-        .status-cancelled { color: #dc3545; }
-        .status-pending { color: #ffc107; }
         .total-row {
             font-weight: bold;
             background-color: #f8f9fa;

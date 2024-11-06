@@ -35,22 +35,39 @@ $orders_query = "SELECT o.*, s.store_name FROM orders o
 $orders_result = $conn->query($orders_query);
 // Fetch orders with optional status filter
 $order_status = isset($_GET['order_status']) ? $_GET['order_status'] : '';
+$store_id = isset($_GET['store_id']) ? $_GET['store_id'] : '';
 
 // Base query
 $orders_query = "SELECT o.*, s.store_name FROM orders o 
                  JOIN stores s ON o.store_id = s.store_id";
 
+// Add filters if selected
+$conditions = [];
+$params = [];
+$param_types = '';
 // Add status filter if selected
 if ($order_status) {
-    $orders_query .= " WHERE o.order_status = ?";
+    $conditions[] = "o.order_status = ?";
+    $params[] = $order_status;
+    $param_types .= 's';
+}
+
+if ($store_id) {
+    $conditions[] = "o.store_id = ?";
+    $params[] = $store_id;
+    $param_types .= 'i';
+}
+
+if ($conditions) {
+    $orders_query .= " WHERE " . implode(" AND ", $conditions);
 }
 
 $orders_query .= " ORDER BY o.order_date DESC";
 
 // Prepare and execute query
-if ($order_status) {
+if ($conditions) {
     $stmt = $conn->prepare($orders_query);
-    $stmt->bind_param("s", $order_status);
+    $stmt->bind_param($param_types, ...$params);
     $stmt->execute();
     $orders_result = $stmt->get_result();
 } else {
@@ -64,6 +81,9 @@ if (isset($_GET['notiflyreport_id'])) {
     $update_status_query->bind_param("i", $notiflyreport_id);
     $update_status_query->execute();
 }
+$stores_query = "SELECT store_id, store_name FROM stores";
+$stores_result = $conn->query($stores_query);
+
 ?>
 
 <!DOCTYPE html>
@@ -94,7 +114,6 @@ if (isset($_GET['notiflyreport_id'])) {
     </div>
     <div class="container-fluid" id="main-content">
         <h2>Order Management</h2>
-        
         <!-- Order Status Filter Form -->
         <form method="GET" id="statusFilterForm" class="form-inline mb-3">
             <label for="order_status" class="mr-2">Filter by Order Status:</label>
@@ -109,6 +128,16 @@ if (isset($_GET['notiflyreport_id'])) {
                 <option value="refund" <?php if (isset($_GET['order_status']) && $_GET['order_status'] == 'refund') echo 'selected'; ?>>Refund</option>
                 <option value="return_shipped" <?php if (isset($_GET['order_status']) && $_GET['order_status'] == 'return_shipped') echo 'selected'; ?>>Return Shipped</option>
                 <option value="completed" <?php if (isset($_GET['order_status']) && $_GET['order_status'] == 'completed') echo 'selected'; ?>>Completed</option>
+            </select>
+            <label for="store_id" class="mr-2">Filter by Store:</label>
+            <select name="store_id" id="store_id" class="form-control mr-2">
+                <option value="">All Stores</option>
+                <?php while ($store = $stores_result->fetch_assoc()): ?>
+                    <option value="<?php echo $store['store_id']; ?>" 
+                        <?php if (isset($_GET['store_id']) && $_GET['store_id'] == $store['store_id']) echo 'selected'; ?>>
+                        <?php echo $store['store_name']; ?>
+                    </option>
+                <?php endwhile; ?>
             </select>
             <button type="submit" class="btn btn-primary">Apply Filter</button>
         </form>

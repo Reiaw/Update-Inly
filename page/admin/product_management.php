@@ -111,9 +111,47 @@ $query = "SELECT ip.*, pi.product_name, p.status, s.store_name, p.store_id
           JOIN product p ON ip.product_id = p.product_id
           JOIN products_info pi ON p.listproduct_id = pi.listproduct_id
           JOIN stores s ON p.store_id = s.store_id
-          ORDER BY ip.report_date DESC";
+          WHERE 1=1";
 $result = $conn->query($query);
 
+// ใช้ filter สำหรับประเภทปัญหาถ้ามีการเลือก
+if (!empty($_GET['issue_type'])) {
+    $query .= " AND ip.issue_type = ?";
+}
+
+// ใช้ filter สำหรับ store ถ้ามีการเลือก
+if (!empty($_GET['store_id'])) {
+    $query .= " AND p.store_id = ?";
+}
+
+$query .= " ORDER BY ip.report_date DESC";
+
+$stmt = $conn->prepare($query);
+
+$bindTypes = "";
+$params = [];
+
+// ผูกค่าตัวแปรประเภทปัญหาถ้ามีการเลือก
+if (!empty($_GET['issue_type'])) {
+    $bindTypes .= "s";
+    $params[] = $_GET['issue_type'];
+}
+
+// ผูกค่าตัวแปร store ถ้ามีการเลือก
+if (!empty($_GET['store_id'])) {
+    $bindTypes .= "i";
+    $params[] = $_GET['store_id'];
+}
+
+// ผูกค่าพารามิเตอร์แบบไดนามิก
+if ($params) {
+    $stmt->bind_param($bindTypes, ...$params);
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
+$stores_query = "SELECT store_id, store_name FROM stores";
+$stores_result = $conn->query($stores_query);
 ?>
 
 <!DOCTYPE html>
@@ -152,10 +190,33 @@ $result = $conn->query($query);
         <a href="notification-settings.php">Notification Settings</a>
         <a href="reports.php">Reports</a>
     </div>
-
     <div class="container-fluid" id="main-content">
-        <h2 class="mt-4 mb-4">Product Issues</h2>
+        <h2>Product Issues</h2>
         <div class="table-responsive">
+        <form method="GET" class="form-inline mb-3">
+            <!-- Issue Type Filter -->
+            <label for="issue_type" class="mr-2">Filter by Issue Type:</label>
+            <select name="issue_type" id="issue_type" class="form-control mr-2">
+                <option value="">All Types</option>
+                <option value="quality_issue" <?php if (isset($_GET['issue_type']) && $_GET['issue_type'] == 'quality_issue') echo 'selected'; ?>>Quality Issue</option>
+                <option value="quantity_issue" <?php if (isset($_GET['issue_type']) && $_GET['issue_type'] == 'quantity_issue') echo 'selected'; ?>>Quantity Issue</option>
+                <option value="damaged_issue" <?php if (isset($_GET['issue_type']) && $_GET['issue_type'] == 'damaged_issue') echo 'selected'; ?>>Damaged Issue</option>
+            </select>
+
+            <!-- Store Filter -->
+            <label for="store_id" class="mr-2">Filter by Store:</label>
+            <select name="store_id" id="store_id" class="form-control mr-2">
+                <option value="">All Stores</option>
+                <?php while ($store = $stores_result->fetch_assoc()): ?>
+                    <option value="<?php echo $store['store_id']; ?>" 
+                        <?php if (isset($_GET['store_id']) && $_GET['store_id'] == $store['store_id']) echo 'selected'; ?>>
+                        <?php echo $store['store_name']; ?>
+                    </option>
+                <?php endwhile; ?>
+            </select>
+            
+            <button type="submit" class="btn btn-primary">Apply Filters</button>
+        </form>
             <table class="table table-striped">
                 <thead>
                     <tr>

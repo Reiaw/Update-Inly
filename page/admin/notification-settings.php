@@ -76,9 +76,19 @@ $check_stmt->close();
 header("Location: notification-settings.php");
 exit();
 }
-
-$conn->close();
-
+// Handle search and filter
+$search = $_GET['search'] ?? '';
+$category = $_GET['category'] ?? '';
+$search_query = "SELECT p.*, a.low_stock_threshold, a.expiry_alert_days 
+                 FROM products_info p
+                 LEFT JOIN product_alert_settings a ON p.listproduct_id = a.listproduct_id
+                 WHERE (p.product_name LIKE ? OR p.listproduct_id LIKE ?) 
+                 AND (p.category = ? OR ? = '')";
+$search_stmt = $conn->prepare($search_query);
+$search_term = '%' . $search . '%';
+$search_stmt->bind_param("ssss", $search_term, $search_term, $category, $category);
+$search_stmt->execute();
+$result = $search_stmt->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -113,11 +123,31 @@ $conn->close();
         <a href="reports.php">Reports</a>
     </div>
     <div class="container" id="main-content">
-    <h2>Notification Settings</h2>
+        <h2>Notification Settings</h2>
+        <form action="" method="GET" class="mb-3">
+            <div class="input-group">
+                <input style="width: 500px;" type="text" class="form-control" placeholder="Search by Id or Name" name="search" value="<?php echo htmlspecialchars($search); ?>">
+                <select class="form-control" name="category">
+                    <option value="">Select Category</option>
+                    <option value="กาแฟ" <?php echo $category == 'กาแฟ' ? 'selected' : ''; ?>>Coffee</option>
+                    <option value="นมและครีม" <?php echo $category == 'นมและครีม' ? 'selected' : ''; ?>>Milk and Cream</option>
+                    <option value="ไซรัปและน้ำเชื่อม" <?php echo $category == 'ไซรัปและน้ำเชื่อม' ? 'selected' : ''; ?>>Syrups and Sweeteners</option>
+                    <option value="ผงเครื่องดื่มและส่วนผสมอื่นๆ" <?php echo $category == 'ผงเครื่องดื่มและส่วนผสมอื่นๆ' ? 'selected' : ''; ?>>Beverage Powders and Other Ingredients</option>
+                    <option value="ขนมและของว่าง" <?php echo $category == 'ขนมและของว่าง' ? 'selected' : ''; ?>>Snacks and Treats</option>
+                    <option value="อุปกรณ์การชงกาแฟ" <?php echo $category == 'อุปกรณ์การชงกาแฟ' ? 'selected' : ''; ?>>Coffee Brewing Equipment</option>
+                    <option value="แก้วและภาชนะบรรจุ" <?php echo $category == 'แก้วและภาชนะบรรจุ' ? 'selected' : ''; ?>>Cups and Containers</option>
+                    <option value="สารให้ความหวานและสารแต่งกลิ่นรส" <?php echo $category == 'สารให้ความหวานและสารแต่งกลิ่นรส' ? 'selected' : ''; ?>>Sweeteners and Flavoring Agents</option>
+                    <option value="ผลิตภัณฑ์เพิ่มมูลค่า" <?php echo $category == 'ผลิตภัณฑ์เพิ่มมูลค่า' ? 'selected' : ''; ?>>Value-Added Products</option>
+                </select>
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">Search</button>
+                </div>
+            </div>
+        </form>
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Product ID</th>
+                    <th>Setting ID</th>
                     <th>Product Name</th>
                     <th>Category</th>
                     <th>Current Stock</th>
@@ -198,6 +228,7 @@ $conn->close();
             document.getElementById('sidebar').classList.toggle('active');
             document.getElementById('main-content').classList.toggle('sidebar-active');
         });
+        
     </script>
  </body>
 </html>

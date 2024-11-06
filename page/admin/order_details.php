@@ -595,8 +595,8 @@ $payment_result = $payment_stmt->get_result();
                                     alt="PromptPay QR Code" class="img-fluid" style="max-width: 200px;">
                             </div>
                             <div class="form-group">
-                                <label for="cancel_pic">Upload Image (JPG/JPEG only):</label>
-                                <input type="file" name="cancel_pic" id="cancel_pic" class="form-control-file" accept="image/jpeg">
+                                <label for="cancel_pic">Upload Image :</label>
+                                <input type="file" name="cancel_pic" id="cancel_pic" class="form-control-file" accept="image/jpeg/png">
                             </div>
                         </div>
                         <div class="modal-footer">
