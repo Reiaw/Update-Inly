@@ -284,8 +284,6 @@ $products = getProducts($conn, $search, $category);
                     <option value="ไซรัปและน้ำเชื่อม" <?php echo $category == 'ไซรัปและน้ำเชื่อม' ? 'selected' : ''; ?>>Syrups and Sweeteners</option>
                     <option value="ผงเครื่องดื่มและส่วนผสมอื่นๆ" <?php echo $category == 'ผงเครื่องดื่มและส่วนผสมอื่นๆ' ? 'selected' : ''; ?>>Beverage Powders and Other Ingredients</option>
                     <option value="ขนมและของว่าง" <?php echo $category == 'ขนมและของว่าง' ? 'selected' : ''; ?>>Snacks and Treats</option>
-                    <option value="อุปกรณ์การชงกาแฟ" <?php echo $category == 'อุปกรณ์การชงกาแฟ' ? 'selected' : ''; ?>>Coffee Brewing Equipment</option>
-                    <option value="แก้วและภาชนะบรรจุ" <?php echo $category == 'แก้วและภาชนะบรรจุ' ? 'selected' : ''; ?>>Cups and Containers</option>
                     <option value="สารให้ความหวานและสารแต่งกลิ่นรส" <?php echo $category == 'สารให้ความหวานและสารแต่งกลิ่นรส' ? 'selected' : ''; ?>>Sweeteners and Flavoring Agents</option>
                     <option value="ผลิตภัณฑ์เพิ่มมูลค่า" <?php echo $category == 'ผลิตภัณฑ์เพิ่มมูลค่า' ? 'selected' : ''; ?>>Value-Added Products</option>
                 </select>
@@ -380,8 +378,6 @@ $products = getProducts($conn, $search, $category);
                                 <option value="ไซรัปและน้ำเชื่อม ">Syrups and Sweeteners</option>
                                 <option value="ผงเครื่องดื่มและส่วนผสมอื่นๆ">Beverage Powders and Other Ingredients</option>
                                 <option value="ขนมและของว่าง ">Snacks and Treats</option>
-                                <option value="อุปกรณ์การชงกาแฟ">Coffee Brewing Equipment</option>
-                                <option value="แก้วและภาชนะบรรจุ">Cups and Containers</option>
                                 <option value="สารให้ความหวานและสารแต่งกลิ่นรส">Sweeteners and Flavoring Agents</option>
                                 <option value="ผลิตภัณฑ์เพิ่มมูลค่า 5">Value-Added Products 5</option>
                             </select>

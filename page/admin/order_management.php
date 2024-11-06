@@ -160,7 +160,44 @@ $stores_result = $conn->query($stores_query);
                     <td><?php echo $order['store_name']; ?></td>
                     <td><?php echo $order['total_amount']; ?></td>
                     <td><?php echo $order['order_date']; ?></td>
-                    <td><?php echo $order['order_status']; ?></td>
+                    <td>
+                        <span class="badge badge-<?php 
+                            switch ($order['order_status']) {
+                                case 'paid':
+                                    echo 'info'; // สีเขียว
+                                    break;
+                                case 'confirm':
+                                    echo 'success'; // สีฟ้า
+                                    break;
+                                case 'cancel':
+                                    echo 'danger'; // สีแดง
+                                    break;
+                                case 'shipped':
+                                    echo 'warning'; // สีเหลือง
+                                    break;
+                                case 'delivered':
+                                    echo 'primary'; // สีฟ้าน้ำทะเล
+                                    break;
+                                case 'issue':
+                                    echo 'danger'; // สีแดง
+                                    break;
+                                case 'refund':
+                                    echo 'warning'; // สีเหลืองทอง
+                                    break;
+                                case 'return_shipped':
+                                    echo 'warning'; // สีเทา
+                                    break;
+                                case 'completed':
+                                    echo 'success'; // สีเขียว
+                                    break;
+                                default:
+                                    echo 'light'; // สีพื้นฐาน (ขาว)
+                                    break;
+                            }
+                        ?>">
+                            <?php echo ucfirst($order['order_status']); ?>
+                        </span>
+                    </td>
                     <td>
                         <a href="order_details.php?id=<?php echo $order['order_id']; ?>" class="btn btn-info btn-sm">View Details</a>
                     </td>

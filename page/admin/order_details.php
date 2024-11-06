@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 include('../../config/db.php');
@@ -367,11 +368,18 @@ $payment_result = $payment_stmt->get_result();
                                             <td><?php echo htmlspecialchars($product['expiration_date']); ?></td>
                                             <td>
                                                 <span class="badge badge-<?php 
-                                                    echo $product['status'] === 'in_stock' ? 'success' : 
-                                                        ($product['status'] === 'check' ? 'warning' : 
-                                                        ($product['status'] === 'expired' ? 'danger' : 'info')); 
+                                                    echo $product['status'] === 'in_stock' ? 'success' :
+                                                        ($product['status'] === 'check' ? 'info' :
+                                                        ($product['status'] === 'expired' ? 'danger' :
+                                                        ($product['status'] === 'nearing_expiration' ? 'secondary' :
+                                                        ($product['status'] === 'issue' ? 'danger' :
+                                                        ($product['status'] === 'cancel' ? 'dark' :
+                                                        ($product['status'] === 'unusable' ? 'dark' :
+                                                        ($product['status'] === 'replace' ? 'primary' :
+                                                        ($product['status'] === 'empty' ? 'dark' : 'light')
+                                                    )))))));
                                                 ?>">
-                                                    <?php echo htmlspecialchars($product['status']); ?>
+                                                    <?php echo ucfirst(str_replace('_', ' ', $product['status'])); ?>
                                                 </span>
                                             </td>
                                         </tr>

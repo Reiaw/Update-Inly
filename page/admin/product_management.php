@@ -243,7 +243,49 @@ $stores_result = $conn->query($stores_query);
                             <img src="../../upload/issue_pic/<?php echo $row['issue_image']; ?>" class="issue-image" alt="Issue Image">
                             <?php endif; ?>
                         </td>
-                        <td><?php echo htmlspecialchars($row['status'] ?? 'Pending'); ?></td>
+                        <td>
+                            <?php
+                            $status = $row['status'] ?? 'Pending';
+                            $badgeClass = '';
+
+                            switch ($status) {
+                                case 'in_stock':
+                                    $badgeClass = 'success'; // สีเขียว
+                                    break;
+                                case 'check':
+                                    $badgeClass = 'warning'; // สีเหลือง
+                                    break;
+                                case 'expired':
+                                    $badgeClass = 'danger'; // สีแดง
+                                    break;
+                                case 'nearing_expiration':
+                                    $badgeClass = 'secondary'; // สีเทาอ่อน
+                                    break;
+                                case 'issue':
+                                    $badgeClass = 'danger'; // สีแดง
+                                    break;
+                                case 'cancel':
+                                    $badgeClass = 'dark'; // สีเทาเข้ม
+                                    break;
+                                case 'unusable':
+                                    $badgeClass = 'dark'; // สีเทาเข้ม
+                                    break;
+                                case 'replace':
+                                    $badgeClass = 'primary'; // สีน้ำเงิน
+                                    break;
+                                case 'empty':
+                                    $badgeClass = 'info'; // สีน้ำเงินอ่อน
+                                    break;
+                                default:
+                                    $badgeClass = 'light'; // สีพื้นฐาน (ขาว)
+                                    break;
+                            }
+                            ?>
+                            <span class="badge badge-<?php echo $badgeClass; ?>">
+                                <?php echo ucfirst(str_replace('_', ' ', $status)); ?>
+                            </span>
+                        </td>
+
                         <td>
                             <?php if (!in_array($row['status'], ['replace', 'unusable'])): ?>
                             <button class="btn btn-primary btn-sm" data-toggle="modal" 
