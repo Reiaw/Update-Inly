@@ -8,6 +8,7 @@ include('../../config/db.php');
 }
 
 $user_id = $_SESSION['user_id'];
+$store_id = $_SESSION['store_id'];
 
 $query = "SELECT u.name, u.surname, u.role, u.store_id, s.store_name 
           FROM users u
@@ -17,13 +18,6 @@ $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
-if (isset($_GET['notiflyreport_id'])) {
-    $notiflyreport_id = $_GET['notiflyreport_id'];
-    
-    $update_status_query = $conn->prepare("UPDATE notiflyreport SET status = 'read' WHERE notiflyreport_id = ?");
-    $update_status_query->bind_param("i", $notiflyreport_id);
-    $update_status_query->execute();
-}
 if ($result->num_rows > 0) {
     $user = $result->fetch_assoc();
     $name = $user['name'];
@@ -35,7 +29,13 @@ if ($result->num_rows > 0) {
     header("Location: login.php");
     exit();
 }
-$store_id = $_SESSION['store_id'];
+if (isset($_GET['notiflyreport_id'])) {
+    $notiflyreport_id = $_GET['notiflyreport_id'];
+    
+    $update_status_query = $conn->prepare("UPDATE notiflyreport SET status = 'read' WHERE notiflyreport_id = ?");
+    $update_status_query->bind_param("i", $notiflyreport_id);
+    $update_status_query->execute();
+}
 
 // Fetch orders for the specific store
 $query = "SELECT o.*, 
@@ -49,6 +49,40 @@ $query = "SELECT o.*,
 
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $store_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+// Retrieve search/filter values from GET request
+$search_order_id = $_GET['order_id'] ?? '';
+$filter_order_status = $_GET['order_status'] ?? '';
+
+// Prepare query for fetching orders with optional filtering
+$order_query = "SELECT o.*, 
+    COUNT(do.detail_order_id) AS total_items,
+    GROUP_CONCAT(CONCAT(do.quantity_set, 'x $', do.price) SEPARATOR ', ') AS order_details
+    FROM orders o
+    LEFT JOIN detail_orders do ON o.order_id = do.order_id
+    WHERE o.store_id = ?";
+
+$params = [$store_id];
+$types = "i"; // Start with store_id as integer
+
+// Add conditions if search or filter values are provided
+if (!empty($search_order_id)) {
+    $order_query .= " AND o.order_id = ?";
+    $params[] = $search_order_id;
+    $types .= "s"; // Add type "s" for order_id
+}
+if (!empty($filter_order_status)) {
+    $order_query .= " AND o.order_status = ?";
+    $params[] = $filter_order_status;
+    $types .= "s"; // Add type "s" for order_status
+}
+
+$order_query .= " GROUP BY o.order_id ORDER BY o.order_date DESC";
+
+$stmt = $conn->prepare($order_query);
+$stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
 $stmt->close();
@@ -86,6 +120,25 @@ $conn->close();
     </div>
     <div class="container" id="main-content">
         <h2>Order Tracking</h2>
+        <!-- Search and Filter Form -->
+        <form method="GET" class="form-inline mb-3">
+            <input type="text" name="order_id" class="form-control mr-2" placeholder="Order ID" value="<?php echo htmlspecialchars($search_order_id); ?>">
+            
+            <select name="order_status" class="form-control mr-2">
+                <option value="">All Status</option>
+                <option value="paid" <?php if ($filter_order_status == 'paid') echo 'selected'; ?>>Paid</option>
+                <option value="confirm" <?php if ($filter_order_status == 'confirm') echo 'selected'; ?>>Confirm</option>
+                <option value="shipped" <?php if ($filter_order_status == 'shipped') echo 'selected'; ?>>Shipped</option>
+                <option value="delivered" <?php if ($filter_order_status == 'delivered') echo 'selected'; ?>>Delivered</option>
+                <option value="completed" <?php if ($filter_order_status == 'completed') echo 'selected'; ?>>Completed</option>
+                <option value="issue" <?php if ($filter_order_status == 'issue') echo 'selected'; ?>>Issue</option>
+                <option value="cancel" <?php if ($filter_order_status == 'cancel') echo 'selected'; ?>>Cancel</option>
+                <option value="refund" <?php if ($filter_order_status == 'refund') echo 'selected'; ?>>Refund</option>
+                <option value="return_shipped" <?php if ($filter_order_status == 'return_shipped') echo 'selected'; ?>>Return Shipped</option>
+            </select>
+            
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>

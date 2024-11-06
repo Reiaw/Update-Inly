@@ -143,6 +143,59 @@ $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $store_id);
 $stmt->execute();
 $result = $stmt->get_result();
+
+$search = isset($_GET['search']) ? $_GET['search'] : '';
+$category_filter = isset($_GET['category']) ? $_GET['category'] : '';
+
+// Get distinct categories for the filter dropdown
+$categories_query = "SELECT DISTINCT category FROM products_info 
+                    JOIN product ON products_info.listproduct_id = product.listproduct_id 
+                    WHERE product.store_id = ?";
+$stmt = $conn->prepare($categories_query);
+$stmt->bind_param("i", $store_id);
+$stmt->execute();
+$categories_result = $stmt->get_result();
+$categories = [];
+while ($row = $categories_result->fetch_assoc()) {
+    $categories[] = $row['category'];
+}
+
+// Modify the main query to include search and filter
+$query = "SELECT p.product_id, p.quantity, p.status, p.expiration_date, p.manufacture_date, 
+                 p.location, pi.product_name, pi.category, pi.price_set
+          FROM product p
+          JOIN products_info pi ON p.listproduct_id = pi.listproduct_id
+          WHERE p.store_id = ? AND p.status NOT IN ('check', 'cancel', 'unusable' , 'replace')";
+
+// Add search condition
+if (!empty($search)) {
+    $query .= " AND (p.product_id LIKE ? OR pi.product_name LIKE ?)";
+}
+
+// Add category filter
+if (!empty($category_filter)) {
+    $query .= " AND pi.category = ?";
+}
+
+$query .= " ORDER BY p.updated_at DESC";
+
+$stmt = $conn->prepare($query);
+
+// Bind parameters based on search and filter conditions
+if (!empty($search) && !empty($category_filter)) {
+    $search_param = "%$search%";
+    $stmt->bind_param("isss", $store_id, $search_param, $search_param, $category_filter);
+} elseif (!empty($search)) {
+    $search_param = "%$search%";
+    $stmt->bind_param("iss", $store_id, $search_param, $search_param);
+} elseif (!empty($category_filter)) {
+    $stmt->bind_param("is", $store_id, $category_filter);
+} else {
+    $stmt->bind_param("i", $store_id);
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
 $stmt->close();
 $conn->close();
 ?>
@@ -178,7 +231,31 @@ $conn->close();
     </div>
     <div class="container" id="main-content">
         <h2>Inventory Management</h2>
-        
+        <!-- Add search and filter form -->
+        <div class="row mb-2">
+            <div class="col-8">
+                <form class="form-inline d-flex align-items-center" method="GET">
+                    <div class="form-group mr-2 flex-grow-1">
+                        <input type="text" class="form-control w-100" name="search" 
+                            placeholder="Search by ID or Name" 
+                            value="<?php echo htmlspecialchars($search); ?>">
+                    </div>
+                    <div class="form-group mr-2">
+                        <select class="form-control" name="category">
+                            <option value="">All Categories</option>
+                            <?php foreach ($categories as $category): ?>
+                                <option value="<?php echo htmlspecialchars($category); ?>"
+                                    <?php echo $category_filter === $category ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($category); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary mr-2">Search</button>
+                    <a href="inventory.php" class="btn btn-secondary">Clear</a>
+                </form>
+            </div>
+        </div>
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
@@ -352,6 +429,19 @@ $conn->close();
                 }
             });
         }
+        fetch('../staff/process_check.php')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // แสดงการแจ้งเตือนที่สร้างขึ้น
+                    data.notifications.forEach(notification => {
+                        console.log(`${notification.type}: ${notification.message}`);
+                    });
+                } else {
+                    console.error('Error:', data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
     </script>
 </body>
 </html>

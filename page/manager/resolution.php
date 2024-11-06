@@ -9,7 +9,6 @@ include('../../config/db.php');
 
 $user_id = $_SESSION['user_id'];
 
-
 $query = "SELECT u.name, u.surname, u.role, u.store_id, s.store_name 
           FROM users u
           LEFT JOIN stores s ON u.store_id = s.store_id 
@@ -88,6 +87,36 @@ $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $store_id);
 $stmt->execute();
 $result = $stmt->get_result();
+
+//Retrieve filter values from GET request
+$search_product_name = $_GET['product_name'] ?? '';
+$filter_status = $_GET['status'] ?? '';
+
+// Query to get resolution data with product information
+$query = "SELECT rp.*, p.status as product_status, p.product_id, 
+          pi.product_name, p.store_id
+          FROM resolution_product rp
+          JOIN product p ON rp.product_id = p.product_id
+          JOIN products_info pi ON p.listproduct_id = pi.listproduct_id
+          WHERE p.store_id = ?";
+
+// Apply filters if provided
+$params = [$store_id];
+if (!empty($search_product_name)) {
+    $query .= " AND pi.product_name LIKE ?";
+    $params[] = "%" . $search_product_name . "%";
+}
+if (!empty($filter_status)) {
+    $query .= " AND p.status = ?";
+    $params[] = $filter_status;
+}
+
+$query .= " ORDER BY rp.resolution_date DESC";
+
+$stmt = $conn->prepare($query);
+$stmt->bind_param(str_repeat("s", count($params)), ...$params);
+$stmt->execute();
+$result = $stmt->get_result();
 $stmt->close();
 $conn->close();
 ?>
@@ -123,7 +152,16 @@ $conn->close();
     </div>
     <div class="container" id="main-content">
         <h2 class="mt-4 mb-4">Resolution Products</h2>
-        
+         <!-- Search and Filter Form -->
+         <form method="GET" class="form-inline mb-3">
+            <input type="text" name="product_name" class="form-control mr-2" placeholder="Product Name" value="<?php echo htmlspecialchars($search_product_name); ?>">
+            <select name="status" class="form-control mr-2">
+                <option value="">All Status</option>
+                <option value="Unusable" <?php if ($filter_status == 'Unusable') echo 'selected'; ?>>Unusable</option>
+                <option value="Replace" <?php if ($filter_status == 'Replace') echo 'selected'; ?>>Replace</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
         <div class="table-responsive resolution-table">
             <table class="table table-striped">
                 <thead>
