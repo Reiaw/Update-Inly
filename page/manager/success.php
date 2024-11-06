@@ -90,7 +90,7 @@ while ($row = $result->fetch_assoc()) {
                         <?php if ($payment_method === 'promptpay' && $payment_pic): ?>
                         <div class="mt-4">
                             <h5>Payment Proof</h5>
-                            <img src="payment_proofs/<?php echo htmlspecialchars($payment_pic); ?>" 
+                            <img src="../../upload/payment_proofs/<?php echo htmlspecialchars($payment_pic); ?>" 
                                  alt="Payment Proof" 
                                  class="img-fluid" 
                                  style="max-width: 300px;">

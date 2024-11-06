@@ -138,8 +138,6 @@ $conn->close();
                     <option value="ไซรัปและน้ำเชื่อม" <?php echo $category == 'ไซรัปและน้ำเชื่อม' ? 'selected' : 'ไซรัปและน้ำเชื่อม'; ?>>Syrups and Sweeteners</option>
                     <option value="ผงเครื่องดื่มและส่วนผสมอื่นๆ" <?php echo $category == 'ผงเครื่องดื่มและส่วนผสมอื่นๆ' ? 'selected' : 'ผงเครื่องดื่มและส่วนผสมอื่นๆ'; ?>>Drink Powders and Other Ingredients</option>
                     <option value="ขนมและของว่าง" <?php echo $category == 'ขนมและของว่าง' ? 'selected' : 'ขนมและของว่าง'; ?>>Snacks and Sweets</option>
-                    <option value="อุปกรณ์การชงกาแฟ" <?php echo $category == 'อุปกรณ์การชงกาแฟ' ? 'selected' : 'อุปกรณ์การชงกาแฟ'; ?>>Coffee Brewing Equipment</option>
-                    <option value="แก้วและภาชนะบรรจุ" <?php echo $category == 'แก้วและภาชนะบรรจุ' ? 'selected' : 'แก้วและภาชนะบรรจุ'; ?>>Cups and Containers</option>
                     <option value="สารให้ความหวานและสารแต่งกลิ่นรส" <?php echo $category == 'สารให้ความหวานและสารแต่งกลิ่นรส' ? 'selected' : 'สารให้ความหวานและสารแต่งกลิ่นรส'; ?>>Sweeteners and Flavorings</option>
                     <option value="ผลิตภัณฑ์เพิ่มมูลค่า" <?php echo $category == 'ผลิตภัณฑ์เพิ่มมูลค่า' ? 'selected' : 'ผลิตภัณฑ์เพิ่มมูลค่า'; ?>>Value-added Products</option>
                 </select>
@@ -265,20 +263,30 @@ $conn->close();
                 // บันทึก orderItems ลงใน localStorage
                 localStorage.setItem('orderItems', JSON.stringify(orderItems));
 
-                for (let productId in orderItems) {
-                    let item = orderItems[productId];
-                    let itemTotal = item.price * item.quantity;
-                    total += itemTotal;
-
+                if (Object.keys(orderItems).length === 0) {
                     $orderItems.append(
-                        `<li class="list-group-item d-flex justify-content-between align-items-center">
-                            ${item.name} (x${item.quantity})
-                            <span>
-                                ฿${itemTotal.toFixed(2)}
-                                <button class="btn btn-danger btn-sm ml-2 remove-item" data-product-id="${productId}">Remove</button>
-                            </span>
+                        `<li class="list-group-item text-center text-muted">
+                            No items in order yet
                         </li>`
                     );
+                    $('#confirm-order').prop('disabled', true);
+                } else {
+                    for (let productId in orderItems) {
+                        let item = orderItems[productId];
+                        let itemTotal = item.price * item.quantity;
+                        total += itemTotal;
+
+                        $orderItems.append(
+                            `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                ${item.name} (x${item.quantity})
+                                <span>
+                                    ฿${itemTotal.toFixed(2)}
+                                    <button class="btn btn-danger btn-sm ml-2 remove-item" data-product-id="${productId}">Remove</button>
+                                </span>
+                            </li>`
+                        );
+                    }
+                    $('#confirm-order').prop('disabled', false);
                 }
 
                 $('#order-total').text(total.toFixed(2));
@@ -327,6 +335,11 @@ $conn->close();
             });
 
             $('#confirm-order').click(function() {
+                if (Object.keys(orderItems).length === 0) {
+                    alert('Please add items to your order first.');
+                    return;
+                }
+
                 let $modalOrderItems = $('#modal-order-items');
                 $modalOrderItems.empty();
 

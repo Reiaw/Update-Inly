@@ -185,7 +185,48 @@ $conn->close();
                             </td>
                             <td><?php echo htmlspecialchars($row['resolution_description']); ?></td>
                             <td><?php echo date('Y-m-d H:i', strtotime($row['resolution_date'])); ?></td>
-                            <td><?php echo ucfirst($row['product_status']); ?></td>
+                           <td>
+                            <?php
+                            $status = $row['priduct_status'] ?? 'Pending';
+                            $badgeClass = '';
+
+                            switch ($status) {
+                                case 'in_stock':
+                                    $badgeClass = 'success'; // สีเขียว
+                                    break;
+                                case 'check':
+                                    $badgeClass = 'warning'; // สีเหลือง
+                                    break;
+                                case 'expired':
+                                    $badgeClass = 'danger'; // สีแดง
+                                    break;
+                                case 'nearing_expiration':
+                                    $badgeClass = 'secondary'; // สีเทาอ่อน
+                                    break;
+                                case 'issue':
+                                    $badgeClass = 'danger'; // สีแดง
+                                    break;
+                                case 'cancel':
+                                    $badgeClass = 'dark'; // สีเทาเข้ม
+                                    break;
+                                case 'unusable':
+                                    $badgeClass = 'dark'; // สีเทาเข้ม
+                                    break;
+                                case 'replace':
+                                    $badgeClass = 'primary'; // สีน้ำเงิน
+                                    break;
+                                case 'empty':
+                                    $badgeClass = 'light'; // สีน้ำเงินอ่อน
+                                    break;
+                                default:
+                                    $badgeClass = 'info'; // สีพื้นฐาน (ขาว)
+                                    break;
+                            }
+                            ?>
+                            <span class="badge badge-<?php echo $badgeClass; ?>">
+                                <?php echo ucfirst(str_replace('_', ' ', $status)); ?>
+                            </span>
+                        </td>
                             <td>
                                 <?php if ($row['resolution_type'] === 'replace' && $row['product_status'] !== 'in_stock') { ?>
                                     <button 

@@ -149,7 +149,7 @@ $conn->close();
                         <th>Order Date</th>
                         <th>Shipping Date</th>
                         <th>Delivered Date</th>
-                        <th>Total Items</th>
+                        <th>Product type</th>
                         <th>Action</th>
                     </tr>
                 </thead>
