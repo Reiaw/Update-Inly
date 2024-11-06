@@ -4,7 +4,7 @@ require_once('../../config/db.php');
 require_once('./check_product.php');
 
 // ตรวจสอบสิทธิ์การเข้าถึง
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'staff') {
+if (!isset($_SESSION['role'])) {
     header('Location: ../../auth/login.php');
     exit();
 }
