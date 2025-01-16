@@ -1,65 +1,48 @@
 <?php
 session_start();
-require_once '../config/config.php';
-require_once '../function/functions.php'; // เรียกใช้ไฟล์ functions.php
-date_default_timezone_set('Asia/Bangkok');
+require_once  '../config/config.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = $_POST['email'];
-    $name = $_POST['name'];
     $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
 
-    // Check if passwords match
-    if ($password !== $confirm_password) {
-        echo "<script>alert('รหัสผ่านไม่ตรงกัน'); </script>";
-    }
-
-    $password = password_hash($password, PASSWORD_BCRYPT);
-
-    if (strpos($email, '@ku.th') === false) {
-        echo "<script>alert('กรุณาใช้อีเมล @ku.th'); </script>";
-    }
-
-    // Check for existing verified user
+    // ตรวจสอบอีเมลและการยืนยัน
     $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? AND verify = 1");
     $stmt->bind_param("s", $email);
     $stmt->execute();
-    if ($stmt->get_result()->num_rows > 0) {
-        echo "<script>alert('อีเมลนี้ถูกใช้งานแล้ว'); </script>";
-    }
+    $result = $stmt->get_result();
 
-    $otp = generateOTP(); // เรียกใช้ฟังก์ชันจาก functions.php
-    $otp_expiry = date('Y-m-d H:i:s', strtotime('+'.OTP_EXPIRY_MINUTES.' minutes'));
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
 
-    // Reset OTP attempts when registering
-    $stmt = $conn->prepare("INSERT INTO users (email, name, password, otp, otp_expiry, otp_attempts, last_otp_sent) 
-                            VALUES (?, ?, ?, ?, ?, 1, NOW()) 
-                            ON DUPLICATE KEY UPDATE 
-                            otp = ?, otp_expiry = ?, password = ?, name = ?, otp_attempts = 1, last_otp_sent = NOW()");
-    $stmt->bind_param("sssssssss", $email, $name, $password, $otp, $otp_expiry, $otp, $otp_expiry, $password, $name);
-    
-    if ($stmt->execute() && sendOTP($email, $otp)) { // เรียกใช้ฟังก์ชันจาก functions.php
-        $_SESSION['email'] = $email;
-        $_SESSION['otp_expiry'] = $otp_expiry;
-        header('Location: verify.php');
+        // ตรวจสอบรหัสผ่าน
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['email'] = $email;
+            $_SESSION['name'] = $user['name']; // เก็บชื่อใน session
+            header('Location: index.php');
+            exit;
+        } else {
+            
+            echo "<script>alert('รหัสผ่านไม่ถูกต้อง');</script>";
+        }
     } else {
-        echo "<script>alert('Error sending OTP email'); window.history.back();</script>";
+        
+        echo "<script>alert('อีเมลไม่ถูกต้องหรือยังไม่ได้ยืนยัน');</script>";
     }
 }
 ?>
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>สมัครสมาชิก</title>
+    <title>เข้าสู่ระบบ</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.23/dist/full.min.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <html data-theme="cyberpunk"></html>
     <style>
-        .register-form {
+        .login-form {
             position: absolute;
             top: 180px;
             right: 220px;
@@ -83,19 +66,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="hero bg-base-200 min-h-screen">
         <div class="hero-content flex-col lg:flex-row-reverse">
         </div>
-        <div class="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl register-form">
+        <div class="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl login-form">
             <form method="POST" class="card-body">
                 <div class="form-control">
                     <label class="label">
                         <span class="label-text">อีเมลล์</span>
                     </label>
                     <input type="email" name="email" placeholder="อีเมลล์" class="input input-bordered" required />
-                </div>
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">ชื่อ</span>
-                    </label>
-                    <input type="text" name="name" placeholder="ชื่อ" class="input input-bordered" required />
                 </div>
                 <div class="form-control">
                     <label class="label">
@@ -107,19 +84,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
-                </div>
-                <div class="form-control">
                     <label class="label">
-                        <span class="label-text">ยืนยันรหัสผ่าน</span>
+                        <a href="./auth/forgot-password.php" class="label-text-alt link link-hover">ลืมรหัสผ่าน?</a>
                     </label>
-                    <input type="password" name="confirm_password" placeholder="ยืนยันรหัสผ่าน" class="input input-bordered" required />
                 </div>
                 <div class="form-control mt-6">
-                    <button type="submit" class="btn btn-primary">สมัครสมาชิก</button>
+                    <button type="submit" class="btn btn-primary">เข้าสู่ระบบ</button>
                 </div>
             </form>
             <p class="text-center mt-3">
-                ลงทะเบียนแล้ว? <a href="../page/login.php" class="link link-hover">เข้าสู่ระบบ</a>
+                ยังไม่ได้ลงทะเบียน? <a href="../auth/register.php" class="link link-hover">สมัครสมาชิก</a>
             </p>
         </div>
     </div>

@@ -1,8 +1,8 @@
 <?php
 // reset_otp.php
 session_start();
-require '../config/config.php';
-require '../function/functions.php';
+require_once '../config/config.php';
+require_once '../function/functions.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
 $email = $data['email'];

@@ -1,7 +1,7 @@
 <?php
 session_start();
-require '../config/config.php';
-require '../function/functions.php';
+require_once '../config/config.php';
+require_once '../function/functions.php';
 date_default_timezone_set('Asia/Bangkok');
 
 if (!isset($_SESSION['reset_email'])) {
@@ -40,16 +40,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             unset($_SESSION['reset_email']);
             echo "<script>
                 alert('รหัสผ่านถูกเปลี่ยนเรียบร้อยแล้ว');
-                window.location.href = '../login.php';
+                window.location.href = '../page/login.php';
             </script>";
             exit;
         } else {
-            echo "<script>alert('เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน'); window.history.back();</script>";
-            exit;
+            echo "<script>alert('เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน'); </script>";
         }
     } else {
-        echo "<script>alert('OTP ไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง'); window.history.back();</script>";
-        exit;
+        echo "<script>alert('OTP ไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง');</script>";   
     }
 }
 ?>
@@ -123,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
             </form>
             <p class="text-center mt-3">
-                <a href="../login.php" class="link link-hover">กลับไปหน้าเข้าสู่ระบบ</a>
+                <a href="../page/login.php" class="link link-hover">กลับไปหน้าเข้าสู่ระบบ</a>
             </p>
             <p class="timer-style text-center mt-3">เวลาที่เหลือ: <span id="timer"></span></p>
         </div>

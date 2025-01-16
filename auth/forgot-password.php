@@ -1,7 +1,7 @@
 <?php
 session_start();
-require '../config/config.php';
-require '../function/functions.php';
+require_once '../config/config.php';
+require_once '../function/functions.php';
 date_default_timezone_set('Asia/Bangkok');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -28,12 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Location: reset-password.php');
             exit;
         } else {
-            echo "<script>alert('เกิดข้อผิดพลาดในการส่ง OTP'); window.history.back();</script>";
-            exit;
+            echo "<script>alert('เกิดข้อผิดพลาดในการส่ง OTP'); </script>";
         }
     } else {
-        echo "<script>alert('อีเมลไม่ถูกต้องหรือยังไม่ได้ยืนยัน'); window.history.back();</script>";
-        exit;
+        echo "<script>alert('อีเมลไม่ถูกต้องหรือยังไม่ได้ยืนยัน'); </script>";
     }
 }
 ?>
@@ -72,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
             </form>
             <p class="text-center mt-3">
-                <a href="../login.php" class="link link-hover">กลับไปหน้าเข้าสู่ระบบ</a>
+                <a href="../page/login.php" class="link link-hover">กลับไปหน้าเข้าสู่ระบบ</a>
             </p>
         </div>
     </div>

@@ -1,7 +1,7 @@
 <?php
 session_start();
-require '../config/config.php';
-require '../function/functions.php'; // เรียกใช้ไฟล์ functions.php
+require_once '../config/config.php';
+require_once '../function/functions.php'; // เรียกใช้ไฟล์ functions.php
 date_default_timezone_set('Asia/Bangkok');
 
 if (!isset($_SESSION['email'])) {
@@ -46,7 +46,7 @@ if (isset($_POST['resend_otp'])) {
         
         echo "<script>alert('OTP ใหม่ถูกส่งไปยังอีเมลของคุณแล้ว');</script>";
     } else {
-        echo "<script>alert('Error sending OTP');</script>";
+        echo "<script>alert('ไม่สามารถส่ง OTP ได้');</script>";
     }
 }
 
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['otp'])) {
         $stmt = $conn->prepare("UPDATE users SET verify = 1, otp = NULL, otp_expiry = NULL, otp_attempts = 0 WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
-        header('Location: ../login.php');
+        header('Location: ../page/login.php');
     } else {
         // Failed attempt - but don't increment otp_attempts
         echo "<script>alert('OTP ไม่ถูกต้อง');</script>";
