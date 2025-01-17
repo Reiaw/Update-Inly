@@ -191,17 +191,17 @@ function deleteService($id_service) {
 }
 function createGedget($data) {
     global $conn;
-    $sql = "INSERT INTO gedget (name_gedget, quantity_gedget) VALUES (?, ?)";
+    $sql = "INSERT INTO gedget (name_gedget, quantity_gedget, id_bill) VALUES (?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("si", $data['name_gedget'], $data['quantity_gedget']);
+    $stmt->bind_param("sii", $data['name_gedget'], $data['quantity_gedget'], $data['id_bill']);
     return $stmt->execute();
 }
 
 function updateGedget($data) {
     global $conn;
-    $sql = "UPDATE gedget SET name_gedget = ?, quantity_gedget = ? WHERE id_gedget = ?";
+    $sql = "UPDATE gedget SET name_gedget = ?, quantity_gedget = ?, id_bill = ? WHERE id_gedget = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sii", $data['name_gedget'], $data['quantity_gedget'], $data['id_gedget']);
+    $stmt->bind_param("siii", $data['name_gedget'], $data['quantity_gedget'], $data['id_bill'], $data['id_gedget']);
     return $stmt->execute();
 }
 
@@ -223,4 +223,228 @@ function getGedgetById($id_gedget) {
     return $result->fetch_assoc();
 }
 
+function createGroupWithItems($data) {
+    global $conn;
+    
+    try {
+        $conn->begin_transaction();
+        
+        // สร้างกลุ่ม
+        $sql = "INSERT INTO group_service (id_bill, group_name) VALUES (?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("is", $data['id_bill'], $data['group_name']);
+        $stmt->execute();
+        $id_group = $stmt->insert_id;
+
+        // เพิ่มบริการเข้าไปในกลุ่ม
+        if (!empty($data['services'])) {
+            $sql = "INSERT INTO group_servicedetail (id_group, id_service) VALUES (?, ?)";
+            $stmt = $conn->prepare($sql);
+            foreach ($data['services'] as $id_service) {
+                $stmt->bind_param("ii", $id_group, $id_service);
+                $stmt->execute();
+            }
+        }
+
+        // เพิ่มอุปกรณ์เข้าไปในกลุ่ม
+        if (!empty($data['gedgets'])) {
+            $sql = "INSERT INTO group_servicedetail (id_group, id_gedget) VALUES (?, ?)";
+            $stmt = $conn->prepare($sql);
+            foreach ($data['gedgets'] as $id_gedget) {
+                $stmt->bind_param("ii", $id_group, $id_gedget);
+                $stmt->execute();
+            }
+        }
+
+        $conn->commit();
+        return true;
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        return false;
+    }
+}
+
+function updateGroup($data) {
+    global $conn;
+    
+    try {
+        $conn->begin_transaction();
+        
+        // อัปเดตชื่อกลุ่ม
+        $sql = "UPDATE group_service SET group_name = ? WHERE id_group = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("si", $data['group_name'], $data['id_group']);
+        $stmt->execute();
+        
+        // ลบรายการบริการและอุปกรณ์เดิมในกลุ่ม
+        $sql = "DELETE FROM group_servicedetail WHERE id_group = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $data['id_group']);
+        $stmt->execute();
+        
+        // เพิ่มบริการใหม่เข้าไปในกลุ่ม
+        if (!empty($data['services'])) {
+            $sql = "INSERT INTO group_servicedetail (id_group, id_service) VALUES (?, ?)";
+            $stmt = $conn->prepare($sql);
+            foreach ($data['services'] as $id_service) {
+                $stmt->bind_param("ii", $data['id_group'], $id_service);
+                $stmt->execute();
+            }
+        }
+        
+        // เพิ่มอุปกรณ์ใหม่เข้าไปในกลุ่ม
+        if (!empty($data['gedgets'])) {
+            $sql = "INSERT INTO group_servicedetail (id_group, id_gedget) VALUES (?, ?)";
+            $stmt = $conn->prepare($sql);
+            foreach ($data['gedgets'] as $id_gedget) {
+                $stmt->bind_param("ii", $data['id_group'], $id_gedget);
+                $stmt->execute();
+            }
+        }
+        
+        $conn->commit();
+        return true;
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        return false;
+    }
+}
+
+function deleteGroup($id_group) {
+    global $conn;
+    
+    try {
+        $conn->begin_transaction();
+        
+        // ลบรายการบริการและอุปกรณ์ในกลุ่ม
+        $sql = "DELETE FROM group_servicedetail WHERE id_group = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id_group);
+        $stmt->execute();
+        
+        // ลบกลุ่ม
+        $sql = "DELETE FROM group_service WHERE id_group = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $id_group);
+        $stmt->execute();
+        
+        $conn->commit();
+        return true;
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        return false;
+    }
+}
+
+function getGroupById($id_group) {
+    global $conn;
+    $sql = "SELECT * FROM group_service WHERE id_group = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_group);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_assoc();
+}
+
+function getGroupDetails($id_group) {
+    global $conn;
+    $sql = "SELECT * FROM group_servicedetail WHERE id_group = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_group);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+// functions.php
+
+function createPackage($data) {
+    global $conn;
+    $sql = "INSERT INTO package_list (name_package, info_package, id_service, create_at, update_at) VALUES (?, ?, ?, ?, NOW())";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssis", $data['name_package'], $data['info_package'], $data['id_service'], $data['create_at']);
+    return $stmt->execute();
+}
+
+function updatePackage($id_package, $data) {
+    global $conn;
+    $sql = "UPDATE package_list SET name_package = ?, info_package = ?, update_at = NOW() WHERE id_package = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssi", $data['name_package'], $data['info_package'], $id_package);
+    return $stmt->execute();
+}
+
+function deletePackage($id_package) {
+    global $conn;
+    $sql = "DELETE FROM package_list WHERE id_package = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_package);
+    return $stmt->execute();
+}
+
+function getPackageById($id_package) {
+    global $conn;
+    $sql = "SELECT * FROM package_list WHERE id_package = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_package);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_assoc();
+}
+
+function createProduct($data) {
+    global $conn;
+    $sql = "INSERT INTO product_list (name_product, info_product, id_package, create_at, update_at) VALUES (?, ?, ?, ?, NOW())";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssis", $data['name_product'], $data['info_product'], $data['id_package'], $data['create_at']);
+    return $stmt->execute();
+}
+
+function updateProduct($id_product, $data) {
+    global $conn;
+    $sql = "UPDATE product_list SET name_product = ?, info_product = ?, update_at = NOW() WHERE id_product = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssi", $data['name_product'], $data['info_product'], $id_product);
+    return $stmt->execute();
+}
+
+function deleteProduct($id_product) {
+    global $conn;
+    $sql = "DELETE FROM product_list WHERE id_product = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_product);
+    return $stmt->execute();
+}
+
+function getProductsByPackage($id_package) {
+    global $conn;
+    $sql = "SELECT * FROM product_list WHERE id_package = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_package);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+function getPackagesByServiceId($id_service) {
+    global $conn;
+    $sql = "SELECT * FROM package_list WHERE id_service = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_service);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
+function getProductsByPackageId($id_package) {
+    global $conn;
+    $sql = "SELECT * FROM product_list WHERE id_package = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_package);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
 ?>

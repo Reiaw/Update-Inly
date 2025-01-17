@@ -27,8 +27,9 @@ if ($id_bill > 0) {
     $services = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
     // ดึงข้อมูล gedget
-    $sql = "SELECT * FROM gedget";
+    $sql = "SELECT * FROM gedget WHERE id_bill = ?";
     $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_bill);
     $stmt->execute();
     $gedgets = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 } else {
@@ -101,6 +102,9 @@ if ($id_bill > 0) {
                                 <td class="py-2 px-4 border-b text-center">
                                     <button onclick="openEditServiceModal(<?php echo $service['id_service']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded"> <i class="fas fa-edit"></i></button>
                                     <button onclick="deleteService(<?php echo $service['id_service']; ?>)" class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
+                                    <a href="service_detail.php?id_service=<?php echo $service['id_service']; ?>" class="bg-blue-500 text-white px-2 py-1 rounded-md">
+                                        <i class="fas fa-info-circle"></i> Info<!-- ไอคอน Info -->
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -147,9 +151,86 @@ if ($id_bill > 0) {
                 </tbody>
             </table>
         </div>
+        <div class="mt-6">
+            <button onclick="openGroupModal()" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">สร้างกลุ่ม</button>
+            <h2 class="text-xl font-bold mb-4">ข้อมูลกลุ่ม</h2>
+            <table id="groupTable" class="common-table min-w-full bg-white border border-gray-300">
+                <thead>
+                    <tr>
+                        <th class="py-2 px-4 border-b">ลำดับที่</th>
+                        <th class="py-2 px-4 border-b">ชื่อกลุ่ม</th>
+                        <th class="py-2 px-4 border-b">บริการ</th>
+                        <th class="py-2 px-4 border-b">อุปกรณ์</th>
+                        <th class="py-2 px-4 border-b">การดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $sql = "SELECT * FROM group_service WHERE id_bill = ?";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bind_param("i", $id_bill);
+                    $stmt->execute();
+                    $groups = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+                    if (!empty($groups)): ?>
+                        <?php foreach ($groups as $group): ?>
+                            <?php
+                            // ดึงข้อมูล service และ gedget ที่อยู่ในกลุ่ม
+                            $sql = "SELECT * FROM group_servicedetail WHERE id_group = ?";
+                            $stmt = $conn->prepare($sql);
+                            $stmt->bind_param("i", $group['id_group']);
+                            $stmt->execute();
+                            $groupDetails = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+                            $servicesInGroup = [];
+                            $gedgetsInGroup = [];
+
+                            foreach ($groupDetails as $detail) {
+                                if ($detail['id_service']) {
+                                    $sql = "SELECT * FROM service_customer WHERE id_service = ?";
+                                    $stmt = $conn->prepare($sql);
+                                    $stmt->bind_param("i", $detail['id_service']);
+                                    $stmt->execute();
+                                    $service = $stmt->get_result()->fetch_assoc();
+                                    if ($service) {
+                                        $servicesInGroup[] = $service['code_service'];
+                                    }
+                                }
+                                if ($detail['id_gedget']) {
+                                    $sql = "SELECT * FROM gedget WHERE id_gedget = ?";
+                                    $stmt = $conn->prepare($sql);
+                                    $stmt->bind_param("i", $detail['id_gedget']);
+                                    $stmt->execute();
+                                    $gedget = $stmt->get_result()->fetch_assoc();
+                                    if ($gedget) {
+                                        $gedgetsInGroup[] = $gedget['name_gedget'];
+                                    }
+                                }
+                            }
+                            ?>
+                            <tr>
+                                <td class="py-2 px-4 border-b text-center"><?php echo $group['id_group']; ?></td>
+                                <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($group['group_name']); ?></td>
+                                <td class="py-2 px-4 border-b text-center"><?php echo implode(', ', $servicesInGroup); ?></td>
+                                <td class="py-2 px-4 border-b text-center"><?php echo implode(', ', $gedgetsInGroup); ?></td>
+                                <td class="py-2 px-4 border-b text-center">
+                                    <button onclick="openEditGroupModal(<?php echo $group['id_group']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded"> <i class="fas fa-edit"></i></button>
+                                    <button onclick="deleteGroup(<?php echo $group['id_group']; ?>)" class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" class="py-2 px-4 border-b text-center">ไม่มีข้อมูลกลุ่ม</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
     <?php include './components/service_modal.php'; ?>
     <?php include './components/gedget_modal.php'; ?>
+    <?php include './components/group_modal.php'; ?>
     <!-- jQuery และ DataTables JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
@@ -157,13 +238,24 @@ if ($id_bill > 0) {
         $(document).ready(function() {
             // ฟังก์ชันสำหรับตั้งค่า DataTables
             function initializeDataTable(tableId) {
-                const table = $(`#${tableId}`).DataTable({
+                // ตรวจสอบว่ามีตารางอยู่จริง
+                const tableElement = $(`#${tableId}`);
+                if (!tableElement.length) return;
+
+                // ตรวจสอบว่ามีข้อมูลในตารางหรือไม่
+                const hasData = tableElement.find('tbody tr').length > 0 && 
+                            !tableElement.find('tbody tr td[colspan]').length;
+
+                const config = {
                     "pageLength": 10,
-                    "lengthMenu": [[10, 20, 50, 100, -1], [10, 20, 50, 100, "All"]],
+                    "lengthMenu": [[10, 20, 50, 100, -1], [10, 20, 50, 100, "ทั้งหมด"]],
                     "language": {
                         "search": "ค้นหา:",
                         "lengthMenu": "แสดง _MENU_ แถวต่อหน้า",
                         "info": "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ แถว",
+                        "infoEmpty": "ไม่มีข้อมูลที่แสดง",
+                        "emptyTable": "ไม่มีข้อมูลในตาราง",
+                        "zeroRecords": "ไม่พบข้อมูลที่ค้นหา",
                         "paginate": {
                             "first": "แรก",
                             "last": "สุดท้าย",
@@ -171,26 +263,62 @@ if ($id_bill > 0) {
                             "previous": "ก่อนหน้า"
                         }
                     },
-                    "columnDefs": [
+                    "ordering": hasData, // เปิดการเรียงลำดับเฉพาะเมื่อมีข้อมูล
+                    "paging": hasData,   // เปิดการแบ่งหน้าเฉพาะเมื่อมีข้อมูล
+                    "info": hasData,     // แสดงข้อมูลเพิ่มเติมเฉพาะเมื่อมีข้อมูล
+                    "searching": hasData, // เปิดการค้นหาเฉพาะเมื่อมีข้อมูล
+                    "columnDefs": hasData ? [
                         {
-                            "targets": 0, // คอลัมน์ลำดับที่
+                            "targets": 0,
                             "render": function(data, type, row, meta) {
-                                return meta.row + 1; // แสดงลำดับที่
+                                return meta.row + 1;
                             }
                         }
-                    ]
+                    ] : []
+                };
+
+                const table = tableElement.DataTable(config);
+
+                // จัดการกรณีไม่มีข้อมูล
+                if (!hasData) {
+                    tableElement.find('tbody').addClass('empty-table');
+                }
+
+                return table;
+            }
+
+            // สร้าง instance ของ DataTable สำหรับแต่ละตาราง
+            const serviceTable = initializeDataTable('serviceTable');
+            const gedgetTable = initializeDataTable('gedgetTable');
+            const groupTable = initializeDataTable('groupTable');
+
+            // อัพเดทลำดับเมื่อมีการเปลี่ยนหน้าหรือค้นหา
+            if (serviceTable) {
+                serviceTable.on('draw', function() {
+                    updateRowNumbers(this);
                 });
             }
-
-            // ตรวจสอบว่าเป็นตาราง serviceTable หรือ gedgetTable
-            if ($('#serviceTable').length) {
-                initializeDataTable('serviceTable');
+            if (gedgetTable) {
+                gedgetTable.on('draw', function() {
+                    updateRowNumbers(this);
+                });
             }
-
-            if ($('#gedgetTable').length) {
-                initializeDataTable('gedgetTable');
+            if (groupTable) {
+                groupTable.on('draw', function() {
+                    updateRowNumbers(this);
+                });
             }
         });
+
+        // ฟังก์ชันอัพเดทลำดับแถว
+        function updateRowNumbers(table) {
+            $(table).find('tbody tr').each(function(index) {
+                const firstCell = $(this).find('td:first');
+                if (!firstCell.attr('colspan')) {
+                    firstCell.text(index + 1);
+                }
+            });
+        }
         function openModal(type, id = null) {
             const modalTitle = document.getElementById('modalTitle');
             const modalForm = document.getElementById(`${type}Form`);
@@ -276,22 +404,126 @@ if ($id_bill > 0) {
         });
         function handleFormSubmit(type, form) {
             const formData = new FormData(form);
-            const id = formData.get(`id_${type}`);
-            const url = id ? `../function/update_${type}.php` : `../function/create_${type}.php`;
+            const id = formData.get('id_group'); // ตรวจสอบ id_group
+            const url = id ? `../function/update_group.php` : `../function/create_group_with_items.php`;
+
             fetch(url, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id_group: id,
+                    id_bill: formData.get('id_bill'),
+                    group_name: formData.get('group_name'),
+                    services: Array.from(formData.getAll('services[]')).map(Number),
+                    gedgets: Array.from(formData.getAll('gedgets[]')).map(Number)
+                })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert(`เกิดข้อผิดพลาดในการบันทึกข้อมูล ${type === 'service' ? 'บริการ' : 'อุปกรณ์'}`);
+                    alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
                 }
             });
         }
-           
+        function openGroupModal() {
+            const modalElement = document.getElementById('groupModal');
+            modalElement.classList.remove('hidden');
+        }
+
+        // ฟังก์ชันปิด Modal
+        function closeGroupModal() {
+            const modalElement = document.getElementById('groupModal');
+            modalElement.classList.add('hidden');
+        }
+
+        // ฟังก์ชันส่งข้อมูลกลุ่มและบริการ/อุปกรณ์ไปยังเซิร์ฟเวอร์
+        document.getElementById('groupForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            const idGroup = formData.get('id_group'); // ตรวจสอบ id_group
+            const selectedServices = Array.from(document.querySelectorAll('input[name="services[]"]:checked')).map(input => input.value);
+            const selectedGedgets = Array.from(document.querySelectorAll('input[name="gedgets[]"]:checked')).map(input => input.value);
+
+            const data = {
+                id_bill: formData.get('id_bill'),
+                group_name: formData.get('group_name'),
+                services: selectedServices,
+                gedgets: selectedGedgets
+            };
+
+            // ถ้ามี id_group แสดงว่าเป็นการแก้ไขกลุ่ม
+            if (idGroup) {
+                data.id_group = idGroup; // เพิ่ม id_group เข้าไปในข้อมูล
+            }
+
+            // เลือก URL ตามว่ากำลังสร้างหรือแก้ไขกลุ่ม
+            const url = idGroup ? '../function/update_group.php' : '../function/create_group_with_items.php';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+                }
+            });
+        });
+        // ในส่วนของ JavaScript
+        function openEditGroupModal(id_group) {
+            fetch(`../function/get_group.php?id=${id_group}`)
+                .then(response => response.json())
+                .then(data => {
+                    const modalElement = document.getElementById('groupModal');
+                    const modalTitle = document.getElementById('modalTitle');
+                    const groupForm = document.getElementById('groupForm');
+                    const idGroupInput = document.getElementById('id_group');
+                    const groupNameInput = document.getElementById('group_name');
+                    const serviceList = document.getElementById('serviceList');
+                    const gedgetList = document.getElementById('gedgetList');
+
+                    modalTitle.innerText = 'แก้ไขกลุ่ม';
+                    idGroupInput.value = data.group.id_group; // ตั้งค่า id_group
+                    groupNameInput.value = data.group.group_name;
+
+                    // เลือกบริการที่อยู่ในกลุ่ม
+                    serviceList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = data.services.includes(parseInt(checkbox.value));
+                    });
+
+                    // เลือกอุปกรณ์ที่อยู่ในกลุ่ม
+                    gedgetList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = data.gedgets.includes(parseInt(checkbox.value));
+                    });
+
+                    modalElement.classList.remove('hidden');
+                });
+        }
+        
+        function deleteGroup(id_group) {
+            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบกลุ่มนี้?')) {
+                fetch(`../function/delete_group.php?id=${id_group}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('เกิดข้อผิดพลาดในการลบกลุ่ม');
+                        }
+                    });
+            }
+        }
     </script>
 </body>
 </html>

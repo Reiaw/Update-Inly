@@ -13,89 +13,89 @@ $amphures = getAmphures();
             </svg>
         </button>
         <div class="mt-3 text-center">
-            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle">Add Customer</h3>
+            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle">เพิ่มลูกค้า</h3>
             <form id="customerForm" class="mt-2">
                 <input type="hidden" id="id_customer" name="id_customer">
 
-                <!-- Name and Type in the same row -->
+                <!-- ชื่อและประเภทอยู่ในแถวเดียวกัน -->
                 <div class="grid grid-cols-2 gap-4 mb-4">
-                    <!-- Name Field -->
+                    <!-- ชื่อลูกค้า -->
                     <div>
-                        <label for="name_customer" class="block text-sm font-medium text-gray-700">Name</label>
-                        <input type="text" name="name_customer" id="name_customer" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" placeholder="Enter customer name" required>
-                        <p class="text-sm text-gray-500 mt-1">Enter the full name.</p>
+                        <label for="name_customer" class="block text-sm font-medium text-gray-700">ชื่อลูกค้า</label>
+                        <input type="text" name="name_customer" id="name_customer" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" placeholder="กรอกชื่อลูกค้า" required>
+                        <p class="text-sm text-gray-500 mt-1">กรอกชื่อเต็มของลูกค้า</p>
                     </div>
 
-                    <!-- Type Field -->
+                    <!-- ประเภทลูกค้า -->
                     <div>
-                        <label for="type_customer" class="block text-sm font-medium text-gray-700">Type</label>
+                        <label for="type_customer" class="block text-sm font-medium text-gray-700">ประเภท</label>
                         <select name="type_customer" id="type_customer" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
-                            <option value="" disabled selected>Select type</option>
+                            <option value="" disabled selected>เลือกประเภท</option>
                             <option value="อบต">อบต</option>
                             <option value="อบจ">อบจ</option>
                             <option value="เทศบาล">เทศบาล</option>
                             <option value="โรงแรม">โรงแรม</option>
                         </select>
-                        <p class="text-sm text-gray-500 mt-1">Select the type.</p>
+                        <p class="text-sm text-gray-500 mt-1">เลือกประเภทลูกค้า</p>
                     </div>
                 </div>
 
-                <!-- Phone and Status in the same row -->
+                <!-- เบอร์โทรและสถานะอยู่ในแถวเดียวกัน -->
                 <div class="grid grid-cols-2 gap-4 mb-4">
-                    <!-- Phone Field -->
+                    <!-- เบอร์โทรศัพท์ -->
                     <div>
-                        <label for="phone_customer" class="block text-sm font-medium text-gray-700">Phone</label>
-                        <input type="text" name="phone_customer" id="phone_customer" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" placeholder="Enter phone number" required>
-                        <p class="text-sm text-gray-500 mt-1">Enter a valid phone number.</p>
+                        <label for="phone_customer" class="block text-sm font-medium text-gray-700">เบอร์โทรศัพท์</label>
+                        <input type="text" name="phone_customer" id="phone_customer" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" placeholder="กรอกเบอร์โทรศัพท์" required>
+                        <p class="text-sm text-gray-500 mt-1">กรอกเบอร์โทรศัพท์ที่ถูกต้อง</p>
                     </div>
 
-                    <!-- Status Field -->
+                    <!-- สถานะลูกค้า -->
                     <div>
-                        <label for="status_customer" class="block text-sm font-medium text-gray-700">Status</label>
+                        <label for="status_customer" class="block text-sm font-medium text-gray-700">สถานะ</label>
                         <select name="status_customer" id="status_customer" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
-                            <option value="" disabled selected>Select status</option>
+                            <option value="" disabled selected>เลือกสถานะ</option>
                             <option value="ใช้งาน">ใช้งาน</option>
                             <option value="ไม่ได้ใช้งาน">ไม่ได้ใช้งาน</option>
                         </select>
-                        <p class="text-sm text-gray-500 mt-1">Select the status.</p>
+                        <p class="text-sm text-gray-500 mt-1">เลือกสถานะลูกค้า</p>
                     </div>
                 </div>
 
-                <!-- Amphure and Tambon in the same row -->
+                <!-- อำเภอและตำบลอยู่ในแถวเดียวกัน -->
                 <div class="grid grid-cols-2 gap-4 mb-4">
-                    <!-- Amphure Field -->
+                    <!-- อำเภอ -->
                     <div>
-                        <label for="id_amphures" class="block text-sm font-medium text-gray-700">Amphure</label>
+                        <label for="id_amphures" class="block text-sm font-medium text-gray-700">อำเภอ</label>
                             <select name="id_amphures" id="id_amphures" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" onchange="loadTambons(this.value)" required>
-                                <option value="" disabled selected>Select Amphure</option>
+                                <option value="" disabled selected>เลือกอำเภอ</option>
                                 <?php foreach ($amphures as $amphure): ?>
                                     <option value="<?= $amphure['id_amphures'] ?>"><?= $amphure['name_amphures'] ?></option>
                                 <?php endforeach; ?>
                             </select>
-                        <p class="text-sm text-gray-500 mt-1">Select the Amphure.</p>
+                        <p class="text-sm text-gray-500 mt-1">เลือกอำเภอ</p>
                     </div>
 
-                    <!-- Tambon Field -->
+                    <!-- ตำบล -->
                     <div>
-                        <label for="id_tambons" class="block text-sm font-medium text-gray-700">Tambon</label>
+                        <label for="id_tambons" class="block text-sm font-medium text-gray-700">ตำบล</label>
                             <select name="id_tambons" id="id_tambons" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
-                                <option value="" disabled selected>Select Tambon</option>
+                                <option value="" disabled selected>เลือกตำบล</option>
                             </select>
-                        <p class="text-sm text-gray-500 mt-1">Select the Tambon.</p>
+                        <p class="text-sm text-gray-500 mt-1">เลือกตำบล</p>
                     </div>
                 </div>
 
-                <!-- Address Info Field -->
+                <!-- ข้อมูลที่อยู่เพิ่มเติม -->
                 <div class="mb-4">
-                    <label for="info_address" class="block text-sm font-medium text-gray-700">Address Info</label>
-                    <textarea name="info_address" id="info_address" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" placeholder="Enter additional address information" ></textarea>
-                    <p class="text-sm text-gray-500 mt-1">Provide additional address details.</p>
+                    <label for="info_address" class="block text-sm font-medium text-gray-700">ข้อมูลที่อยู่เพิ่มเติม</label>
+                    <textarea name="info_address" id="info_address" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" placeholder="กรอกข้อมูลที่อยู่เพิ่มเติม"></textarea>
+                    <p class="text-sm text-gray-500 mt-1">กรอกข้อมูลที่อยู่เพิ่มเติม</p>
                 </div>
 
-                <!-- Buttons -->
+                <!-- ปุ่มดำเนินการ -->
                 <div class="flex justify-end">
-                    <button type="button" onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded-md mr-2 hover:bg-gray-600 transition duration-300">Cancel</button>
-                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300">Save</button>
+                    <button type="button" onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded-md mr-2 hover:bg-gray-600 transition duration-300">ยกเลิก</button>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300">บันทึก</button>
                 </div>
                 <input type="hidden" name="id_address" id="id_address" value="">
             </form>
@@ -112,7 +112,7 @@ function loadTambons(id_amphures) {
                 .then(response => response.json())
                 .then(data => {
                     const tambonSelect = document.getElementById('id_tambons');
-                    tambonSelect.innerHTML = '<option value="" disabled selected>Select Tambon</option>';
+                    tambonSelect.innerHTML = '<option value="" disabled selected>เลือกตำบล</option>';
                     data.forEach(tambon => {
                         tambonSelect.innerHTML += `<option value="${tambon.id_tambons}">${tambon.name_tambons}</option>`;
                     });

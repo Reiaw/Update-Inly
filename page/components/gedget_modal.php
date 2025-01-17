@@ -6,6 +6,7 @@
             <h3 id="modalTitle" class="text-lg leading-6 font-medium text-gray-900"></h3>
             <form id="gedgetForm" class="mt-2">
                 <input type="hidden" id="id_gedget" name="id_gedget">
+                <input type="hidden" id="id_bill" name="id_bill" value="<?php echo $id_bill; ?>">
                 <div class="mb-4">
                     <label for="name_gedget" class="block text-sm font-medium text-gray-700">ชื่อ Gedget</label>
                     <input type="text" id="name_gedget" name="name_gedget" class="mt-1 p-2 w-full border rounded-md">

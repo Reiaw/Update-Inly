@@ -165,17 +165,48 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
         .fa-circle {
             font-size: 12px; /* ปรับขนาดไอคอน */
         }
+            .flex-wrap {
+            gap: 0.5rem; /* ระยะห่างระหว่างองค์ประกอบ */
+        }
+        .border {
+            border: 1px solid #e2e8f0; /* สีเส้นขอบ */
+        }
+        .rounded-md {
+            border-radius: 0.375rem; /* มุมโค้ง */
+        }
     </style>
 </head>
 <body class="bg-gray-100">
     <?php include './components/navbar.php'; ?>
-
-    <div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">จัดการบิลสำหรับลูกค้า: <?= $id_customer > 0 ? htmlspecialchars($customer_name) : 'ทั้งหมด' ?></h1>
-        <button onclick="openCreateBillModal()" class="bg-blue-500 text-white px-4 py-2 rounded-md">สร้างบิลใหม่</button>
-
         <!-- ตารางแสดงข้อมูลบิล -->
         <div class="mt-6">
+            <div class="container mx-auto px-4 py-8">
+                <h1 class="text-2xl font-bold mb-4">จัดการบิลสำหรับลูกค้า: <?= $id_customer > 0 ? htmlspecialchars($customer_name) : 'ทั้งหมด' ?></h1>
+                <!-- ปุ่มและตัวค้นหา -->
+                <div class="flex justify-between items-center mb-4">
+                    <!-- ปุ่มสร้างบิลใหม่ -->
+                    <button onclick="openCreateBillModal()" class="bg-blue-500 text-white px-4 py-2 rounded-md">สร้างบิลใหม่</button>
+                    
+                    <!-- ตัวค้นหาและตัวกรอง -->
+                    <div class="flex items-center">
+                        <div class="relative">
+                            <input type="text" id="searchNumberBill" placeholder="ค้นหาเลขบิล" class="border p-2 rounded-md pl-10 mr-2">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i> <!-- ไอคอนค้นหา -->
+                        </div>
+                        <select id="filterTypeBill" class="p-2 border rounded-md mr-2">
+                            <option value="">ทั้งหมด</option>
+                            <option value="CIP+">CIP+</option>
+                            <option value="Special Bill">Special Bill</option>
+                            <option value="Nt1">Nt1</option>
+                        </select>
+                        <select id="filterStatusBill" class="p-2 border rounded-md mr-2">
+                            <option value="">ทั้งหมด</option>
+                            <option value="ใช้งาน">ใช้งาน</option>
+                            <option value="ยกเลิกใช้งาน">ยกเลิกใช้งาน</option>
+                        </select>
+                        <button onclick="resetFilters()" class="bg-gray-500 text-white px-4 py-2 rounded-md"> <i class="fas fa-sync-alt"></i></button>
+                    </div>
+                </div>
             <table id="billTable" class="min-w-full bg-white border border-gray-300">
                 <thead>
                     <tr>
@@ -237,8 +268,16 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
 
     <script>
     // เรียกใช้ DataTables
+    function resetFilters() {
+        const table = $('#billTable').DataTable();
+        $('#searchNumberBill').val('');
+        $('#filterTypeBill').val('');
+        $('#filterStatusBill').val('');
+        table.search('').columns().search('').draw();
+    }
+
     $(document).ready(function() {
-        $('#billTable').DataTable({
+        const table = $('#billTable').DataTable({
             "pageLength": 10,
             "lengthMenu": [[10, 20, 50, 100, -1], [10, 20, 50, 100, "All"]],
             "language": {
@@ -252,14 +291,20 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                     "previous": "ก่อนหน้า"
                 }
             },
-            "columnDefs": [
-                {
-                    "targets": 0, // คอลัมน์ลำดับที่
-                    "render": function(data, type, row, meta) {
-                        return meta.row + 1; // แสดงลำดับที่
-                    }
-                }
-            ]
+            // ... rest of your DataTable configuration
+        });
+
+        // Event listeners for filters
+        $('#searchNumberBill').on('keyup', function() {
+            table.column(2).search(this.value).draw();
+        });
+
+        $('#filterTypeBill').on('change', function() {
+            table.column(3).search(this.value).draw();
+        });
+
+        $('#filterStatusBill').on('change', function() {
+            table.column(4).search(this.value).draw();
         });
     });
 
