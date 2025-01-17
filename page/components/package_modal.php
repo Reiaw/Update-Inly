@@ -51,6 +51,17 @@
                         <textarea name="info_product[]" placeholder="ข้อมูล Product" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
                     </div>
                 </div>
+                <div class="grid grid-cols-2 gap-4 mt-2">
+                    <div>
+                        <input type="number" name="mainpackage_price[]" placeholder="ราคา Main Package" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" oninput="calculateAllPrice(this)">
+                    </div>
+                    <div>
+                        <input type="number" name="ict_price[]" placeholder="ราคา ICT Solution" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" oninput="calculateAllPrice(this)">
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <input type="text" name="info_overide[]" placeholder="ข้อมูลเพิ่มเติม (ไม่จำเป็น)" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
                 <button type="button" onclick="removeProductField(this)" class="bg-red-500 text-white px-2 py-1 rounded-lg hover:bg-red-600 mt-2">ลบ</button>
             </div>
         `;
@@ -67,9 +78,17 @@
         const formData = new FormData(document.getElementById('packageForm'));
         const products = [];
         formData.getAll('name_product[]').forEach((name, index) => {
+            const mainpackagePrice = parseFloat(formData.getAll('mainpackage_price[]')[index]) || 0;
+            const ictPrice = parseFloat(formData.getAll('ict_price[]')[index]) || 0;
+            const allPrice = mainpackagePrice + ictPrice; // คำนวณ all_price
+
             products.push({
                 name_product: name,
-                info_product: formData.getAll('info_product[]')[index]
+                info_product: formData.getAll('info_product[]')[index],
+                mainpackage_price: mainpackagePrice,
+                ict_price: ictPrice,
+                all_price: allPrice, // ส่ง all_price ที่คำนวณแล้ว
+                info_overide: formData.getAll('info_overide[]')[index] || null // เพิ่ม info_overide
             });
         });
 
@@ -98,5 +117,12 @@
                 alert('เกิดข้อผิดพลาด: ' + data.message);
             }
         });
+    }
+    function calculateAllPrice(input) {
+        const productField = input.closest('.product-field');
+        const mainpackagePrice = parseFloat(productField.querySelector('input[name="mainpackage_price[]"]').value) || 0;
+        const ictPrice = parseFloat(productField.querySelector('input[name="ict_price[]"]').value) || 0;
+        const allPrice = mainpackagePrice + ictPrice;
+        // ไม่ต้องแสดง all_price ในฟอร์ม แต่จะส่งค่าไปยังเซิร์ฟเวอร์
     }
 </script>

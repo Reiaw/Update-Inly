@@ -48,25 +48,21 @@ if ($id_bill > 0) {
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* ซ่อนปุ่มค้นหาของ DataTables */
         .dataTables_filter {
             display: none;
         }
 
-        /* เพิ่มสีพื้นหลังให้หัวตาราง */
         .common-table thead th {
-            background-color: #4a5568; /* สีเทาเข้ม */
-            color: white; /* สีตัวอักษรขาว */
+            background-color: #4a5568;
+            color: white;
         }
 
-        /* ปรับสีพื้นหลังของแถวตาราง */
         .common-table tbody tr {
-            background-color: rgb(255, 255, 255); /* สีขาว */
+            background-color: rgb(255, 255, 255);
         }
 
-        /* ปรับสีพื้นหลังของแถวตารางเมื่อโฮเวอร์ */
         .common-table tbody tr:hover {
-            background-color: rgb(198, 198, 198); /* สีเทาอ่อน */
+            background-color: rgb(198, 198, 198);
         }
     </style>
 </head>
@@ -77,7 +73,7 @@ if ($id_bill > 0) {
         <h1 class="text-2xl font-bold mb-4">ข้อมูลบริการสำหรับบิล: <?php echo htmlspecialchars($bill['number_bill']); ?></h1>
 
         <div class="mt-6">
-        <button onclick="openCreateServiceModal()" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">เพิ่มบริการ</button>
+            <button onclick="openModal('service')" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">เพิ่มบริการ</button>
             <h2 class="text-xl font-bold mb-4">ข้อมูลหมายเลขบริการบิลนี้</h2>
             <table id="serviceTable" class="common-table min-w-full bg-white border border-gray-300">
                 <thead>
@@ -87,7 +83,7 @@ if ($id_bill > 0) {
                         <th class="py-2 px-4 border-b">ประเภทบริการ</th>
                         <th class="py-2 px-4 border-b">ประเภทอุปกรณ์</th>
                         <th class="py-2 px-4 border-b">สถานะบริการ</th>
-                        <th class="py-2 px-4 border-b">การดำเนินการ</th> <!-- เพิ่มคอลัมน์สำหรับปุ่มแก้ไข/ลบ -->
+                        <th class="py-2 px-4 border-b">การดำเนินการ</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -100,10 +96,10 @@ if ($id_bill > 0) {
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($service['type_gadget']); ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($service['status_service']); ?></td>
                                 <td class="py-2 px-4 border-b text-center">
-                                    <button onclick="openEditServiceModal(<?php echo $service['id_service']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded"> <i class="fas fa-edit"></i></button>
-                                    <button onclick="deleteService(<?php echo $service['id_service']; ?>)" class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
+                                    <button onclick="openModal('service', <?php echo $service['id_service']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded"> <i class="fas fa-edit"></i></button>
+                                    <button onclick="deleteItem('service', <?php echo $service['id_service']; ?>)" class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
                                     <a href="service_detail.php?id_service=<?php echo $service['id_service']; ?>" class="bg-blue-500 text-white px-2 py-1 rounded-md">
-                                        <i class="fas fa-info-circle"></i> Info<!-- ไอคอน Info -->
+                                        <i class="fas fa-info-circle"></i> Info
                                     </a>
                                 </td>
                             </tr>
@@ -116,11 +112,10 @@ if ($id_bill > 0) {
                 </tbody>
             </table>
         </div>
+
         <div class="mt-6">
-            <!-- เพิ่มปุ่มสร้าง Gedget -->
-            <button onclick="openCreateGedgetModal()" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">เพิ่มอุปกรณ์</button>
-                <h2 class="text-xl font-bold mb-4">ข้อมูลอุปกรณ์ของบิลนี้</h2>
-            <!-- แก้ไขตาราง Gedget -->
+            <button onclick="openModal('gedget')" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">เพิ่มอุปกรณ์</button>
+            <h2 class="text-xl font-bold mb-4">ข้อมูลอุปกรณ์ของบิลนี้</h2>
             <table id="gedgetTable" class="common-table min-w-full bg-white border border-gray-300">
                 <thead>
                     <tr>
@@ -138,8 +133,8 @@ if ($id_bill > 0) {
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($gedget['name_gedget']); ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($gedget['quantity_gedget']); ?></td>
                                 <td class="py-2 px-4 border-b text-center">
-                                    <button onclick="openEditGedgetModal(<?php echo $gedget['id_gedget']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded"> <i class="fas fa-edit"></i></button>
-                                    <button onclick="deleteGedget(<?php echo $gedget['id_gedget']; ?>)" class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
+                                    <button onclick="openModal('gedget', <?php echo $gedget['id_gedget']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded"> <i class="fas fa-edit"></i></button>
+                                    <button onclick="deleteItem('gedget', <?php echo $gedget['id_gedget']; ?>)" class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -151,8 +146,9 @@ if ($id_bill > 0) {
                 </tbody>
             </table>
         </div>
+
         <div class="mt-6">
-            <button onclick="openGroupModal()" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">สร้างกลุ่ม</button>
+            <button onclick="openModal('group')" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">สร้างกลุ่ม</button>
             <h2 class="text-xl font-bold mb-4">ข้อมูลกลุ่ม</h2>
             <table id="groupTable" class="common-table min-w-full bg-white border border-gray-300">
                 <thead>
@@ -175,7 +171,6 @@ if ($id_bill > 0) {
                     if (!empty($groups)): ?>
                         <?php foreach ($groups as $group): ?>
                             <?php
-                            // ดึงข้อมูล service และ gedget ที่อยู่ในกลุ่ม
                             $sql = "SELECT * FROM group_servicedetail WHERE id_group = ?";
                             $stmt = $conn->prepare($sql);
                             $stmt->bind_param("i", $group['id_group']);
@@ -214,8 +209,8 @@ if ($id_bill > 0) {
                                 <td class="py-2 px-4 border-b text-center"><?php echo implode(', ', $servicesInGroup); ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo implode(', ', $gedgetsInGroup); ?></td>
                                 <td class="py-2 px-4 border-b text-center">
-                                    <button onclick="openEditGroupModal(<?php echo $group['id_group']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded"> <i class="fas fa-edit"></i></button>
-                                    <button onclick="deleteGroup(<?php echo $group['id_group']; ?>)" class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
+                                    <button onclick="openModal('group', <?php echo $group['id_group']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded"> <i class="fas fa-edit"></i></button>
+                                    <button onclick="deleteItem('group', <?php echo $group['id_group']; ?>)" class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -228,21 +223,19 @@ if ($id_bill > 0) {
             </table>
         </div>
     </div>
+
     <?php include './components/service_modal.php'; ?>
     <?php include './components/gedget_modal.php'; ?>
     <?php include './components/group_modal.php'; ?>
-    <!-- jQuery และ DataTables JavaScript -->
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
     <script>
         $(document).ready(function() {
-            // ฟังก์ชันสำหรับตั้งค่า DataTables
             function initializeDataTable(tableId) {
-                // ตรวจสอบว่ามีตารางอยู่จริง
                 const tableElement = $(`#${tableId}`);
                 if (!tableElement.length) return;
 
-                // ตรวจสอบว่ามีข้อมูลในตารางหรือไม่
                 const hasData = tableElement.find('tbody tr').length > 0 && 
                             !tableElement.find('tbody tr td[colspan]').length;
 
@@ -263,10 +256,10 @@ if ($id_bill > 0) {
                             "previous": "ก่อนหน้า"
                         }
                     },
-                    "ordering": hasData, // เปิดการเรียงลำดับเฉพาะเมื่อมีข้อมูล
-                    "paging": hasData,   // เปิดการแบ่งหน้าเฉพาะเมื่อมีข้อมูล
-                    "info": hasData,     // แสดงข้อมูลเพิ่มเติมเฉพาะเมื่อมีข้อมูล
-                    "searching": hasData, // เปิดการค้นหาเฉพาะเมื่อมีข้อมูล
+                    "ordering": hasData,
+                    "paging": hasData,
+                    "info": hasData,
+                    "searching": hasData,
                     "columnDefs": hasData ? [
                         {
                             "targets": 0,
@@ -279,7 +272,6 @@ if ($id_bill > 0) {
 
                 const table = tableElement.DataTable(config);
 
-                // จัดการกรณีไม่มีข้อมูล
                 if (!hasData) {
                     tableElement.find('tbody').addClass('empty-table');
                 }
@@ -287,12 +279,10 @@ if ($id_bill > 0) {
                 return table;
             }
 
-            // สร้าง instance ของ DataTable สำหรับแต่ละตาราง
             const serviceTable = initializeDataTable('serviceTable');
             const gedgetTable = initializeDataTable('gedgetTable');
             const groupTable = initializeDataTable('groupTable');
 
-            // อัพเดทลำดับเมื่อมีการเปลี่ยนหน้าหรือค้นหา
             if (serviceTable) {
                 serviceTable.on('draw', function() {
                     updateRowNumbers(this);
@@ -310,7 +300,6 @@ if ($id_bill > 0) {
             }
         });
 
-        // ฟังก์ชันอัพเดทลำดับแถว
         function updateRowNumbers(table) {
             $(table).find('tbody tr').each(function(index) {
                 const firstCell = $(this).find('td:first');
@@ -319,16 +308,17 @@ if ($id_bill > 0) {
                 }
             });
         }
+
         function openModal(type, id = null) {
             const modalTitle = document.getElementById('modalTitle');
             const modalForm = document.getElementById(`${type}Form`);
             const modalElement = document.getElementById(`${type}Modal`);
+
             if (id) {
-                // กรณีแก้ไข
                 fetch(`../function/get_${type}.php?id=${id}`)
                     .then(response => response.json())
                     .then(data => {
-                        modalTitle.innerText = `แก้ไข ${type === 'service' ? 'บริการ' : 'อุปกรณ์'}`;
+                        modalTitle.innerText = `แก้ไข ${type === 'service' ? 'บริการ' : type === 'gedget' ? 'อุปกรณ์' : 'กลุ่ม'}`;
                         modalForm.reset();
                         Object.keys(data).forEach(key => {
                             const input = modalForm.querySelector(`[name="${key}"]`);
@@ -339,56 +329,37 @@ if ($id_bill > 0) {
                         modalElement.classList.remove('hidden');
                     });
             } else {
-                // กรณีสร้างใหม่
-                modalTitle.innerText = `สร้าง ${type === 'service' ? 'บริการ' : 'อุปกรณ์'}`;
+                modalTitle.innerText = `สร้าง ${type === 'service' ? 'บริการ' : type === 'gedget' ? 'อุปกรณ์' : 'กลุ่ม'}`;
                 modalForm.reset();
                 modalElement.classList.remove('hidden');
             }
         }
+
         function closeModal(type) {
             const modalElement = document.getElementById(`${type}Modal`);
             modalElement.classList.add('hidden');
         }
-        function openCreateServiceModal() {
-            openModal('service');
-        }
-        function openEditServiceModal(id_service) {
-            openModal('service', id_service);
-        }
-        function openCreateGedgetModal() {
-            openModal('gedget');
-        }
-        function openEditGedgetModal(id_gedget) {
-            openModal('gedget', id_gedget);
-        }
-        function closeServiceModal() {
-            closeModal('service');
-        }
-        function closeGedgetModal() {
-            closeModal('gedget');
-        }
+
         function deleteItem(type, id) {
-            if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบ ${type === 'service' ? 'บริการ' : 'อุปกรณ์'} นี้?`)) {
+            const itemName = type === 'service' ? 'บริการ' : type === 'gedget' ? 'อุปกรณ์' : 'กลุ่ม';
+            if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบ ${itemName} นี้?`)) {
                 fetch(`../function/delete_${type}.php?id=${id}`, { method: 'DELETE' })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
                             location.reload();
                         } else {
-                            alert(`เกิดข้อผิดพลาดในการลบ ${type === 'service' ? 'บริการ' : 'อุปกรณ์'}`);
+                            alert(`เกิดข้อผิดพลาดในการลบ ${itemName}`);
                         }
                     });
             }
         }
-        function deleteService(id_service) {
-            deleteItem('service', id_service);
-        }
-        function deleteGedget(id_gedget) {
-            deleteItem('gedget', id_gedget);
-        } 
+
         document.addEventListener('DOMContentLoaded', function() {
             const serviceForm = document.getElementById('serviceForm');
             const gedgetForm = document.getElementById('gedgetForm');
+            const groupForm = document.getElementById('groupForm');
+
             if (serviceForm) {
                 serviceForm.addEventListener('submit', function(event) {
                     event.preventDefault();
@@ -401,128 +372,62 @@ if ($id_bill > 0) {
                     handleFormSubmit('gedget', this);
                 });
             }
+            if (groupForm) {
+                groupForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    handleFormSubmit('group', this);
+                });
+            }
         });
+
         function handleFormSubmit(type, form) {
             const formData = new FormData(form);
-            const id = formData.get('id_group'); // ตรวจสอบ id_group
-            const url = id ? `../function/update_group.php` : `../function/create_group_with_items.php`;
+            const data = {};
+            
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            data.id_bill = <?php echo $id_bill; ?>;
+
+            if (type === 'service') {
+                if (!data.code_service || !data.type_service || !data.type_gadget) {
+                    alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                    return;
+                }
+            } else if (type === 'gedget') {
+                if (!data.name_gedget || !data.quantity_gedget) {
+                    alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                    return;
+                }
+            } else if (type === 'group') {
+                if (!data.group_name) {
+                    alert('กรุณากรอกชื่อกลุ่ม');
+                    return;
+                }
+            }
+
+            const isEdit = formData.get(`id_${type}`) ? true : false;
+            const url = isEdit ? 
+                `../function/update_${type}.php` : 
+                `../function/create_${type}.php`;
 
             fetch(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    id_group: id,
-                    id_bill: formData.get('id_bill'),
-                    group_name: formData.get('group_name'),
-                    services: Array.from(formData.getAll('services[]')).map(Number),
-                    gedgets: Array.from(formData.getAll('gedgets[]')).map(Number)
-                })
+                body: formData
             })
             .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+            .then(result => {
+                if (result.success) {
                     location.reload();
                 } else {
-                    alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+                    alert(result.message || `เกิดข้อผิดพลาดในการ${isEdit ? 'แก้ไข' : 'บันทึก'}ข้อมูล`);
                 }
-            });
-        }
-        function openGroupModal() {
-            const modalElement = document.getElementById('groupModal');
-            modalElement.classList.remove('hidden');
-        }
-
-        // ฟังก์ชันปิด Modal
-        function closeGroupModal() {
-            const modalElement = document.getElementById('groupModal');
-            modalElement.classList.add('hidden');
-        }
-
-        // ฟังก์ชันส่งข้อมูลกลุ่มและบริการ/อุปกรณ์ไปยังเซิร์ฟเวอร์
-        document.getElementById('groupForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const formData = new FormData(this);
-            const idGroup = formData.get('id_group'); // ตรวจสอบ id_group
-            const selectedServices = Array.from(document.querySelectorAll('input[name="services[]"]:checked')).map(input => input.value);
-            const selectedGedgets = Array.from(document.querySelectorAll('input[name="gedgets[]"]:checked')).map(input => input.value);
-
-            const data = {
-                id_bill: formData.get('id_bill'),
-                group_name: formData.get('group_name'),
-                services: selectedServices,
-                gedgets: selectedGedgets
-            };
-
-            // ถ้ามี id_group แสดงว่าเป็นการแก้ไขกลุ่ม
-            if (idGroup) {
-                data.id_group = idGroup; // เพิ่ม id_group เข้าไปในข้อมูล
-            }
-
-            // เลือก URL ตามว่ากำลังสร้างหรือแก้ไขกลุ่ม
-            const url = idGroup ? '../function/update_group.php' : '../function/create_group_with_items.php';
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-                }
+            .catch(error => {
+                console.error('Error:', error);
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
             });
-        });
-        // ในส่วนของ JavaScript
-        function openEditGroupModal(id_group) {
-            fetch(`../function/get_group.php?id=${id_group}`)
-                .then(response => response.json())
-                .then(data => {
-                    const modalElement = document.getElementById('groupModal');
-                    const modalTitle = document.getElementById('modalTitle');
-                    const groupForm = document.getElementById('groupForm');
-                    const idGroupInput = document.getElementById('id_group');
-                    const groupNameInput = document.getElementById('group_name');
-                    const serviceList = document.getElementById('serviceList');
-                    const gedgetList = document.getElementById('gedgetList');
-
-                    modalTitle.innerText = 'แก้ไขกลุ่ม';
-                    idGroupInput.value = data.group.id_group; // ตั้งค่า id_group
-                    groupNameInput.value = data.group.group_name;
-
-                    // เลือกบริการที่อยู่ในกลุ่ม
-                    serviceList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                        checkbox.checked = data.services.includes(parseInt(checkbox.value));
-                    });
-
-                    // เลือกอุปกรณ์ที่อยู่ในกลุ่ม
-                    gedgetList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                        checkbox.checked = data.gedgets.includes(parseInt(checkbox.value));
-                    });
-
-                    modalElement.classList.remove('hidden');
-                });
-        }
-        
-        function deleteGroup(id_group) {
-            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบกลุ่มนี้?')) {
-                fetch(`../function/delete_group.php?id=${id_group}`, { method: 'DELETE' })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            location.reload();
-                        } else {
-                            alert('เกิดข้อผิดพลาดในการลบกลุ่ม');
-                        }
-                    });
-            }
         }
     </script>
 </body>

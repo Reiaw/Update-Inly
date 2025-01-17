@@ -57,29 +57,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $number_bill = $_POST['number_bill'];
         $type_bill = $_POST['type_bill'];
         $status_bill = $_POST['status_bill'];
-
+    
         // อัปเดตข้อมูลบิล
         $sql = "UPDATE bill_customer SET id_customer = ?, number_bill = ?, type_bill = ?, status_bill = ?, update_at = NOW() WHERE id_bill = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("isssi", $id_customer, $number_bill, $type_bill, $status_bill, $id_bill);
         $stmt->execute();
-
-        // ลบบริการเดิม
-        $sql = "DELETE FROM service_customer WHERE id_bill = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $id_bill);
-        $stmt->execute();
-
-        // เพิ่มบริการใหม่
+    
+        // อัปเดตข้อมูลบริการ
         if (isset($_POST['code_service'])) {
             foreach ($_POST['code_service'] as $index => $code_service) {
                 $type_service = $_POST['type_service'][$index];
                 $type_gadget = $_POST['type_gadget'][$index];
                 $status_service = $_POST['status_service'][$index];
-
-                $sql = "INSERT INTO service_customer (code_service, type_service, type_gadget, status_service, id_bill, create_at, update_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ssssi", $code_service, $type_service, $type_gadget, $status_service, $id_bill);
+                
+                if (isset($_POST['id_service'][$index])) {
+                    // อัปเดตบริการที่มีอยู่
+                    $sql = "UPDATE service_customer SET 
+                            code_service = ?, 
+                            type_service = ?, 
+                            type_gadget = ?, 
+                            status_service = ?, 
+                            update_at = NOW() 
+                            WHERE id_service = ?";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bind_param("ssssi", $code_service, $type_service, $type_gadget, $status_service, $_POST['id_service'][$index]);
+                } else {
+                    // เพิ่มบริการใหม่
+                    $sql = "INSERT INTO service_customer (code_service, type_service, type_gadget, status_service, id_bill, create_at, update_at) 
+                            VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bind_param("ssssi", $code_service, $type_service, $type_gadget, $status_service, $id_bill);
+                }
                 $stmt->execute();
             }
         }
@@ -223,17 +232,18 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                 </thead>
                 <tbody>
                     <?php if (!empty($bills)): ?>
+                        <?php $counter = 1; // เริ่มต้นตัวนับ ?>
                         <?php foreach ($bills as $bill): ?>
                             <tr>
-                                <td class="py-2 px-4 border-b text-center"></td>
+                                <td class="py-2 px-4 border-b text-center"><?php echo $counter; ?></td> <!-- แสดงลำดับที่ -->
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($bill['customer_name']); ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($bill['bill_number']); ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($bill['bill_type']); ?></td>
                                 <td class="py-2 px-4 border-b text-center">
                                     <?php if ($bill['bill_status'] === 'ใช้งาน'): ?>
-                                        <i class="fas fa-circle text-green-500"></i><?= $bill['bill_status'] ?> <!-- ไอคอน Online -->
+                                        <i class="fas fa-circle text-green-500"></i><?= $bill['bill_status'] ?>
                                     <?php else: ?>
-                                        <i class="fas fa-circle text-red-500"></i><?= $bill['bill_status'] ?> <!-- ไอคอน Offline -->
+                                        <i class="fas fa-circle text-red-500"></i><?= $bill['bill_status'] ?>
                                     <?php endif; ?>
                                 </td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo $bill['active_services']; ?></td>
@@ -241,13 +251,14 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($bill['bill_start_date']); ?></td>
                                 <td class="py-2 px-4 border-b text-center">
                                     <button onclick="openEditBillModal(<?php echo $bill['id_bill']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded-md">
-                                        <i class="fas fa-edit"></i> <!-- ไอคอนแก้ไข -->
+                                        <i class="fas fa-edit"></i>
                                     </button>
                                     <a href="service_bill.php?id_bill=<?php echo $bill['id_bill']; ?>" class="bg-blue-500 text-white px-2 py-1 rounded-md">
-                                        <i class="fas fa-info-circle"></i> Info<!-- ไอคอน Info -->
+                                        <i class="fas fa-info-circle"></i> Info
                                     </a>
                                 </td>
                             </tr>
+                            <?php $counter++; // เพิ่มค่าตัวนับ ?>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
@@ -341,6 +352,7 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
         const newService = document.createElement('div');
         newService.classList.add('mb-4', 'border', 'p-4', 'rounded-md');
         newService.innerHTML = `
+            ${service ? `<input type="hidden" name="id_service[]" value="${service.id_service}">` : ''}
             <h3 class="text-lg font-semibold mb-2">บริการที่ ${index + 1}</h3>
             <div class="grid grid-cols-2 gap-4 mb-2">
                 <div>

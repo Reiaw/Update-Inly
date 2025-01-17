@@ -191,6 +191,12 @@ function deleteService($id_service) {
 }
 function createGedget($data) {
     global $conn;
+
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (empty($data['name_gedget']) || empty($data['quantity_gedget']) || empty($data['id_bill'])) {
+        throw new Exception("กรุณากรอกข้อมูลให้ครบถ้วน");
+    }
+
     $sql = "INSERT INTO gedget (name_gedget, quantity_gedget, id_bill) VALUES (?, ?, ?)";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("sii", $data['name_gedget'], $data['quantity_gedget'], $data['id_bill']);
