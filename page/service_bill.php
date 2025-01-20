@@ -122,6 +122,7 @@ if ($id_bill > 0) {
                         <th class="py-2 px-4 border-b">ลำดับที่</th>
                         <th class="py-2 px-4 border-b">ชื่อ Gedget</th>
                         <th class="py-2 px-4 border-b">จำนวน</th>
+                        <th class="py-2 px-4 border-b">วันที่เริ่มใช้อุปกรณ์</th>
                         <th class="py-2 px-4 border-b">การดำเนินการ</th>
                     </tr>
                 </thead>
@@ -132,6 +133,7 @@ if ($id_bill > 0) {
                                 <td class="py-2 px-4 border-b text-center"><?php echo $gedget['id_gedget']; ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($gedget['name_gedget']); ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($gedget['quantity_gedget']); ?></td>
+                                <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($gedget['create_at']); ?></td>
                                 <td class="py-2 px-4 border-b text-center">
                                     <button onclick="openModal('gedget', <?php echo $gedget['id_gedget']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded"> <i class="fas fa-edit"></i></button>
                                     <button onclick="deleteItem('gedget', <?php echo $gedget['id_gedget']; ?>)" class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
@@ -313,22 +315,58 @@ if ($id_bill > 0) {
             const modalTitle = document.getElementById('modalTitle');
             const modalForm = document.getElementById(`${type}Form`);
             const modalElement = document.getElementById(`${type}Modal`);
+            const createDateField = document.getElementById('createDateField');
 
             if (id) {
+                if (createDateField) {
+                    createDateField.style.display = 'none';
+                }
+
                 fetch(`../function/get_${type}.php?id=${id}`)
                     .then(response => response.json())
                     .then(data => {
                         modalTitle.innerText = `แก้ไข ${type === 'service' ? 'บริการ' : type === 'gedget' ? 'อุปกรณ์' : 'กลุ่ม'}`;
                         modalForm.reset();
-                        Object.keys(data).forEach(key => {
-                            const input = modalForm.querySelector(`[name="${key}"]`);
-                            if (input) {
-                                input.value = data[key];
+
+                        if (type === 'group') {
+                            // จัดการข้อมูลกลุ่ม
+                            if (data.group) {
+                                modalForm.querySelector('[name="id_group"]').value = data.group.id_group;
+                                modalForm.querySelector('[name="group_name"]').value = data.group.group_name;
                             }
-                        });
+                            
+                            // จัดการ checkboxes สำหรับ services
+                            if (data.services) {
+                                data.services.forEach(serviceId => {
+                                    const checkbox = modalForm.querySelector(`input[name="services[]"][value="${serviceId}"]`);
+                                    if (checkbox) checkbox.checked = true;
+                                });
+                            }
+                            
+                            // จัดการ checkboxes สำหรับ gedgets
+                            if (data.gedgets) {
+                                data.gedgets.forEach(gedgetId => {
+                                    const checkbox = modalForm.querySelector(`input[name="gedgets[]"][value="${gedgetId}"]`);
+                                    if (checkbox) checkbox.checked = true;
+                                });
+                            }
+                        } else {
+                            // จัดการข้อมูลสำหรับ service และ gedget
+                            Object.keys(data).forEach(key => {
+                                const input = modalForm.querySelector(`[name="${key}"]`);
+                                if (input) {
+                                    input.value = data[key];
+                                }
+                            });
+                        }
+                        
                         modalElement.classList.remove('hidden');
                     });
             } else {
+                // โค้ดสำหรับการเพิ่มใหม่ (ไม่เปลี่ยนแปลง)
+                if (createDateField) {
+                    createDateField.style.display = 'block';
+                }
                 modalTitle.innerText = `สร้าง ${type === 'service' ? 'บริการ' : type === 'gedget' ? 'อุปกรณ์' : 'กลุ่ม'}`;
                 modalForm.reset();
                 modalElement.classList.remove('hidden');
@@ -381,15 +419,79 @@ if ($id_bill > 0) {
         });
 
         function handleFormSubmit(type, form) {
+            // สำหรับกรณี group
+            if (type === 'group') {
+                const formData = new FormData(form);
+                const data = {
+                    id_bill: <?php echo $id_bill; ?>,
+                    group_name: formData.get('group_name'),
+                    services: [],
+                    gedgets: []
+                };
+
+                // เช็คว่ามีการกรอกชื่อกลุ่มหรือไม่
+                if (!data.group_name) {
+                    alert('กรุณากรอกชื่อกลุ่ม');
+                    return;
+                }
+                
+                // รวบรวมค่า checkbox ที่ถูกเลือก
+                form.querySelectorAll('input[name="services[]"]:checked').forEach(checkbox => {
+                    data.services.push(parseInt(checkbox.value));
+                });
+                
+                form.querySelectorAll('input[name="gedgets[]"]:checked').forEach(checkbox => {
+                    data.gedgets.push(parseInt(checkbox.value));
+                });
+
+                // เช็คว่าเลือกอย่างน้อย 1 รายการ
+                if (data.services.length === 0 && data.gedgets.length === 0) {
+                    alert('กรุณาเลือกอย่างน้อย 1 บริการหรืออุปกรณ์');
+                    return;
+                }
+
+                // กรณีแก้ไข
+                const id_group = formData.get('id_group');
+                if (id_group) {
+                    data.id_group = parseInt(id_group);
+                }
+
+                // ส่งข้อมูลแบบ JSON
+                const url = id_group ? '../function/update_group.php' : '../function/create_group.php';
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert(result.message || `เกิดข้อผิดพลาดในการ${id_group ? 'แก้ไข' : 'บันทึก'}ข้อมูล`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
+                });
+                
+                return;
+            }
+
+            // สำหรับกรณี service และ gedget
             const formData = new FormData(form);
             const data = {};
-            
             formData.forEach((value, key) => {
                 data[key] = value;
             });
 
             data.id_bill = <?php echo $id_bill; ?>;
 
+            // ตรวจสอบข้อมูลตามประเภท
             if (type === 'service') {
                 if (!data.code_service || !data.type_service || !data.type_gadget) {
                     alert('กรุณากรอกข้อมูลให้ครบถ้วน');
@@ -398,11 +500,6 @@ if ($id_bill > 0) {
             } else if (type === 'gedget') {
                 if (!data.name_gedget || !data.quantity_gedget) {
                     alert('กรุณากรอกข้อมูลให้ครบถ้วน');
-                    return;
-                }
-            } else if (type === 'group') {
-                if (!data.group_name) {
-                    alert('กรุณากรอกชื่อกลุ่ม');
                     return;
                 }
             }

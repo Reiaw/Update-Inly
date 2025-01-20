@@ -193,13 +193,13 @@ function createGedget($data) {
     global $conn;
 
     // ตรวจสอบข้อมูลที่จำเป็น
-    if (empty($data['name_gedget']) || empty($data['quantity_gedget']) || empty($data['id_bill'])) {
+    if (empty($data['name_gedget']) || empty($data['quantity_gedget']) || empty($data['id_bill']) || empty($data['create_at'])) {
         throw new Exception("กรุณากรอกข้อมูลให้ครบถ้วน");
     }
 
-    $sql = "INSERT INTO gedget (name_gedget, quantity_gedget, id_bill) VALUES (?, ?, ?)";
+    $sql = "INSERT INTO gedget (name_gedget, quantity_gedget, id_bill, create_at) VALUES (?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sii", $data['name_gedget'], $data['quantity_gedget'], $data['id_bill']);
+    $stmt->bind_param("siss", $data['name_gedget'], $data['quantity_gedget'], $data['id_bill'], $data['create_at']);
     return $stmt->execute();
 }
 
@@ -267,6 +267,7 @@ function createGroupWithItems($data) {
         
     } catch (Exception $e) {
         $conn->rollback();
+        error_log("Error in createGroupWithItems: " . $e->getMessage()); // บันทึกข้อผิดพลาด
         return false;
     }
 }

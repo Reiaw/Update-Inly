@@ -42,7 +42,7 @@
 
                 <!-- ปุ่มดำเนินการ -->
                 <div class="flex justify-end">
-                    <button type="button" onclick="closeGroupModal()" class="bg-gray-500 text-white px-4 py-2 rounded mr-2">ยกเลิก</button>
+                    <button type="button" onclick="closeModal('group')" class="bg-gray-500 text-white px-4 py-2 rounded mr-2">ยกเลิก</button>
                     <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">บันทึก</button>
                 </div>
             </form>
