@@ -114,6 +114,7 @@ $sql = "SELECT
             b.status_bill AS bill_status,
             b.create_at AS bill_start_date,
             b.end_date AS end_date,
+            b.contact_status as contact_status,
             SUM(CASE WHEN s.status_service = 'ใช้งาน' THEN 1 ELSE 0 END) AS active_services,
             SUM(CASE WHEN s.status_service = 'ยกเลิก' THEN 1 ELSE 0 END) AS canceled_services
         FROM bill_customer b
@@ -242,10 +243,10 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                 </thead>
                 <tbody>
                     <?php if (!empty($bills)): ?>
-                        <?php $counter = 1; // เริ่มต้นตัวนับ ?>
+                        <?php $counter = 1; ?>
                         <?php foreach ($bills as $bill): ?>
                             <tr>
-                                <td class="py-2 px-4 border-b text-center"><?php echo $counter; ?></td> <!-- แสดงลำดับที่ -->
+                                <td class="py-2 px-4 border-b text-center"><?php echo $counter; ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($bill['customer_name']); ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($bill['bill_number']); ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($bill['bill_type']); ?></td>
@@ -261,6 +262,17 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($bill['bill_start_date']); ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($bill['end_date']); ?></td>
                                 <td class="py-2 px-4 border-b text-center">
+                                    <?php
+                                    // ตรวจสอบว่า end_date น้อยกว่า 30 วันหรือไม่
+                                    $end_date = new DateTime($bill['end_date']);
+                                    $current_date = new DateTime();
+                                    $interval = $current_date->diff($end_date);
+                                    $days_left = $interval->days;
+
+                                    if ($days_left < 30 && $bill['contact_status'] !== 'ยกเลิกสัญญา') {
+                                        echo '<button onclick="openContractModal(' . $bill['id_bill'] . ')" class="bg-green-500 text-white px-2 py-1 rounded-md">สัญญาในจัดการ</button>';
+                                    }
+                                    ?>
                                     <button onclick="openEditBillModal(<?php echo $bill['id_bill']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded-md">
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -269,11 +281,11 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                                     </a>
                                 </td>
                             </tr>
-                            <?php $counter++; // เพิ่มค่าตัวนับ ?>
+                            <?php $counter++; ?>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="9" class="py-2 px-4 border-b text-center">ไม่มีข้อมูลบิล</td>
+                            <td colspan="10" class="py-2 px-4 border-b text-center">ไม่มีข้อมูลบิล</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -369,6 +381,23 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
 
         if (idCustomer) {
             document.getElementById('id_customer').value = idCustomer;
+        }
+    });
+    function openContractModal(id_bill) {
+        document.getElementById('contract_id_bill').value = id_bill;
+        document.getElementById('contractModal').classList.remove('hidden');
+    }
+
+    function closeContractModal() {
+        document.getElementById('contractModal').classList.add('hidden');
+    }
+
+    document.getElementById('contract_action').addEventListener('change', function() {
+        const durationField = document.getElementById('contract_duration_field');
+        if (this.value === 'ต่อสัญญา') {
+            durationField.classList.remove('hidden');
+        } else {
+            durationField.classList.add('hidden');
         }
     });
     </script>

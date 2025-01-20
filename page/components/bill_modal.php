@@ -80,6 +80,30 @@
     </div>
 </div>
 
+<!-- Modal สำหรับจัดการสัญญา -->
+<div id="contractModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg p-6 max-w-md mx-auto mt-20">
+        <h2 class="text-xl font-bold mb-4">จัดการสัญญา</h2>
+        <form id="contractForm" action="../function/update_contract.php" method="POST">
+            <input type="hidden" id="contract_id_bill" name="id_bill">
+            <div class="mb-4">
+                <label for="contract_action" class="block text-sm font-medium text-gray-700">การดำเนินการ</label>
+                <select id="contract_action" name="contract_action" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                    <option value="ต่อสัญญา">ต่อสัญญา</option>
+                    <option value="ยกเลิกสัญญา">ยกเลิกสัญญา</option>
+                </select>
+            </div>
+            <div id="contract_duration_field" class="mb-4 hidden">
+                <label for="contract_duration" class="block text-sm font-medium text-gray-700">ระยะสัญญา (วัน)</label>
+                <input type="number" id="contract_duration" name="contract_duration" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+            </div>
+            <div class="flex justify-end">
+                <button type="button" onclick="closeContractModal()" class="bg-gray-500 text-white px-4 py-2 rounded-md mr-2">ยกเลิก</button>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md">บันทึก</button>
+            </div>
+        </form>
+    </div>
+</div>
 <script>
     let serviceIndex = 0;
 
