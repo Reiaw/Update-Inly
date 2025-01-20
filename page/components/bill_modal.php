@@ -9,33 +9,43 @@
             <h3 class="text-lg leading-6 font-medium text-gray-900">สร้างบิลใหม่</h3>
             <form id="createBillForm" method="POST" action="bill.php" class="mt-2">
                 <input type="hidden" name="id_bill" id="id_bill">
-                
-                <?php if (!isset($id_customer) || $id_customer == 0): ?>
-                <div class="mb-4">
-                    <label for="id_customer" class="block text-sm font-medium text-gray-700">เลือกลูกค้า</label>
-                    <select name="id_customer" id="id_customer" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
-                        <option value="" disabled selected>กรุณาเลือกลูกค้า</option>
-                        <?php
-                        $customer_sql = "SELECT id_customer, name_customer FROM customers ORDER BY name_customer";
-                        $customer_result = $conn->query($customer_sql);
-                        while ($customer = $customer_result->fetch_assoc()) {
-                            echo "<option value='" . $customer['id_customer'] . "'>" . 
-                                htmlspecialchars($customer['name_customer']) . "</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
-                <?php else: ?>
-                <input type="hidden" name="id_customer" id="id_customer" value="<?= $id_customer ?>">
-                <?php endif; ?>
+    
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="number_bill" class="block text-sm font-medium text-gray-700">หมายเลขบิล</label>
                         <input type="text" name="number_bill" id="number_bill" placeholder="ใส่หมายเลขบิล" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>  
+                    <?php if (!isset($id_customer) || $id_customer == 0): ?>
+                    <div>
+                        <label for="id_customer" class="block text-sm font-medium text-gray-700">เลือกลูกค้า</label>
+                            <select name="id_customer" id="id_customer" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
+                                <option value="" disabled selected>กรุณาเลือกลูกค้า</option>
+                                <?php
+                                $customer_sql = "SELECT id_customer, name_customer FROM customers ORDER BY name_customer";
+                                $customer_result = $conn->query($customer_sql);
+                                while ($customer = $customer_result->fetch_assoc()) {
+                                    echo "<option value='" . $customer['id_customer'] . "'>" . 
+                                        htmlspecialchars($customer['name_customer']) . "</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <?php else: ?>
+                        <input type="hidden" name="id_customer" id="id_customer" value="<?= $id_customer ?>">
+                        <?php endif; ?>
                     </div>
                 </div>
-
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="create_at" class="block text-sm font-medium text-gray-700">วันที่เริ่มสัญญา</label>
+                        <input type="date" name="create_at" id="create_at" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>
+                    <div>
+                        <label for="date_count" class="block text-sm font-medium text-gray-700">ระยะสัญญา (วัน)</label>
+                        <input type="number" name="date_count" id="date_count" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>
+                </div>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="type_bill" class="block text-sm font-medium text-gray-700">ประเภทบิล</label>

@@ -312,7 +312,13 @@ $customers = $conn->query("
         .then(data => {
             if (data.success) {
                 location.reload();
+            } else {
+                alert(data.message); // แสดงข้อความแจ้งเตือนเมื่อมีชื่อลูกค้าซ้ำ
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('เกิดข้อผิดพลาดในการดำเนินการ');
         });
     });
     // JavaScript สำหรับอัปโหลดไฟล์ Excel

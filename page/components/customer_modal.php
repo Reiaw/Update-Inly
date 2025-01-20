@@ -150,32 +150,5 @@ document.getElementById('customerForm').addEventListener('submit', function(e) {
         return;
     }
 
-    // ตรวจสอบว่าชื่อลูกค้าไม่ซ้ำกันในฐานข้อมูล
-    fetch(`../function/check_customer_name.php?name_customer=${encodeURIComponent(nameCustomer)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.exists) {
-                alert('ชื่อลูกค้านี้มีอยู่ในระบบแล้ว กรุณาใช้ชื่ออื่น');
-            } else {
-                // ส่งฟอร์ม
-                const formData = new FormData(this);
-                const id_customer = formData.get('id_customer');
-                const url = id_customer ? `../function/update_customer.php?id_customer=${id_customer}` : '../function/create_customer.php';
-
-                fetch(url, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('ดำเนินการสำเร็จ');
-                        location.reload();
-                    } else {
-                        alert('เกิดข้อผิดพลาด: ' + data.message);
-                    }
-                });
-            }
-        });
 });
 </script>

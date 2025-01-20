@@ -37,15 +37,9 @@ function getCustomerById($id_customer) {
 function createCustomer($data) {
     global $conn;
 
-    // ตรวจสอบว่า id_address มีอยู่ในตาราง address หรือไม่
-    $checkAddressSql = "SELECT id_address FROM address WHERE id_address = ?";
-    $checkStmt = $conn->prepare($checkAddressSql);
-    $checkStmt->bind_param("i", $data['id_address']);
-    $checkStmt->execute();
-    $checkResult = $checkStmt->get_result();
-
-    if ($checkResult->num_rows === 0) {
-        throw new Exception("Invalid id_address: Address does not exist.");
+    // ตรวจสอบว่าชื่อลูกค้ามีอยู่แล้วหรือไม่
+    if (checkCustomerName($data['name_customer'])) {
+        throw new Exception("ชื่อลูกค้ามีอยู่ในระบบแล้ว");
     }
 
     // เพิ่มข้อมูลลูกค้า
@@ -57,6 +51,12 @@ function createCustomer($data) {
 
 function updateCustomer($id_customer, $data) {
     global $conn;
+
+    // ตรวจสอบว่าชื่อลูกค้ามีอยู่แล้วหรือไม่ (ยกเว้นลูกค้าที่กำลังแก้ไข)
+    $existingCustomer = getCustomerById($id_customer);
+    if ($existingCustomer['name_customer'] !== $data['name_customer'] && checkCustomerName($data['name_customer'])) {
+        throw new Exception("ชื่อลูกค้ามีอยู่ในระบบแล้ว");
+    }
 
     // อัปเดตข้อมูลในตาราง customers
     $sql = "UPDATE customers SET name_customer = ?, type_customer = ?, phone_customer = ?, status_customer = ?, id_address = ?, update_at = NOW() WHERE id_customer = ?";
@@ -365,7 +365,6 @@ function getGroupDetails($id_group) {
     $result = $stmt->get_result();
     return $result->fetch_all(MYSQLI_ASSOC);
 }
-// functions.php
 
 function createPackage($data) {
     global $conn;

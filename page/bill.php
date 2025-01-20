@@ -27,11 +27,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $number_bill = $_POST['number_bill'];
         $type_bill = $_POST['type_bill'];
         $status_bill = $_POST['status_bill'];
+        $create_at = $_POST['create_at'];
+        $date_count = $_POST['date_count'];
+        $end_date = date('Y-m-d', strtotime($create_at . " + $date_count days"));
 
         // สร้างบิลใหม่
-        $sql = "INSERT INTO bill_customer (id_customer, number_bill, type_bill, status_bill, create_at, update_at) VALUES (?, ?, ?, ?, NOW(), NOW())";
+        $sql = "INSERT INTO bill_customer (id_customer, number_bill, type_bill, status_bill, create_at, update_at, date_count, end_date) 
+            VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("isss", $id_customer, $number_bill, $type_bill, $status_bill);
+        $stmt->bind_param("issssss", $id_customer, $number_bill, $type_bill, $status_bill, $create_at, $date_count, $end_date);
         $stmt->execute();
         $id_bill = $stmt->insert_id;
 
@@ -57,13 +61,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $number_bill = $_POST['number_bill'];
         $type_bill = $_POST['type_bill'];
         $status_bill = $_POST['status_bill'];
+        $create_at = $_POST['create_at'];
+        $date_count = $_POST['date_count'];
+        $end_date = date('Y-m-d', strtotime($create_at . " + $date_count days"));
     
         // อัปเดตข้อมูลบิล
-        $sql = "UPDATE bill_customer SET id_customer = ?, number_bill = ?, type_bill = ?, status_bill = ?, update_at = NOW() WHERE id_bill = ?";
+        $sql = "UPDATE bill_customer SET id_customer = ?, number_bill = ?, type_bill = ?, status_bill = ?, create_at = ?, date_count = ?, end_date = ?, update_at = NOW() 
+            WHERE id_bill = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("isssi", $id_customer, $number_bill, $type_bill, $status_bill, $id_bill);
+        $stmt->bind_param("issssssi", $id_customer, $number_bill, $type_bill, $status_bill, $create_at, $date_count, $end_date, $id_bill);
         $stmt->execute();
-    
+
         // อัปเดตข้อมูลบริการ
         if (isset($_POST['code_service'])) {
             foreach ($_POST['code_service'] as $index => $code_service) {
@@ -105,6 +113,7 @@ $sql = "SELECT
             b.type_bill AS bill_type,
             b.status_bill AS bill_status,
             b.create_at AS bill_start_date,
+            b.end_date AS end_date,
             SUM(CASE WHEN s.status_service = 'ใช้งาน' THEN 1 ELSE 0 END) AS active_services,
             SUM(CASE WHEN s.status_service = 'ยกเลิก' THEN 1 ELSE 0 END) AS canceled_services
         FROM bill_customer b
@@ -227,6 +236,7 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                         <th class="py-2 px-4 border-b">จำนวนบริการที่ใช้งาน</th>
                         <th class="py-2 px-4 border-b">จำนวนบริการที่ยกเลิก</th>
                         <th class="py-2 px-4 border-b">วันที่เริ่มบิล</th>
+                        <th class="py-2 px-4 border-b">วันที่สิ้นสุดสัญญา</th>
                         <th class="py-2 px-4 border-b">การดำเนินการ</th>
                     </tr>
                 </thead>
@@ -249,6 +259,7 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                                 <td class="py-2 px-4 border-b text-center"><?php echo $bill['active_services']; ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo $bill['canceled_services']; ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($bill['bill_start_date']); ?></td>
+                                <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($bill['end_date']); ?></td>
                                 <td class="py-2 px-4 border-b text-center">
                                     <button onclick="openEditBillModal(<?php echo $bill['id_bill']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded-md">
                                         <i class="fas fa-edit"></i>
@@ -302,7 +313,7 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                     "previous": "ก่อนหน้า"
                 }
             },
-            // ... rest of your DataTable configuration
+        
         });
 
         // Event listeners for filters
@@ -346,8 +357,7 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                 document.getElementById('updateBillButton').classList.remove('hidden');
             });
     }
-
-    
+  
     function removeServiceField(button) {
         const serviceDiv = button.parentElement;
         serviceDiv.remove();

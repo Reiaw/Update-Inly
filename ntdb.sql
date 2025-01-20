@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 17, 2025 at 10:25 AM
+-- Generation Time: Jan 20, 2025 at 08:13 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -39,7 +39,8 @@ CREATE TABLE `address` (
 --
 
 INSERT INTO `address` (`id_address`, `info_address`, `id_amphures`, `id_tambons`) VALUES
-(42, '', 7101, 710103);
+(42, '', 7101, 710103),
+(45, '1234', 7113, 711301);
 
 -- --------------------------------------------------------
 
@@ -84,17 +85,28 @@ CREATE TABLE `bill_customer` (
   `status_bill` enum('ใช้งาน','ยกเลิกใช้งาน') DEFAULT NULL,
   `id_customer` int(11) DEFAULT NULL,
   `create_at` date DEFAULT NULL,
-  `update_at` date DEFAULT NULL
+  `update_at` date DEFAULT NULL,
+  `date_count` int(11) DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `contact_count` int(11) DEFAULT NULL,
+  `contact_status` enum('ยังไม่ได้เลือก','ต่อสัญญา','ยกเลิกสัญญา') DEFAULT 'ยังไม่ได้เลือก'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `bill_customer`
 --
 
-INSERT INTO `bill_customer` (`id_bill`, `number_bill`, `type_bill`, `status_bill`, `id_customer`, `create_at`, `update_at`) VALUES
-(13, 2147483647, 'CIP+', 'ใช้งาน', 38, '2025-01-17', '2025-01-17'),
-(14, 4008648, 'Special Bill', 'ใช้งาน', 38, '2025-01-17', '2025-01-17'),
-(15, 2147483647, 'CIP+', 'ใช้งาน', 38, '2025-01-17', '2025-01-17');
+INSERT INTO `bill_customer` (`id_bill`, `number_bill`, `type_bill`, `status_bill`, `id_customer`, `create_at`, `update_at`, `date_count`, `end_date`, `contact_count`, `contact_status`) VALUES
+(13, 2147483647, 'CIP+', 'ใช้งาน', 38, '2025-01-17', '2025-01-17', NULL, NULL, NULL, 'ยังไม่ได้เลือก'),
+(14, 4008648, 'Special Bill', 'ใช้งาน', 38, '2025-01-17', '2025-01-17', NULL, NULL, NULL, 'ยังไม่ได้เลือก'),
+(15, 2147483647, 'CIP+', 'ใช้งาน', 38, '2025-01-17', '2025-01-17', NULL, NULL, NULL, 'ยังไม่ได้เลือก'),
+(16, 555555, 'CIP+', 'ใช้งาน', 38, '2025-01-20', '2025-01-20', NULL, NULL, NULL, 'ยังไม่ได้เลือก'),
+(17, 2147483647, 'CIP+', 'ใช้งาน', 40, '2025-01-20', '2025-01-20', NULL, NULL, NULL, 'ยังไม่ได้เลือก'),
+(34, 254687, 'CIP+', 'ใช้งาน', 38, '2025-01-10', '2025-01-20', 200, '0000-00-00', NULL, 'ยังไม่ได้เลือก'),
+(35, 2147483647, 'CIP+', 'ใช้งาน', 40, '2025-01-10', '2025-01-20', 25, '0000-00-00', NULL, 'ยังไม่ได้เลือก'),
+(36, 254687, 'CIP+', 'ใช้งาน', 40, '2025-01-09', '2025-01-20', 200, '0000-00-00', NULL, 'ยังไม่ได้เลือก'),
+(37, 2147483647, 'CIP+', 'ใช้งาน', 40, '2025-01-09', '2025-01-20', 20, '0000-00-00', NULL, 'ยังไม่ได้เลือก'),
+(38, 2147483647, 'CIP+', 'ใช้งาน', 38, '2025-01-09', '2025-01-20', 25, '0000-00-00', NULL, 'ยังไม่ได้เลือก');
 
 -- --------------------------------------------------------
 
@@ -118,7 +130,8 @@ CREATE TABLE `customers` (
 --
 
 INSERT INTO `customers` (`id_customer`, `name_customer`, `type_customer`, `phone_customer`, `status_customer`, `id_address`, `create_at`, `update_at`) VALUES
-(38, 'ปากแพรก', 'เทศบาล', '0874652345 คุณต้น', 'ใช้งาน', 42, '2025-01-17 15:20:56', '2025-01-17 15:20:56');
+(38, 'ปากแพรก', 'เทศบาล', '0874652345 คุณต้น', 'ใช้งาน', 42, '2025-01-17 15:20:56', '2025-01-17 15:20:56'),
+(40, 'Rtop', 'อบต', '0898081659', 'ใช้งาน', 45, '2025-01-20 12:29:04', '2025-01-20 12:29:04');
 
 -- --------------------------------------------------------
 
@@ -130,27 +143,31 @@ CREATE TABLE `gedget` (
   `id_gedget` int(11) NOT NULL,
   `name_gedget` varchar(100) DEFAULT NULL,
   `quantity_gedget` int(5) DEFAULT NULL,
-  `id_bill` int(11) NOT NULL
+  `id_bill` int(11) NOT NULL,
+  `create_at` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `gedget`
 --
 
-INSERT INTO `gedget` (`id_gedget`, `name_gedget`, `quantity_gedget`, `id_bill`) VALUES
-(14, 'ZTE รุ่น F620', 1, 13),
-(15, 'Mikrotik รุ่น rb3011', 1, 13),
-(16, 'ubiquibi รุ่น injector ', 2, 13),
-(17, 'ubiquibi รุ่น uapaclr', 2, 13),
-(18, 'syndome รุ่น 1E00YA', 1, 13),
-(19, 'ZTE รุ่น F620', 1, 13),
-(20, 'Mikrotik รุ่น rb3011', 1, 13),
-(21, 'ubiquibi รุ่น us-8', 1, 13),
-(22, 'ubiquibi รุ่น llap ac lr', 5, 13),
-(23, 'syndome 1000vA', 1, 13),
-(24, 'Mikrotik Router RB3011', 1, 15),
-(25, 'Access point UAP ACLLR ', 2, 15),
-(26, 'UPS Poe Injecter', 2, 15);
+INSERT INTO `gedget` (`id_gedget`, `name_gedget`, `quantity_gedget`, `id_bill`, `create_at`) VALUES
+(14, 'ZTE รุ่น F620', 1, 13, NULL),
+(15, 'Mikrotik รุ่น rb3011', 1, 13, NULL),
+(16, 'ubiquibi รุ่น injector ', 2, 13, NULL),
+(17, 'ubiquibi รุ่น uapaclr', 2, 13, NULL),
+(18, 'syndome รุ่น 1E00YA', 1, 13, NULL),
+(19, 'ZTE รุ่น F620', 1, 13, NULL),
+(20, 'Mikrotik รุ่น rb3011', 1, 13, NULL),
+(21, 'ubiquibi รุ่น us-8', 1, 13, NULL),
+(22, 'ubiquibi รุ่น llap ac lr', 5, 13, NULL),
+(23, 'syndome 1000vA', 1, 13, NULL),
+(24, 'Mikrotik Router RB3011', 1, 15, NULL),
+(25, 'Access point UAP ACLLR ', 2, 15, NULL),
+(26, 'UPS Poe Injecter', 2, 15, NULL),
+(29, 'Mikrotik รุ่น rb3011', 2, 14, '2025-01-15'),
+(30, 'asd', 2, 13, '2025-01-11'),
+(31, 'asd', 2, 13, '2025-01-15');
 
 -- --------------------------------------------------------
 
@@ -175,7 +192,9 @@ INSERT INTO `group_service` (`id_group`, `id_bill`, `group_name`) VALUES
 (57, 13, 'ICT สำนักปลัด'),
 (58, 13, 'อื่นๆ'),
 (59, 15, 'กองยุทศาสตร์ (เก่า)'),
-(60, 15, 'กองยุทศาสตร์ (ใหม่)');
+(61, 14, 'A'),
+(62, 14, 'B'),
+(63, 13, '5');
 
 -- --------------------------------------------------------
 
@@ -219,25 +238,11 @@ INSERT INTO `group_servicedetail` (`id_group_detail`, `id_group`, `id_service`, 
 (86, 59, NULL, 24),
 (87, 59, NULL, 25),
 (88, 59, NULL, 26),
-(89, 60, 41, NULL),
-(90, 60, NULL, 24),
-(91, 60, NULL, 25),
-(92, 60, NULL, 26);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `invoice_customer`
---
-
-CREATE TABLE `invoice_customer` (
-  `id_invoice` int(11) NOT NULL,
-  `number_invoice` int(15) DEFAULT NULL,
-  `date_invoice` date DEFAULT NULL,
-  `paper_invoice` blob DEFAULT NULL,
-  `id_service` int(11) DEFAULT NULL,
-  `id_bill` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+(94, 62, NULL, 29),
+(95, 61, 39, NULL),
+(96, 61, NULL, 29),
+(97, 63, 31, NULL),
+(98, 63, NULL, 31);
 
 -- --------------------------------------------------------
 
@@ -341,7 +346,9 @@ INSERT INTO `service_customer` (`id_service`, `code_service`, `type_service`, `t
 (40, '3451L0114', 'Fttx', 'เช่า', 'ยกเลิก', 15, '2025-01-17', '2025-01-17'),
 (41, '342J1009', 'Fttx', 'เช่า', 'ใช้งาน', 15, '2025-01-17', '2025-01-17'),
 (42, '034510533', 'Fttx', 'เช่า', 'ใช้งาน', 15, '2025-01-17', '2025-01-17'),
-(43, 'C010003094', 'Fttx', 'เช่า', 'ใช้งาน', 15, '2025-01-17', '2025-01-17');
+(52, '123', 'Smart City', 'ขาย', 'ยกเลิก', 13, '2025-01-20', '2025-01-20'),
+(53, '3451L0114', 'Fttx+ICT solution', 'ขาย', 'ยกเลิก', 16, '2025-01-20', '2025-01-20'),
+(54, '1235', 'WiFi', 'ขาย', 'ยกเลิก', 16, '2025-01-20', '2025-01-20');
 
 -- --------------------------------------------------------
 
@@ -541,14 +548,6 @@ ALTER TABLE `group_servicedetail`
   ADD KEY `id_gedget` (`id_gedget`);
 
 --
--- Indexes for table `invoice_customer`
---
-ALTER TABLE `invoice_customer`
-  ADD PRIMARY KEY (`id_invoice`),
-  ADD KEY `id_service` (`id_service`),
-  ADD KEY `id_bill` (`id_bill`);
-
---
 -- Indexes for table `overide`
 --
 ALTER TABLE `overide`
@@ -598,43 +597,37 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `address`
 --
 ALTER TABLE `address`
-  MODIFY `id_address` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id_address` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT for table `bill_customer`
 --
 ALTER TABLE `bill_customer`
-  MODIFY `id_bill` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id_bill` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `id_customer` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
+  MODIFY `id_customer` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT for table `gedget`
 --
 ALTER TABLE `gedget`
-  MODIFY `id_gedget` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id_gedget` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `group_service`
 --
 ALTER TABLE `group_service`
-  MODIFY `id_group` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+  MODIFY `id_group` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- AUTO_INCREMENT for table `group_servicedetail`
 --
 ALTER TABLE `group_servicedetail`
-  MODIFY `id_group_detail` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=93;
-
---
--- AUTO_INCREMENT for table `invoice_customer`
---
-ALTER TABLE `invoice_customer`
-  MODIFY `id_invoice` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_group_detail` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=99;
 
 --
 -- AUTO_INCREMENT for table `overide`
@@ -658,7 +651,7 @@ ALTER TABLE `product_list`
 -- AUTO_INCREMENT for table `service_customer`
 --
 ALTER TABLE `service_customer`
-  MODIFY `id_service` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
+  MODIFY `id_service` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -708,13 +701,6 @@ ALTER TABLE `group_servicedetail`
   ADD CONSTRAINT `group_servicedetail_ibfk_1` FOREIGN KEY (`id_group`) REFERENCES `group_service` (`id_group`),
   ADD CONSTRAINT `group_servicedetail_ibfk_2` FOREIGN KEY (`id_service`) REFERENCES `service_customer` (`id_service`),
   ADD CONSTRAINT `group_servicedetail_ibfk_3` FOREIGN KEY (`id_gedget`) REFERENCES `gedget` (`id_gedget`);
-
---
--- Constraints for table `invoice_customer`
---
-ALTER TABLE `invoice_customer`
-  ADD CONSTRAINT `invoice_customer_ibfk_1` FOREIGN KEY (`id_service`) REFERENCES `service_customer` (`id_service`),
-  ADD CONSTRAINT `invoice_customer_ibfk_2` FOREIGN KEY (`id_bill`) REFERENCES `bill_customer` (`id_bill`);
 
 --
 -- Constraints for table `overide`
