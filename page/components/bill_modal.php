@@ -89,6 +89,7 @@
             <div class="mb-4">
                 <label for="contract_action" class="block text-sm font-medium text-gray-700">การดำเนินการ</label>
                 <select id="contract_action" name="contract_action" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                    <option value="" disabled selected>กรุณาเลือกการดำเนินการ</option>
                     <option value="ต่อสัญญา">ต่อสัญญา</option>
                     <option value="ยกเลิกสัญญา">ยกเลิกสัญญา</option>
                 </select>

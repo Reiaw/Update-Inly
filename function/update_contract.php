@@ -27,9 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // อัปเดตข้อมูลบิล
-    $sql = "UPDATE bill_customer SET end_date = ?, contact_status = ?, contact_count = ? WHERE id_bill = ?";
+    $sql = "UPDATE bill_customer SET end_date = ?, contact_status = ? , date_count = ?, contact_count = ? WHERE id_bill = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssii", $new_end_date, $contact_status, $contact_count, $id_bill);
+    $stmt->bind_param("ssiii", $new_end_date, $contact_status, $contract_duration, $contact_count, $id_bill);
     $stmt->execute();
 
     echo "<script>alert('อัปเดตสัญญาเรียบร้อยแล้ว'); window.location.href = '../page/bill.php';</script>";
