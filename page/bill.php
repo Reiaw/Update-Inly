@@ -347,55 +347,7 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
             });
     }
 
-    function addServiceField(index, service = null) {
-        const container = document.getElementById('services-container');
-        const newService = document.createElement('div');
-        newService.classList.add('mb-4', 'border', 'p-4', 'rounded-md');
-        newService.innerHTML = `
-            ${service ? `<input type="hidden" name="id_service[]" value="${service.id_service}">` : ''}
-            <h3 class="text-lg font-semibold mb-2">บริการที่ ${index + 1}</h3>
-            <div class="grid grid-cols-2 gap-4 mb-2">
-                <div>
-                    <label for="code_service_${index}" class="block text-sm font-medium text-gray-700">รหัสบริการ</label>
-                    <input type="text" name="code_service[]" id="code_service_${index}" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required value="${service ? service.code_service : ''}">
-                </div>
-                <div>
-                    <label for="type_service_${index}" class="block text-sm font-medium text-gray-700">ประเภทบริการ</label>
-                    <select name="type_service[]" id="type_service_${index}" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
-                        <option value="Fttx" ${service && service.type_service === 'Fttx' ? 'selected' : ''}>Fttx</option>
-                        <option value="Fttx+ICT solution" ${service && service.type_service === 'Fttx+ICT solution' ? 'selected' : ''}>Fttx+ICT solution</option>
-                        <option value="Fttx 2+ICT solution" ${service && service.type_service === 'Fttx 2+ICT solution' ? 'selected' : ''}>Fttx 2+ICT solution</option>
-                        <option value="SI service" ${service && service.type_service === 'SI service' ? 'selected' : ''}>SI service</option>
-                        <option value="วงจเช่า" ${service && service.type_service === 'วงจเช่า' ? 'selected' : ''}>วงจเช่า</option>
-                        <option value="IP phone" ${service && service.type_service === 'IP phone' ? 'selected' : ''}>IP phone</option>
-                        <option value="Smart City" ${service && service.type_service === 'Smart City' ? 'selected' : ''}>Smart City</option>
-                        <option value="WiFi" ${service && service.type_service === 'WiFi' ? 'selected' : ''}>WiFi</option>
-                        <option value="อื่นๆ" ${service && service.type_service === 'อื่นๆ' ? 'selected' : ''}>อื่นๆ</option>
-                    </select>
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-4 mb-2">
-                <div>
-                    <label for="type_gadget_${index}" class="block text-sm font-medium text-gray-700">ประเภทอุปกรณ์</label>
-                    <select name="type_gadget[]" id="type_gadget_${index}" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
-                        <option value="เช่า" ${service && service.type_gadget === 'เช่า' ? 'selected' : ''}>เช่า</option>
-                        <option value="ขาย" ${service && service.type_gadget === 'ขาย' ? 'selected' : ''}>ขาย</option>
-                        <option value="เช่าและขาย" ${service && service.type_gadget === 'เช่าและขาย' ? 'selected' : ''}>เช่าและขาย</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="status_service_${index}" class="block text-sm font-medium text-gray-700">สถานะบริการ</label>
-                    <select name="status_service[]" id="status_service_${index}" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
-                        <option value="ใช้งาน" ${service && service.status_service === 'ใช้งาน' ? 'selected' : ''}>ใช้งาน</option>
-                        <option value="ยกเลิก" ${service && service.status_service === 'ยกเลิก' ? 'selected' : ''}>ยกเลิก</option>
-                    </select>
-                </div>
-            </div>
-            <button type="button" onclick="removeServiceField(this)" class="bg-red-500 text-white px-2 py-1 rounded-md">ลบบริการ</button>
-        `;
-        container.appendChild(newService);
-    }
-
+    
     function removeServiceField(button) {
         const serviceDiv = button.parentElement;
         serviceDiv.remove();

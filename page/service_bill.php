@@ -32,6 +32,19 @@ if ($id_bill > 0) {
     $stmt->bind_param("i", $id_bill);
     $stmt->execute();
     $gedgets = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    $sql = "SELECT * FROM service_customer WHERE id_bill = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_bill);
+    $stmt->execute();
+    $services = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    // ดึงข้อมูล gedget
+    $sql = "SELECT * FROM gedget WHERE id_bill = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_bill);
+    $stmt->execute();
+    $gedgets = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 } else {
     header('Location: bill.php');
     exit;
@@ -51,16 +64,13 @@ if ($id_bill > 0) {
         .dataTables_filter {
             display: none;
         }
-
         .common-table thead th {
             background-color: #4a5568;
             color: white;
         }
-
         .common-table tbody tr {
             background-color: rgb(255, 255, 255);
         }
-
         .common-table tbody tr:hover {
             background-color: rgb(198, 198, 198);
         }
@@ -71,10 +81,43 @@ if ($id_bill > 0) {
 
     <div class="container mx-auto px-4 py-8">
         <h1 class="text-2xl font-bold mb-4">ข้อมูลบริการสำหรับบิล: <?php echo htmlspecialchars($bill['number_bill']); ?></h1>
-
         <div class="mt-6">
-            <button onclick="openModal('service')" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">เพิ่มบริการ</button>
             <h2 class="text-xl font-bold mb-4">ข้อมูลหมายเลขบริการบิลนี้</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <!-- ปุ่มเพิ่มบริการ -->
+                    <button onclick="openModal('service')" class="bg-blue-500 text-white px-4 py-2 rounded-md">เพิ่มบริการ</button>
+                    <!-- ตัวค้นหาและตัวกรอง -->
+                    <div class="flex items-center">
+                        <div class="relative">
+                            <input type="text" id="serviceSearch" placeholder="ค้นหาจากรหัสบริการ" class="border p-2 rounded-md pl-10 mr-2">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i> <!-- ไอคอนค้นหา -->
+                        </div>
+                        <select id="serviceTypeFilter" class="p-2 border rounded-md mr-2">
+                            <option value="">ทั้งหมด (ประเภทบริการ)</option>
+                            <option value="Fttx">Fttx</option>
+                            <option value="Fttx+ICT solution">Fttx+ICT solution</option>
+                            <option value="Fttx 2+ICT solution">Fttx 2+ICT solution</option>
+                            <option value="SI service">SI service</option>
+                            <option value="วงจเช่า">วงจเช่า</option>
+                            <option value="IP phone">IP phone</option>
+                            <option value="Smart City">Smart City</option>
+                            <option value="WiFi">WiFi</option>
+                            <option value="อื่นๆ">อื่นๆ</option>
+                        </select>
+                        <select id="serviceGadgetFilter" class="p-2 border rounded-md mr-2">
+                            <option value="">ทั้งหมด (ประเภทอุปกรณ์)</option>
+                            <option value="เช่า">เช่า</option>
+                            <option value="ขาย">ขาย</option>
+                            <option value="เช่าและขาย">เช่าและขาย</option>
+                        </select>
+                        <select id="serviceStatusFilter" class="p-2 border rounded-md mr-2">
+                            <option value="">ทั้งหมด (สถานะบริการ)</option>
+                            <option value="ใช้งาน">ใช้งาน</option>
+                            <option value="ยกเลิก">ยกเลิก</option>
+                        </select>
+                        <button onclick="resetServiceFilters()" class="bg-gray-500 text-white px-4 py-2 rounded-md"> <i class="fas fa-sync-alt"></i></button>
+                    </div>
+                </div>
             <table id="serviceTable" class="common-table min-w-full bg-white border border-gray-300">
                 <thead>
                     <tr>
@@ -114,8 +157,17 @@ if ($id_bill > 0) {
         </div>
 
         <div class="mt-6">
-            <button onclick="openModal('gedget')" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">เพิ่มอุปกรณ์</button>
             <h2 class="text-xl font-bold mb-4">ข้อมูลอุปกรณ์ของบิลนี้</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <button onclick="openModal('gedget')" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">เพิ่มอุปกรณ์</button>
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="relative">
+                            <input type="text" id="gedgetSearch" placeholder="ค้นหาจากชื่ออุปกรณ์" class="border p-2 rounded-md pl-10 mr-2">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i> <!-- ไอคอนค้นหา -->
+                        </div>
+                        <button onclick="resetGedgetFilters()" class="bg-gray-500 text-white px-4 py-2 rounded-md"> <i class="fas fa-sync-alt"></i></button>
+                    </div>
+                </div>
             <table id="gedgetTable" class="common-table min-w-full bg-white border border-gray-300">
                 <thead>
                     <tr>
@@ -302,6 +354,49 @@ if ($id_bill > 0) {
             }
         });
 
+        $(document).ready(function() {
+            // ฟังก์ชันสำหรับการค้นหาและกรองข้อมูล service
+            $('#serviceSearch, #serviceTypeFilter, #serviceGadgetFilter, #serviceStatusFilter').on('input change', function() {
+                const searchText = $('#serviceSearch').val().toLowerCase();
+                const typeFilter = $('#serviceTypeFilter').val();
+                const gadgetFilter = $('#serviceGadgetFilter').val();
+                const statusFilter = $('#serviceStatusFilter').val();
+
+                $('#serviceTable tbody tr').each(function() {
+                    const codeService = $(this).find('td:eq(1)').text().toLowerCase();
+                    const typeService = $(this).find('td:eq(2)').text();
+                    const typeGadget = $(this).find('td:eq(3)').text();
+                    const statusService = $(this).find('td:eq(4)').text();
+
+                    const matchSearch = codeService.includes(searchText);
+                    const matchType = typeFilter === '' || typeService === typeFilter;
+                    const matchGadget = gadgetFilter === '' || typeGadget === gadgetFilter;
+                    const matchStatus = statusFilter === '' || statusService === statusFilter;
+
+                    if (matchSearch && matchType && matchGadget && matchStatus) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+
+            // ฟังก์ชันสำหรับการค้นหาและกรองข้อมูล gedget
+            $('#gedgetSearch').on('input', function() {
+                const searchText = $(this).val().toLowerCase();
+
+                $('#gedgetTable tbody tr').each(function() {
+                    const nameGedget = $(this).find('td:eq(1)').text().toLowerCase();
+
+                    if (nameGedget.includes(searchText)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+        });
+
         function updateRowNumbers(table) {
             $(table).find('tbody tr').each(function(index) {
                 const firstCell = $(this).find('td:first');
@@ -309,6 +404,27 @@ if ($id_bill > 0) {
                     firstCell.text(index + 1);
                 }
             });
+        }
+
+         // ฟังก์ชันรีเซ็ตตัวกรองสำหรับ service
+        function resetServiceFilters() {
+            // รีเซ็ตค่าช่องค้นหาและตัวกรอง
+            $('#serviceSearch').val('');
+            $('#serviceTypeFilter').val('');
+            $('#serviceGadgetFilter').val('');
+            $('#serviceStatusFilter').val('');
+
+            // แสดงข้อมูลทั้งหมดในตาราง service
+            $('#serviceTable tbody tr').show();
+        }
+
+        // ฟังก์ชันรีเซ็ตตัวกรองสำหรับ gedget
+        function resetGedgetFilters() {
+            // รีเซ็ตค่าช่องค้นหา
+            $('#gedgetSearch').val('');
+
+            // แสดงข้อมูลทั้งหมดในตาราง gedget
+            $('#gedgetTable tbody tr').show();
         }
 
         function openModal(type, id = null) {

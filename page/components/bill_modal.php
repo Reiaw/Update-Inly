@@ -85,12 +85,23 @@
         document.getElementById('createBillModal').classList.add('hidden');
     }
 
+    function updateServiceNumbers() {
+        const services = document.querySelectorAll('#services-container > div');
+        services.forEach((service, index) => {
+            const heading = service.querySelector('h3');
+            if (heading) {
+                heading.textContent = `บริการที่ ${index + 1}`;
+            }
+        });
+    }
+
     function addServiceField(service = null) {
         const container = document.getElementById('services-container');
+        const currentIndex = container.children.length; // นับจำนวนบริการที่มีอยู่
         const newService = document.createElement('div');
         newService.classList.add('mb-4', 'border', 'p-4', 'rounded-md');
         newService.innerHTML = `
-            <h3 class="text-lg font-semibold mb-2">บริการที่ ${serviceIndex + 1}</h3>
+            <h3 class="text-lg font-semibold mb-2">บริการที่ ${currentIndex + 1}</h3>
             <div class="grid grid-cols-2 gap-4 mb-2">
                 <div>
                     <label for="code_service_${serviceIndex}" class="block text-sm font-medium text-gray-700">รหัสบริการ</label>
@@ -137,5 +148,6 @@
     function removeServiceField(button) {
         const serviceDiv = button.parentElement;
         serviceDiv.remove();
+        updateServiceNumbers(); // เรียกใช้ฟังก์ชันอัพเดทลำดับหลังจากลบ
     }
 </script>
