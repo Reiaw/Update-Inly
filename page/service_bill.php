@@ -45,6 +45,20 @@ if ($id_bill > 0) {
     $stmt->bind_param("i", $id_bill);
     $stmt->execute();
     $gedgets = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    // ดึงข้อมูลบริการที่เกี่ยวข้องกับบิล
+    $sql = "SELECT sc.id_service, sc.code_service, sc.type_service, sc.type_gadget, sc.status_service,
+    COALESCE(SUM(o.mainpackage_price + o.ict_price), 0) AS total_price
+    FROM service_customer sc
+    LEFT JOIN package_list pl ON sc.id_service = pl.id_service AND pl.status_package = 'ใช้งาน'
+    LEFT JOIN product_list pr ON pl.id_package = pr.id_package AND pr.status_product = 'ใช้งาน'
+    LEFT JOIN overide o ON pr.id_product = o.id_product
+    WHERE sc.id_bill = ?
+    GROUP BY sc.id_service";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_bill);
+    $stmt->execute();
+    $services = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 } else {
     header('Location: bill.php');
     exit;
@@ -126,6 +140,7 @@ if ($id_bill > 0) {
                         <th class="py-2 px-4 border-b">ประเภทบริการ</th>
                         <th class="py-2 px-4 border-b">ประเภทอุปกรณ์</th>
                         <th class="py-2 px-4 border-b">สถานะบริการ</th>
+                        <th class="py-2 px-4 border-b">ราคา</th>
                         <th class="py-2 px-4 border-b">การดำเนินการ</th>
                     </tr>
                 </thead>
@@ -138,6 +153,7 @@ if ($id_bill > 0) {
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($service['type_service']); ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($service['type_gadget']); ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($service['status_service']); ?></td>
+                                <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($service['total_price'] ?? '0'); ?></td> <!-- แสดงราคา -->
                                 <td class="py-2 px-4 border-b text-center">
                                     <button onclick="openModal('service', <?php echo $service['id_service']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded"> <i class="fas fa-edit"></i></button>
                                     <button onclick="deleteItem('service', <?php echo $service['id_service']; ?>)" class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
@@ -149,7 +165,7 @@ if ($id_bill > 0) {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="py-2 px-4 border-b text-center">ไม่มีข้อมูลบริการ</td>
+                            <td colspan="7" class="py-2 px-4 border-b text-center">ไม่มีข้อมูลบริการ</td> <!-- ปรับ colspan เป็น 7 -->
                         </tr>
                     <?php endif; ?>
                 </tbody>

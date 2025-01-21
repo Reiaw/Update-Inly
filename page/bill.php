@@ -9,6 +9,7 @@ require_once '../config/config.php';
 require_once '../function/functions.php';
 
 $id_customer = isset($_GET['id_customer']) ? intval($_GET['id_customer']) : 0;
+$bill_id = isset($_GET['bill_id']) ? intval($_GET['bill_id']) : 0;
 $customer_name = '';
 if ($id_customer > 0) {
     $sql = "SELECT name_customer FROM customers WHERE id_customer = ?";
@@ -74,10 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute();
     
         echo "<script>alert('บิลถูกอัปเดตเรียบร้อยแล้ว');</script>";
-    }
+    }   
 }
 
-// ดึงข้อมูลบิลและบริการจากฐานข้อมูล
 $sql = "SELECT 
             c.name_customer AS customer_name,
             b.id_bill,
@@ -98,12 +98,20 @@ if ($id_customer > 0) {
     $sql .= " AND b.id_customer = ?";
 }
 
+if ($bill_id > 0) {
+    $sql .= " AND b.id_bill = ?";
+}
+
 $sql .= " GROUP BY b.id_bill ORDER BY b.create_at DESC";
 
 $stmt = $conn->prepare($sql);
 
-if ($id_customer > 0) {
+if ($id_customer > 0 && $bill_id > 0) {
+    $stmt->bind_param("ii", $id_customer, $bill_id);
+} elseif ($id_customer > 0) {
     $stmt->bind_param("i", $id_customer);
+} elseif ($bill_id > 0) {
+    $stmt->bind_param("i", $bill_id);
 }
 
 $stmt->execute();
@@ -172,7 +180,7 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
         <!-- ตารางแสดงข้อมูลบิล -->
         <div class="mt-6">
             <div class="container mx-auto px-4 py-8">
-                <h1 class="text-2xl font-bold mb-4">จัดการบิลสำหรับลูกค้า: <?= $id_customer > 0 ? htmlspecialchars($customer_name) : 'ทั้งหมด' ?></h1>
+            <h1 class="text-2xl font-bold mb-4">จัดการบิลสำหรับลูกค้า: <?= $id_customer > 0 ? htmlspecialchars($customer_name) : 'ทั้งหมด' ?></h1>
                 <!-- ปุ่มและตัวค้นหา -->
                 <div class="flex justify-between items-center mb-4">
                     <!-- ปุ่มสร้างบิลใหม่ -->
@@ -300,7 +308,6 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                     "previous": "ก่อนหน้า"
                 }
             },
-        
         });
 
         // Event listeners for filters
@@ -315,7 +322,7 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
         $('#filterStatusBill').on('change', function() {
             table.column(4).search(this.value).draw();
         });
-    });
+    });;
 
     function openEditBillModal(id_bill) {
         // ดึงข้อมูลบิลและบริการจากฐานข้อมูล

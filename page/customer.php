@@ -287,12 +287,14 @@ $customers = $conn->query("
     }
 
     function deleteCustomer(id_customer) {
-        if (confirm('Are you sure you want to delete this customer?')) {
+        if (confirm('ต้องการลบลูกค้าออกจากระบบ?')) {
             fetch(`../function/delete_customer.php?id_customer=${id_customer}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         location.reload();
+                    } else {
+                        alert(data.message); // แสดงข้อความแจ้งเตือนเมื่อมีบิลที่เกี่ยวข้อง
                     }
                 });
         }

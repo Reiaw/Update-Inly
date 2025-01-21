@@ -365,15 +365,6 @@ function getGroupDetails($id_group) {
     $result = $stmt->get_result();
     return $result->fetch_all(MYSQLI_ASSOC);
 }
-
-function createPackage($data) {
-    global $conn;
-    $sql = "INSERT INTO package_list (name_package, info_package, id_service, create_at, update_at) VALUES (?, ?, ?, ?, NOW())";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssis", $data['name_package'], $data['info_package'], $data['id_service'], $data['create_at']);
-    return $stmt->execute();
-}
-
 function updatePackage($id_package, $data) {
     global $conn;
     $sql = "UPDATE package_list SET name_package = ?, info_package = ?, update_at = NOW() WHERE id_package = ?";
@@ -398,14 +389,6 @@ function getPackageById($id_package) {
     $stmt->execute();
     $result = $stmt->get_result();
     return $result->fetch_assoc();
-}
-
-function createProduct($data) {
-    global $conn;
-    $sql = "INSERT INTO product_list (name_product, info_product, id_package, create_at, update_at) VALUES (?, ?, ?, ?, NOW())";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssis", $data['name_product'], $data['info_product'], $data['id_package'], $data['create_at']);
-    return $stmt->execute();
 }
 
 function updateProduct($id_product, $data) {
