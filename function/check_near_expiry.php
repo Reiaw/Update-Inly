@@ -18,7 +18,8 @@ $result = $stmt->get_result();
 $near_expiry_count = $result->fetch_assoc()['near_expiry_count'];
 
 // Query รายละเอียดสัญญาที่ใกล้หมด
-$sql_details = "SELECT c.id_customer,
+$sql_details = "SELECT 
+            c.id_customer,
             c.name_customer,
             bc.end_date,
             bc.number_bill,
@@ -32,9 +33,6 @@ $sql_details = "SELECT c.id_customer,
         AND bc.contact_status != 'ยกเลิกสัญญา'
         AND bc.status_bill = 'ใช้งาน'
         ORDER BY bc.end_date ASC";
-$stmt_details = $conn->prepare($sql_details);
-$stmt_details->execute();
-$near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt_details = $conn->prepare($sql_details);
 $stmt_details->execute();
 $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);

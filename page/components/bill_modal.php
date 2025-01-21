@@ -93,13 +93,13 @@
                     <option value="ต่อสัญญา">ต่อสัญญา</option>
                     <option value="ยกเลิกสัญญา">ยกเลิกสัญญา</option>
                 </select>
-            </div>
-            <div id="contract_duration_field" class="mb-4 hidden">
-                <label for="contract_duration" class="block text-sm font-medium text-gray-700">ระยะสัญญา (วัน)</label>
-                <input type="number" id="contract_duration" name="contract_duration" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
-            </div>
-            <div class="flex justify-end">
-                <button type="button" onclick="closeContractModal()" class="bg-gray-500 text-white px-4 py-2 rounded-md mr-2">ยกเลิก</button>
+                </div>
+                <div id="contract_duration_field" class="mb-4 hidden">
+                    <label for="contract_duration" class="block text-sm font-medium text-gray-700">ระยะสัญญา (วัน)</label>
+                    <input type="number" id="contract_duration" name="contract_duration" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" onclick="closeContractModal()" class="bg-gray-500 text-white px-4 py-2 rounded-md mr-2">ยกเลิก</button>
                 <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md">บันทึก</button>
             </div>
         </form>
@@ -132,10 +132,12 @@
 
     function addServiceField(service = null) {
         const container = document.getElementById('services-container');
-        const currentIndex = container.children.length; // นับจำนวนบริการที่มีอยู่
+        const currentIndex = container.children.length;
         const newService = document.createElement('div');
         newService.classList.add('mb-4', 'border', 'p-4', 'rounded-md');
+        
         newService.innerHTML = `
+            ${service ? `<input type="hidden" name="id_service[]" value="${service.id_service}">` : ''}
             <h3 class="text-lg font-semibold mb-2">บริการที่ ${currentIndex + 1}</h3>
             <div class="grid grid-cols-2 gap-4 mb-2">
                 <div>

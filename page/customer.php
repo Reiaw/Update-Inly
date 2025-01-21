@@ -78,7 +78,7 @@ $customers = $conn->query("
     <?php include './components/navbar.php'; ?>
 
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-2xl font-bold mb-4">Customer Management</h1>
+        <h1 class="text-2xl font-bold mb-4">จัดการลูกค้า</h1>
         
         <!-- ปรับ UI ให้ปุ่ม "Add Customer" และฟอร์มค้นหาอยู่ในบรรทัดเดียวกัน -->
         <div class="flex flex-wrap items-center justify-between mb-4">

@@ -66,42 +66,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $end_date = date('Y-m-d', strtotime($create_at . " + $date_count days"));
     
         // อัปเดตข้อมูลบิล
-        $sql = "UPDATE bill_customer SET id_customer = ?, number_bill = ?, type_bill = ?, status_bill = ?, create_at = ?, date_count = ?, end_date = ?, update_at = NOW() 
+        $sql = "UPDATE bill_customer SET id_customer = ?, number_bill = ?, type_bill = ?, 
+                status_bill = ?, create_at = ?, date_count = ?, end_date = ?, update_at = NOW() 
             WHERE id_bill = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("issssssi", $id_customer, $number_bill, $type_bill, $status_bill, $create_at, $date_count, $end_date, $id_bill);
         $stmt->execute();
-
-        // อัปเดตข้อมูลบริการ
-        if (isset($_POST['code_service'])) {
-            foreach ($_POST['code_service'] as $index => $code_service) {
-                $type_service = $_POST['type_service'][$index];
-                $type_gadget = $_POST['type_gadget'][$index];
-                $status_service = $_POST['status_service'][$index];
-                
-                if (isset($_POST['id_service'][$index])) {
-                    // อัปเดตบริการที่มีอยู่
-                    $sql = "UPDATE service_customer SET 
-                            code_service = ?, 
-                            type_service = ?, 
-                            type_gadget = ?, 
-                            status_service = ?, 
-                            update_at = NOW() 
-                            WHERE id_service = ?";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("ssssi", $code_service, $type_service, $type_gadget, $status_service, $_POST['id_service'][$index]);
-                } else {
-                    // เพิ่มบริการใหม่
-                    $sql = "INSERT INTO service_customer (code_service, type_service, type_gadget, status_service, id_bill, create_at, update_at) 
-                            VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("ssssi", $code_service, $type_service, $type_gadget, $status_service, $id_bill);
-                }
-                $stmt->execute();
-            }
-        }
-
-        echo "<script>alert('บิลและบริการถูกอัปเดตเรียบร้อยแล้ว');</script>";
+    
+        echo "<script>alert('บิลถูกอัปเดตเรียบร้อยแล้ว');</script>";
     }
 }
 
@@ -356,15 +328,12 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                 document.getElementById('number_bill').value = data.bill.number_bill;
                 document.getElementById('type_bill').value = data.bill.type_bill;
                 document.getElementById('status_bill').value = data.bill.status_bill;
+                document.getElementById('create_at').value = data.bill.create_at;
+                document.getElementById('date_count').value = data.bill.date_count;
 
-                // ล้างบริการเดิม
-                const container = document.getElementById('services-container');
-                container.innerHTML = '';
-
-                // เพิ่มบริการใหม่
-                data.services.forEach((service, index) => {
-                    addServiceField(index, service);
-                });
+                // ซ่อนส่วนของบริการ
+                document.getElementById('services-container').innerHTML = '';
+                document.getElementById('addServiceButton').classList.add('hidden');
 
                 // เปิด Modal
                 document.getElementById('createBillModal').classList.remove('hidden');

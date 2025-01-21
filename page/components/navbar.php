@@ -36,9 +36,6 @@ $sql_details = "SELECT
 $stmt_details = $conn->prepare($sql_details);
 $stmt_details->execute();
 $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt_details = $conn->prepare($sql_details);
-$stmt_details->execute();
-$near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <style>
@@ -89,9 +86,14 @@ $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
         padding: 0.25rem 0.5rem;
         border-radius: 9999px;
     }
+    .sticky-nav {
+        position: sticky;
+        top: 0;
+        z-index: 1000; /* ให้ Navbar อยู่ด้านบนสุดของหน้าเว็บ */
+    }
         
 </style>
-<nav class="bg-white shadow-md">
+<nav class="bg-white shadow-md sticky-nav">
     <div class="container mx-auto px-4">
         <div class="flex justify-between items-center h-16">
             <!-- Logo and Brand Name -->
@@ -121,18 +123,10 @@ $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
                     <?php if ($near_expiry_count > 0): ?>
                         <div class="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden notification-dropdown" id="notificationDropdown">
                             <div class="p-4">
-                                <h3 class="text-lg font-semibold mb-2">แจ้งเตือนสัญญาใกล้หมดเวลา</h3>
+                                <h3 class="text-lg font-semibold mb-2">การแจ้งเตือน</h3>
                                 <ul>
                                     <?php foreach ($near_expiry_contracts as $contract): ?>
-                                        <li class="notification-item">
-                                            <div class="notification-title"><?= htmlspecialchars($contract['name_customer']) ?></div>
-                                            <div class="notification-days-left">สัญญาจะหมดอายุใน <?= $contract['days_left'] ?> วัน</div>
-                                            <div class="notification-date">วันที่สิ้นสุด: <?= htmlspecialchars($contract['end_date']) ?></div>
-                                            <a href="bill.php?id_customer=<?= htmlspecialchars($contract['id_customer']) ?>" 
-                                            class="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition duration-300">
-                                                <i class="fas fa-external-link-alt"></i> ดูบิล
-                                            </a>
-                                        </li>
+                                        
                                     <?php endforeach; ?>
                                 </ul>
                             </div>
@@ -164,9 +158,13 @@ $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
             li.className = 'mb-2';
             li.innerHTML = `
                 <div class="text-sm text-gray-700">
-                    <strong>${contract.name_customer}</strong>
-                    <p>สัญญาจะหมดอายุใน ${contract.days_left} วัน</p>
+                    <p class="notification-title">สัญญาใกล้หมดอายุ</p>
+                    <p>ลูกค้า ${contract.name_customer} หมายเลขบิล ${contract.number_bill}</p>
+                    <p class="text-xs text-gray-500">สัญญาจะหมดอายุใน ${contract.days_left} วัน</p>
                     <p class="text-xs text-gray-500">วันที่สิ้นสุด: ${contract.end_date}</p>
+                    <a href="bill.php?id_customer=<?= htmlspecialchars($contract['id_customer']) ?>" 
+                        class="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition duration-300">ดูบิล
+                    </a>
                 </div>
             `;
             ul.appendChild(li);
