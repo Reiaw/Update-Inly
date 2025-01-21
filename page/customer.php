@@ -20,7 +20,7 @@ $amphures = $conn->query("SELECT * FROM amphures")->fetch_all(MYSQLI_ASSOC);
 $tambons = []; // เริ่มต้นด้วยอาร์เรย์ว่าง
 
 $customers = $conn->query("
-    SELECT c.*, a.info_address, t.name_tambons, am.name_amphures 
+    SELECT c.*, a.info_address, t.name_tambons, am.name_amphures, t.zip_code 
     FROM customers c 
     JOIN address a ON c.id_address = a.id_address 
     JOIN tambons t ON a.id_tambons = t.id_tambons 
@@ -155,7 +155,7 @@ $customers = $conn->query("
                             <?php endif; ?>
                         </td>
                         <td class="py-2 text-center">
-                            <?= $customer['info_address'] ?> <?= $customer['name_tambons'] ?>, <?= $customer['name_amphures'] ?>
+                            <?= $customer['info_address'] ?> <?= $customer['name_tambons'] ?>, <?= $customer['name_amphures'] ?>, <?= $customer['zip_code'] ?>
                         </td>
                         <td class="py-2 text-center">
                             <button onclick="editCustomer(<?= $customer['id_customer'] ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded-md">

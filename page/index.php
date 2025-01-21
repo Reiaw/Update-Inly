@@ -14,19 +14,26 @@ if (!isset($_SESSION['email'])) {
     <title>Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- เพิ่ม FullCalendar CSS และ JS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
     <style>
         body {
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            background-color: #ffffff; /* สีพื้นหลังหลักเป็นสีขาว */
-            color: #333333; /* สีตัวอักษรหลักเป็นสีเทาเข้ม */
+            background-color: #ffffff;
+            color: #333333;
         }
         .footer {
-            background-color: #f8f9fa; /* สีเทาอ่อนสำหรับ Footer */
+            background-color: #f8f9fa;
             padding: 20px 0;
             margin-top: auto;
             text-align: center;
+        }
+        #calendar {
+            max-width: 900px;
+            margin: 40px auto;
         }
     </style>
 </head>
@@ -108,11 +115,26 @@ if (!isset($_SESSION['email'])) {
         </div>
     </div>
 
+    <!-- FullCalendar Section -->
+    <div class="container mx-auto px-4 py-16">
+        <div id="calendar"></div>
+    </div>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <span class="text-gray-800">© 2023 Your Company. All rights reserved.</span> <!-- เปลี่ยนสีข้อความ Footer เป็นสีเทาเข้ม -->
         </div>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+            });
+            calendar.render();
+        });
+    </script>
 </body>
 </html>

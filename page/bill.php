@@ -270,13 +270,13 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                                     </a>
                                     <div>
                                         <?php
-                                        // ตรวจสอบว่า end_date น้อยกว่า 30 วันหรือไม่
+                                        // ตรวจสอบว่า end_date น้อยกว่า 60 วันหรือไม่
                                         $end_date = new DateTime($bill['end_date']);
                                         $current_date = new DateTime();
                                         $interval = $current_date->diff($end_date);
                                         $days_left = $interval->days;
 
-                                        if ($days_left < 30 && $bill['contact_status'] !== 'ยกเลิกสัญญา') {
+                                        if ($days_left < 60 && $bill['contact_status'] !== 'ยกเลิกสัญญา') {
                                             echo '<button onclick="openContractModal(' . $bill['id_bill'] . ')" class="bg-green-500 text-white px-2 py-1 rounded-md"><i class="fas fa-file-contract"></i> สัญญา</button>';
                                         }
                                         ?>
