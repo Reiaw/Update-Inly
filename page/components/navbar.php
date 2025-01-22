@@ -163,7 +163,7 @@ $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
                     <p>ลูกค้า ${contract.name_customer} หมายเลขบิล ${contract.number_bill}</p>
                     <p class="text-xs text-gray-500">สัญญาจะหมดอายุใน ${contract.days_left} วัน</p>
                     <p class="text-xs text-gray-500">วันที่สิ้นสุด: ${contract.end_date}</p>
-                    <a href="bill.php?id_customer=${contract.id_customer}&bill_id=${contract.id_bill}" 
+                    <a href="bill.php?id_customer=${contract.id_customer}&id_bill=${contract.id_bill}" 
                         class="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition duration-300">ดูบิล
                     </a>
                 </div>

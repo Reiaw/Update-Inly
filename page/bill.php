@@ -9,7 +9,7 @@ require_once '../config/config.php';
 require_once '../function/functions.php';
 
 $id_customer = isset($_GET['id_customer']) ? intval($_GET['id_customer']) : 0;
-$bill_id = isset($_GET['bill_id']) ? intval($_GET['bill_id']) : 0;
+$bill_id = isset($_GET['id_bill']) ? intval($_GET['id_bill']) : 0;
 $customer_name = '';
 if ($id_customer > 0) {
     $sql = "SELECT name_customer FROM customers WHERE id_customer = ?";
@@ -252,11 +252,11 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                                         <?php
                                         // ตรวจสอบว่า end_date น้อยกว่า 60 วันหรือไม่
                                         $end_date = new DateTime($bill['end_date']);
-                                        $current_date = new DateTime();
+                                        $current_date = new DateTime(); 
                                         $interval = $current_date->diff($end_date);
                                         $days_left = $interval->days;
 
-                                        if ($days_left < 60 && $bill['contact_status'] !== 'ยกเลิกสัญญา') {
+                                        if ($days_left < 60 && $bill['contact_status'] !== 'ยกเลิกสัญญา' && $bill['bill_status'] !== 'ยกเลิกใช้งาน') {
                                             echo '<button onclick="openContractModal(' . $bill['id_bill'] . ')" class="bg-green-500 text-white px-2 py-1 rounded-md"><i class="fas fa-file-contract"></i> สัญญา</button>';
                                         }
                                         ?>

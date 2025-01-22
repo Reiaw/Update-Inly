@@ -21,6 +21,7 @@ $near_expiry_count = $result->fetch_assoc()['near_expiry_count'];
 $sql_details = "SELECT 
             c.id_customer,
             c.name_customer,
+            bc.id_bill,
             bc.end_date,
             bc.number_bill,
             bc.type_bill,

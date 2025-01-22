@@ -7,7 +7,7 @@ if (!isset($_SESSION['email'])) {
 require_once '../config/config.php';
 require_once '../function/functions.php';
 $sql = "
-    SELECT bc.number_bill, bc.end_date, bc.type_bill, c.name_customer, c.phone_customer
+    SELECT bc.number_bill, bc.end_date, bc.type_bill, bc.status_bill, c.name_customer, c.phone_customer 
     FROM bill_customer bc
     JOIN customers c ON bc.id_customer = c.id_customer
 ";
@@ -122,7 +122,7 @@ if ($result->num_rows > 0) {
                 </div>
 
                 <!-- 2019 -->
-                <div class="flex flex-col md:flex-row gap-8 items-start">
+      W          <div class="flex flex-col md:flex-row gap-8 items-start">
                     <div class="w-full md:w-1/3">
                         <h2 class="text-2xl font-bold mb-2 text-gray-800">2019</h2>
                         <h3 class="text-xl text-gray-700 mb-4">Strict Quality Control</h3>
@@ -183,7 +183,8 @@ if ($result->num_rows > 0) {
                             phone: '<?php echo htmlspecialchars($bill['phone_customer']); ?>',
                             billnum: '<?php echo $bill['number_bill']; ?>',
                             billtype: '<?php echo $bill['type_bill']; ?>',
-                            customername: '<?php echo htmlspecialchars($bill['name_customer']); ?>'
+                            customername: '<?php echo htmlspecialchars($bill['name_customer']); ?>',
+                            billstatus: '<?php echo htmlspecialchars($bill['status_bill']); ?>'
                         }
                     },
                     <?php endforeach; ?>
@@ -194,7 +195,7 @@ if ($result->num_rows > 0) {
                     document.getElementById('modalBillCode').innerText = 'Bill Code: ' + info.event.extendedProps.billnum;
                     document.getElementById('modalBillType').innerText = 'ประเภทบิล: ' + info.event.extendedProps.billtype;
                     document.getElementById('modalPhone').innerText = 'เบอร์ติดต่อ: ' + info.event.extendedProps.phone;
-
+                    document.getElementById('modalBillStatus').innerText = 'สถานะบิล: ' + info.event.extendedProps.billstatus;
                     // แสดง modal
                     document.getElementById('eventModal').classList.remove('hidden');
                 }

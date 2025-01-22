@@ -17,16 +17,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // ตรวจสอบรหัสผ่าน
         if (password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id']; // เก็บ user_id ในเซสชัน
             $_SESSION['email'] = $email;
             $_SESSION['name'] = $user['name']; // เก็บชื่อใน session
             header('Location: index.php');
             exit;
         } else {
-            
             echo "<script>alert('รหัสผ่านไม่ถูกต้อง');</script>";
         }
     } else {
-        
         echo "<script>alert('อีเมลไม่ถูกต้องหรือยังไม่ได้ยืนยัน');</script>";
     }
 }

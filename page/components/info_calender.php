@@ -8,6 +8,7 @@
                 <p class="text-sm text-gray-500" id="modalBillCode"></p>
                 <p class="text-sm text-gray-500" id="modalBillType"></p>
                 <p class="text-sm text-gray-500" id="modalPhone"></p>
+                <p class="text-sm text-gray-500" id="modalBillStatus"></p>
             </div>
             <div class="items-center px-4 py-3">
                 <button id="okBtn" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
