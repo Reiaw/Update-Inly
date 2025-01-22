@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 21, 2025 at 08:19 AM
+-- Generation Time: Jan 22, 2025 at 09:12 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -97,15 +97,15 @@ CREATE TABLE `bill_customer` (
 --
 
 INSERT INTO `bill_customer` (`id_bill`, `number_bill`, `type_bill`, `status_bill`, `id_customer`, `create_at`, `update_at`, `date_count`, `end_date`, `contact_count`, `contact_status`) VALUES
-(13, 2147483647, 'CIP+', 'ใช้งาน', 38, '2025-01-21', '2025-01-21', 120, '2025-05-21', 1, 'ต่อสัญญา'),
-(14, 101, 'Special Bill', 'ยกเลิกใช้งาน', 38, '2025-01-17', '2025-01-21', 20, '2025-02-06', 1, 'ต่อสัญญา'),
-(15, 2147483647, 'CIP+', 'ใช้งาน', 38, '2025-01-17', '2025-01-17', 20000, '2025-01-29', 1, 'ต่อสัญญา'),
-(16, 555555, 'CIP+', 'ใช้งาน', 38, '2025-01-20', '2025-01-20', NULL, '2025-01-31', 1, 'ต่อสัญญา'),
+(13, 2147483647, 'CIP+', 'ใช้งาน', 38, '2025-01-21', '2025-01-21', 120, '2025-03-21', 1, 'ต่อสัญญา'),
+(14, 101, 'Special Bill', 'ยกเลิกใช้งาน', 38, '2025-01-17', '2025-01-21', 0, '2025-02-07', 2, 'ต่อสัญญา'),
+(15, 2147483647, 'CIP+', 'ใช้งาน', 38, '2025-01-17', '2025-01-17', 20, '2026-10-03', 3, 'ต่อสัญญา'),
+(16, 555555, 'CIP+', 'ใช้งาน', 38, '2025-01-20', '2025-01-20', 200, '2025-08-19', 2, 'ต่อสัญญา'),
 (17, 2147483647, 'CIP+', 'ใช้งาน', 40, '2025-01-20', '2025-01-20', 365, '2026-02-19', 2, 'ต่อสัญญา'),
-(34, 254687, 'CIP+', 'ใช้งาน', 38, '2025-01-19', '2025-01-20', 100, '2025-05-21', 3, 'ต่อสัญญา'),
-(40, 2147483647, 'CIP+', 'ใช้งาน', 40, '2025-01-15', '2025-01-20', 200, '2025-01-24', 0, 'ยังไม่ได้เลือก'),
-(41, 2147483647, 'CIP+', 'ใช้งาน', 40, '2025-01-21', '2025-01-21', 120, '2025-05-21', 1, 'ยกเลิกสัญญา'),
-(42, 254687, 'Special Bill', 'ใช้งาน', 40, '2025-01-20', '2025-01-20', 725, '2027-01-15', 0, 'ยังไม่ได้เลือก');
+(34, 254687, 'CIP+', 'ใช้งาน', 38, '2025-01-19', '2025-01-20', 100, '2025-02-01', 3, 'ต่อสัญญา'),
+(40, 2147483647, 'CIP+', 'ใช้งาน', 40, '2025-01-15', '2025-01-20', 5, '2025-01-25', 3, 'ต่อสัญญา'),
+(41, 2147483647, 'CIP+', 'ใช้งาน', 40, '2025-01-21', '2025-01-22', 5, '2025-08-21', 3, 'ต่อสัญญา'),
+(42, 254687, 'Special Bill', 'ใช้งาน', 40, '2025-01-20', '2025-01-20', 725, '2027-01-30', 0, 'ยังไม่ได้เลือก');
 
 -- --------------------------------------------------------
 
@@ -152,7 +152,6 @@ CREATE TABLE `gedget` (
 
 INSERT INTO `gedget` (`id_gedget`, `name_gedget`, `quantity_gedget`, `id_bill`, `create_at`) VALUES
 (14, 'ZTE รุ่น F620', 1, 13, NULL),
-(15, 'Mikrotik รุ่น rb3011', 1, 13, NULL),
 (16, 'ubiquibi รุ่น injector ', 2, 13, NULL),
 (17, 'ubiquibi รุ่น uapaclr', 2, 13, NULL),
 (18, 'syndome รุ่น 1E00YA', 1, 13, NULL),
@@ -186,7 +185,6 @@ CREATE TABLE `group_service` (
 --
 
 INSERT INTO `group_service` (`id_group`, `id_bill`, `group_name`) VALUES
-(54, 13, 'กอคลัง'),
 (55, 13, 'สำนักปลัด'),
 (56, 13, 'ICT กองคลัง'),
 (57, 13, 'ICT สำนักปลัด'),
@@ -194,7 +192,9 @@ INSERT INTO `group_service` (`id_group`, `id_bill`, `group_name`) VALUES
 (59, 15, 'กองยุทศาสตร์ (เก่า)'),
 (61, 14, 'A'),
 (62, 14, 'B'),
-(63, 13, '5');
+(63, 13, '5'),
+(64, 14, 'A'),
+(65, 14, 'AXXXX');
 
 -- --------------------------------------------------------
 
@@ -214,12 +214,6 @@ CREATE TABLE `group_servicedetail` (
 --
 
 INSERT INTO `group_servicedetail` (`id_group_detail`, `id_group`, `id_service`, `id_gedget`) VALUES
-(52, 54, 35, NULL),
-(53, 54, NULL, 14),
-(54, 54, NULL, 15),
-(55, 54, NULL, 16),
-(56, 54, NULL, 17),
-(57, 54, NULL, 18),
 (58, 55, 36, NULL),
 (59, 55, NULL, 19),
 (60, 55, NULL, 20),
@@ -242,7 +236,34 @@ INSERT INTO `group_servicedetail` (`id_group_detail`, `id_group`, `id_service`, 
 (95, 61, 39, NULL),
 (96, 61, NULL, 29),
 (97, 63, 31, NULL),
-(98, 63, NULL, 31);
+(98, 63, NULL, 31),
+(99, 64, 39, NULL),
+(100, 65, 39, NULL),
+(101, 65, NULL, 29);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `notifications`
+--
+
+CREATE TABLE `notifications` (
+  `id_notifications` int(11) NOT NULL,
+  `id_user` int(11) NOT NULL,
+  `id_bill` int(11) NOT NULL,
+  `message` text NOT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `notifications`
+--
+
+INSERT INTO `notifications` (`id_notifications`, `id_user`, `id_bill`, `message`, `is_read`, `created_at`) VALUES
+(21, 15, 13, 'สัญญาใกล้หมดอายุ: ลูกค้า ปากแพรก หมายเลขบิล 2147483647 จะหมดอายุใน 58 วัน', 0, '2025-01-22 13:37:02'),
+(22, 15, 34, 'สัญญาใกล้หมดอายุ: ลูกค้า ปากแพรก หมายเลขบิล 254687 จะหมดอายุใน 10 วัน', 0, '2025-01-22 13:45:14'),
+(24, 15, 40, 'สัญญาใกล้หมดอายุ: ลูกค้า Rtop หมายเลขบิล 2147483647 จะหมดอายุใน 3 วัน', 1, '2025-01-22 15:03:59');
 
 -- --------------------------------------------------------
 
@@ -264,7 +285,12 @@ CREATE TABLE `overide` (
 --
 
 INSERT INTO `overide` (`id_overide`, `mainpackage_price`, `ict_price`, `all_price`, `info_overide`, `id_product`) VALUES
-(19, 3890, 0, 3890, NULL, 26);
+(27, 100, 100, 200, NULL, 34),
+(28, 200, 100, 300, NULL, 35),
+(29, 100, 200, 300, NULL, 36),
+(30, 100, 100, 200, NULL, 37),
+(31, 100, 100, 200, NULL, 38),
+(32, 100, 0, 100, NULL, 39);
 
 -- --------------------------------------------------------
 
@@ -287,7 +313,12 @@ CREATE TABLE `package_list` (
 --
 
 INSERT INTO `package_list` (`id_package`, `name_package`, `info_package`, `id_service`, `create_at`, `update_at`, `status_package`) VALUES
-(12, ' Smart Help Call Center', '-', 39, '2025-01-15', '2025-01-17', 'ใช้งาน');
+(15, ' Smart Help Call Center', 'AB', 39, '0000-00-00', '2025-01-21', 'ยกเลิก'),
+(18, ' Smart Help Call Center', '-', 39, '2025-01-16', '2025-01-21', 'ยกเลิก'),
+(19, 'A', '', 39, '2025-01-09', '2025-01-21', 'ยกเลิก'),
+(20, 'AA', '', 39, '2025-01-15', '2025-01-21', 'ยกเลิก'),
+(24, ' Smart Help Call Center', '', 39, '2025-01-16', '2025-01-21', 'ใช้งาน'),
+(25, ' Smart Help Call Center', '1', 40, '2025-01-07', '2025-01-21', 'ใช้งาน');
 
 -- --------------------------------------------------------
 
@@ -310,7 +341,12 @@ CREATE TABLE `product_list` (
 --
 
 INSERT INTO `product_list` (`id_product`, `name_product`, `info_product`, `id_package`, `create_at`, `update_at`, `status_product`) VALUES
-(26, 'ค่าบริการ Smart Help Call Center', '-', 12, '2025-01-15', '2025-01-17', 'ใช้งาน');
+(34, 'AA', '', 18, '2025-01-16', '2025-01-21', 'ยกเลิก'),
+(35, 'AA', '', 19, '2025-01-09', '2025-01-21', 'ยกเลิก'),
+(36, 'AA', '', 20, '2025-01-15', '2025-01-21', 'ยกเลิก'),
+(37, '0', '', 15, '0000-00-00', '2025-01-21', 'ยกเลิก'),
+(38, '100', '', 24, '2025-01-16', '2025-01-21', 'ใช้งาน'),
+(39, '100', '100', 25, '2025-01-07', '2025-01-21', 'ใช้งาน');
 
 -- --------------------------------------------------------
 
@@ -548,6 +584,14 @@ ALTER TABLE `group_servicedetail`
   ADD KEY `id_gedget` (`id_gedget`);
 
 --
+-- Indexes for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`id_notifications`),
+  ADD KEY `id_user` (`id_user`),
+  ADD KEY `id_bill` (`id_bill`);
+
+--
 -- Indexes for table `overide`
 --
 ALTER TABLE `overide`
@@ -621,31 +665,37 @@ ALTER TABLE `gedget`
 -- AUTO_INCREMENT for table `group_service`
 --
 ALTER TABLE `group_service`
-  MODIFY `id_group` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+  MODIFY `id_group` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
 -- AUTO_INCREMENT for table `group_servicedetail`
 --
 ALTER TABLE `group_servicedetail`
-  MODIFY `id_group_detail` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=99;
+  MODIFY `id_group_detail` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
+
+--
+-- AUTO_INCREMENT for table `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `id_notifications` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `overide`
 --
 ALTER TABLE `overide`
-  MODIFY `id_overide` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id_overide` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `package_list`
 --
 ALTER TABLE `package_list`
-  MODIFY `id_package` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id_package` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `product_list`
 --
 ALTER TABLE `product_list`
-  MODIFY `id_product` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id_product` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `service_customer`
@@ -701,6 +751,13 @@ ALTER TABLE `group_servicedetail`
   ADD CONSTRAINT `group_servicedetail_ibfk_1` FOREIGN KEY (`id_group`) REFERENCES `group_service` (`id_group`),
   ADD CONSTRAINT `group_servicedetail_ibfk_2` FOREIGN KEY (`id_service`) REFERENCES `service_customer` (`id_service`),
   ADD CONSTRAINT `group_servicedetail_ibfk_3` FOREIGN KEY (`id_gedget`) REFERENCES `gedget` (`id_gedget`);
+
+--
+-- Constraints for table `notifications`
+--
+ALTER TABLE `notifications`
+  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `notifications_ibfk_2` FOREIGN KEY (`id_bill`) REFERENCES `bill_customer` (`id_bill`);
 
 --
 -- Constraints for table `overide`
