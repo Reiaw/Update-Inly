@@ -1,42 +1,31 @@
 <?php
-
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/config.php';
 require_once '../function/functions.php';
 
-// ตรวจสอบสัญญาที่ใกล้หมดเวลา (ภายใน 30 วัน)
-$sql = "SELECT COUNT(*) as near_expiry_count 
-        FROM bill_customer bc
-        INNER JOIN customers c ON bc.id_customer = c.id_customer
-        WHERE bc.end_date IS NOT NULL 
-        AND bc.end_date != '0000-00-00'
-        AND bc.end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)
-        AND bc.contact_status != 'ยกเลิกสัญญา'
-        AND bc.status_bill = 'ใช้งาน';";
-$stmt = $conn->prepare($sql);
-$stmt->execute();
-$result = $stmt->get_result();
-$near_expiry_count = $result->fetch_assoc()['near_expiry_count'];
+// ดึง user_id จาก session
+$user_id = $_SESSION['user_id'] ?? null;
 
-// Query รายละเอียดสัญญาที่ใกล้หมด
-$sql_details = "SELECT 
-            c.id_customer,
-            c.name_customer,
-            bc.id_bill,
-            bc.end_date,
-            bc.number_bill,
-            bc.type_bill,
-            DATEDIFF(bc.end_date, CURDATE()) as days_left
-        FROM bill_customer bc
-        INNER JOIN customers c ON bc.id_customer = c.id_customer
-        WHERE bc.end_date IS NOT NULL 
-        AND bc.end_date != '0000-00-00'
-        AND bc.end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)
-        AND bc.contact_status != 'ยกเลิกสัญญา'
-        AND bc.status_bill = 'ใช้งาน'
-        ORDER BY bc.end_date ASC";
-$stmt_details = $conn->prepare($sql_details);
-$stmt_details->execute();
-$near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
+if (!$user_id) {
+    echo json_encode(['error' => 'User not logged in']);
+    exit;
+}
+
+// ดึงการแจ้งเตือนจากตาราง notifications ที่ยังไม่ได้อ่าน (is_read = 0)
+$sql_notifications = "SELECT n.id_notifications, n.message, n.created_at, n.is_read, bc.number_bill, c.name_customer
+                      FROM notifications n
+                      INNER JOIN bill_customer bc ON n.id_bill = bc.id_bill
+                      INNER JOIN customers c ON bc.id_customer = c.id_customer
+                      WHERE n.id_user = ? AND n.is_read = 0
+                      ORDER BY n.created_at DESC";
+$stmt_notifications = $conn->prepare($sql_notifications);
+$stmt_notifications->bind_param("i", $user_id);
+$stmt_notifications->execute();
+$notifications = $stmt_notifications->get_result()->fetch_all(MYSQLI_ASSOC);
+
+$near_expiry_count = count($notifications);
 ?>
 
 <style>
@@ -51,6 +40,7 @@ $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
     .notification-item {
+        position: relative; /* กำหนดให้เป็น relative เพื่อให้ปุ่มอ่านแล้วอยู่ภายใน */
         padding: 0.75rem;
         border-bottom: 1px solid #e2e8f0;
         transition: background-color 0.2s ease-in-out;
@@ -86,6 +76,23 @@ $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
         font-size: 0.75rem;
         padding: 0.25rem 0.5rem;
         border-radius: 9999px;
+    }
+
+    /* สไตล์สำหรับปุ่มอ่านแล้ว (ไอคอนกากบาท) */
+    .mark-as-read-button {
+        position: absolute; /* กำหนดให้อยู่ที่มุมขวาบน */
+        top: 0.5rem;
+        right: 0.5rem;
+        background: none;
+        border: none;
+        color: #718096; /* สีเทา */
+        font-size: 1.5rem; /* ปรับขนาดให้ใหญ่ขึ้น (ค่าเริ่มต้นคือ 1rem) */
+        cursor: pointer;
+        transition: color 0.2s ease-in-out;
+    }
+
+    .mark-as-read-button:hover {
+        color: #dc2626; /* สีแดงเมื่อ hover */
     }
     .sticky-nav {
         position: sticky;
@@ -126,8 +133,21 @@ $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
                             <div class="p-4">
                                 <h3 class="text-lg font-semibold mb-2">การแจ้งเตือน</h3>
                                 <ul>
-                                    <?php foreach ($near_expiry_contracts as $contract): ?>
-                                        
+                                    <?php foreach ($notifications as $notification): ?>
+                                        <li class="notification-item" data-notification-id="<?= $notification['id_notifications'] ?>">
+                                            <div class="text-sm text-gray-700">
+                                                <button onclick="markAsRead(<?= $notification['id_notifications'] ?>)" 
+                                                        class="mark-as-read-button">
+                                                    ×
+                                                </button>
+                                                <p class="notification-title"><?= $notification['message'] ?></p>
+                                                <p class="notification-date"><?= date('Y-m-d H:i:s', strtotime($notification['created_at'])) ?></p>
+                                                <a href="bill.php?id_customer=<?= $notification['id_customer'] ?>&id_bill=<?= $notification['id_bill'] ?>" 
+                                                class="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition duration-300">
+                                                    ดูบิล
+                                                </a>
+                                            </div>
+                                        </li>
                                     <?php endforeach; ?>
                                 </ul>
                             </div>
@@ -155,24 +175,32 @@ $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
 
         // Add new notifications
         contracts.forEach(contract => {
-            const li = document.createElement('li');
-            li.className = 'mb-2';
-            li.innerHTML = `
-                <div class="text-sm text-gray-700">
-                    <p class="notification-title">สัญญาใกล้หมดอายุ</p>
-                    <p>ลูกค้า ${contract.name_customer} หมายเลขบิล ${contract.number_bill}</p>
-                    <p class="text-xs text-gray-500">สัญญาจะหมดอายุใน ${contract.days_left} วัน</p>
-                    <p class="text-xs text-gray-500">วันที่สิ้นสุด: ${contract.end_date}</p>
-                    <a href="bill.php?id_customer=${contract.id_customer}&id_bill=${contract.id_bill}" 
-                        class="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition duration-300">ดูบิล
-                    </a>
-                </div>
-            `;
-            ul.appendChild(li);
+            if (!contract.is_read) {  // เพิ่มเงื่อนไขให้แสดงเฉพาะการแจ้งเตือนที่ยังไม่ได้อ่าน
+                const li = document.createElement('li');
+                li.className = 'notification-item';
+                li.setAttribute('data-notification-id', contract.id_notifications); // เพิ่ม data-notification-id
+                li.innerHTML = `
+                     <div class="text-sm text-gray-700">
+                        <p class="notification-title">สัญญาใกล้หมดอายุ</p>
+                        <p class="notification-title">ลูกค้า ${contract.name_customer}</p>
+                        <p class="notification-days-left">เหลือเวลาอีก ${contract.days_left} วัน</p>
+                        <p class="notification-date">หมายเลขบิล: ${contract.number_bill}</p>
+                        <a href="bill.php?id_customer=${contract.id_customer}&id_bill=${contract.id_bill}" 
+                        class="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition duration-300">
+                            ดูบิล
+                        </a>
+                        <button onclick="markAsRead(${contract.id_notifications})" 
+                                class="mark-as-read-button"">
+                            ×
+                        </button>
+                    </div>
+                `;
+                ul.appendChild(li);
+            }
         });
     }
 
-    function checkNearExpiryContracts() {
+    function checkNotifications() {
         fetch('../function/check_near_expiry.php')
             .then(response => response.json())
             .then(data => {
@@ -196,8 +224,8 @@ $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
     // ตรวจสอบทุก 5 นาที
-    setInterval(checkNearExpiryContracts, 300000);
-    checkNearExpiryContracts(); // ตรวจสอบทันทีเมื่อโหลดหน้า
+    setInterval(checkNotifications, 300000);
+    checkNotifications(); // ตรวจสอบทันทีเมื่อโหลดหน้า
 
      // เปิด/ปิด dropdown menu เมื่อคลิกที่ไอคอนกระดิ่ง
     document.addEventListener('DOMContentLoaded', function() {
@@ -218,4 +246,35 @@ $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
             });
         }
     });
+    function markAsRead(notificationId) {
+        fetch('../function/mark_as_read.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ notification_id: notificationId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // หา element ที่มี data-notification-id เท่ากับ notificationId
+                const notificationItem = document.querySelector(`.notification-item[data-notification-id="${notificationId}"]`);
+                if (notificationItem) {
+                    // ลบรายการแจ้งเตือนที่ถูกอ่านแล้วออกจาก dropdown
+                    notificationItem.remove();
+                }
+
+                // อัปเดตจำนวนการแจ้งเตือนที่แสดงบนไอคอนกระดิ่ง
+                const notificationCount = document.querySelector('.fa-bell').nextElementSibling;
+                if (notificationCount) {
+                    const newCount = parseInt(notificationCount.textContent) - 1;
+                    if (newCount > 0) {
+                        notificationCount.textContent = newCount;
+                    } else {
+                        notificationCount.remove();
+                    }
+                }
+            }
+        });
+    }
 </script>

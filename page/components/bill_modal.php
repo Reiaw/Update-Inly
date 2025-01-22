@@ -42,7 +42,7 @@
                         <input type="date" name="create_at" id="create_at" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
                     </div>
                     <div>
-                        <label for="date_count" class="block text-sm font-medium text-gray-700">ระยะสัญญา (วัน)</label>
+                        <label for="date_count" class="block text-sm font-medium text-gray-700">ระยะสัญญา (เดือน)</label>
                         <input type="number" name="date_count" id="date_count" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
                     </div>
                 </div>
@@ -95,7 +95,7 @@
                 </select>
                 </div>
                 <div id="contract_duration_field" class="mb-4 hidden">
-                    <label for="contract_duration" class="block text-sm font-medium text-gray-700">ระยะสัญญา (วัน)</label>
+                    <label for="contract_duration" class="block text-sm font-medium text-gray-700">ระยะสัญญา (เดือน)</label>
                     <input type="number" id="contract_duration" name="contract_duration" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                 </div>
                 <div class="flex justify-end">

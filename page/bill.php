@@ -20,6 +20,7 @@ if ($id_customer > 0) {
     $customer = $result->fetch_assoc();
     $customer_name = $customer['name_customer'];
 }
+
 // ตรวจสอบการส่งฟอร์ม
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['create_bill'])) {
@@ -30,7 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status_bill = $_POST['status_bill'];
         $create_at = $_POST['create_at'];
         $date_count = $_POST['date_count'];
-        $end_date = date('Y-m-d', strtotime($create_at . " + $date_count days"));
+
+        // คำนวณวันที่สิ้นสุดสัญญาจากเดือน
+        $end_date = date('Y-m-d', strtotime($create_at . " + $date_count months"));
 
         // สร้างบิลใหม่
         $sql = "INSERT INTO bill_customer (id_customer, number_bill, type_bill, status_bill, create_at, update_at, date_count, end_date) 
@@ -64,8 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status_bill = $_POST['status_bill'];
         $create_at = $_POST['create_at'];
         $date_count = $_POST['date_count'];
-        $end_date = date('Y-m-d', strtotime($create_at . " + $date_count days"));
-    
+
+        // คำนวณวันที่สิ้นสุดสัญญาจากเดือน
+        $end_date = date('Y-m-d', strtotime($create_at . " + $date_count months"));
+
         // อัปเดตข้อมูลบิล
         $sql = "UPDATE bill_customer SET id_customer = ?, number_bill = ?, type_bill = ?, 
                 status_bill = ?, create_at = ?, date_count = ?, end_date = ?, update_at = NOW() 
@@ -73,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("issssssi", $id_customer, $number_bill, $type_bill, $status_bill, $create_at, $date_count, $end_date, $id_bill);
         $stmt->execute();
-    
+
         echo "<script>alert('บิลถูกอัปเดตเรียบร้อยแล้ว');</script>";
     }   
 }
@@ -252,7 +257,7 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                                         <?php
                                         // ตรวจสอบว่า end_date น้อยกว่า 60 วันหรือไม่
                                         $end_date = new DateTime($bill['end_date']);
-                                        $current_date = new DateTime(); 
+                                        $current_date = new DateTime();
                                         $interval = $current_date->diff($end_date);
                                         $days_left = $interval->days;
 

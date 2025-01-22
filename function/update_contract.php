@@ -32,6 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("ssiii", $new_end_date, $contact_status, $contract_duration, $contact_count, $id_bill);
     $stmt->execute();
 
-    echo "<script>alert('อัปเดตสัญญาเรียบร้อยแล้ว'); window.location.href = '../page/bill.php';</script>";
+    echo "<script>alert('อัปเดตสัญญาเรียบร้อยแล้ว'); window.location.href = '../page/bill.php?id_bill=$id_bill&id_customer=$id_customer';</script>";
 }
 ?>
