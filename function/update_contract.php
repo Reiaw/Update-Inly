@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($contract_action === 'ต่อสัญญา') {
         // คำนวณ end_date ใหม่
-        $new_end_date = date('Y-m-d', strtotime($bill['end_date'] . " + $contract_duration days"));
+        $new_end_date = date('Y-m-d', strtotime($bill['end_date'] . " + $contract_duration months"));
         $contact_status = 'ต่อสัญญา';
         $contact_count = $bill['contact_count'] + 1; // เพิ่ม contact_count ขึ้น 1
     } else {
