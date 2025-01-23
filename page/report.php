@@ -356,6 +356,7 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
                         CONCAT(a.info_address, ' ต.', t.name_tambons, ' อ.', am.name_amphures) AS full_address, 
                         g.name_gedget, 
                         g.status_gedget,
+                        g.create_at,
                         g.note
                     FROM customers c 
                     LEFT JOIN bill_customer b ON c.id_customer = b.id_customer 
@@ -389,6 +390,7 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
                         <th class='p-2 border border-gray-300'>Phone</th>
                         <th class='p-2 border border-gray-300'>Address</th>
                         <th class='p-2 border border-gray-300'>Gadget Name</th>
+                        <th class='p-2 border border-gray-300'>Create_at</th>
                         <th class='p-2 border border-gray-300'>Gadget Status</th>
                         <th class='p-2 border border-gray-300'>Note</th>
                       </tr></thead>";
@@ -406,17 +408,16 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
                                 <td class='p-2 border border-gray-300'>" . $row['phone_customer'] . "</td>
                                 <td class='p-2 border border-gray-300'>" . $row['full_address'] . "</td>
                                 <td class='p-2 border border-gray-300'>" . $row['name_gedget'] . "</td>
+                                <td class='p-2 border border-gray-300'>" . $row['create_at'] . "</td>
                                 <td class='p-2 border border-gray-300'>" . $row['status_gedget'] . "</td>
                                 <td class='p-2 border border-gray-300'>" . $row['note'] . "</td>
                               </tr>";
                         $counter++; // เพิ่มค่าลำดับ
                     } else {
                         echo "<tr>
-                                <td class='p-2 border border-gray-300'></td>
-                                <td class='p-2 border border-gray-300'></td>
-                                <td class='p-2 border border-gray-300'></td>
-                                <td class='p-2 border border-gray-300'></td>
+                                <td class='p-2 border border-gray-300' colspan='4'></td>
                                 <td class='p-2 border border-gray-300'>" . $row['name_gedget'] . "</td>
+                                <td class='p-2 border border-gray-300'>" . $row['create_at'] . "</td>
                                 <td class='p-2 border border-gray-300'>" . $row['status_gedget'] . "</td>
                                 <td class='p-2 border border-gray-300'>" . $row['note'] . "</td>
                               </tr>";
