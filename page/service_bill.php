@@ -189,8 +189,9 @@ if ($id_bill > 0) {
                     <tr>
                         <th class="py-2 px-4 border-b">ลำดับที่</th>
                         <th class="py-2 px-4 border-b">ชื่อ Gedget</th>
-                        <th class="py-2 px-4 border-b">จำนวน</th>
                         <th class="py-2 px-4 border-b">วันที่เริ่มใช้อุปกรณ์</th>
+                        <th class="py-2 px-4 border-b">สถานะอุปกรณ์</th>
+                        <th class="py-2 px-4 border-b">หมายเหตุ</th>
                         <th class="py-2 px-4 border-b">การดำเนินการ</th>
                     </tr>
                 </thead>
@@ -200,8 +201,9 @@ if ($id_bill > 0) {
                             <tr>
                                 <td class="py-2 px-4 border-b text-center"><?php echo $gedget['id_gedget']; ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($gedget['name_gedget']); ?></td>
-                                <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($gedget['quantity_gedget']); ?></td>
                                 <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($gedget['create_at']); ?></td>
+                                <td class="py-2 px-4 border-b text-center"><?php echo htmlspecialchars($gedget['status_gedget']); ?></td>
+                                <td class="py-2 px-4 border-b text-center"><?php echo $gedget['note'] !== null ? htmlspecialchars($gedget['note']) : '-'; ?></td>
                                 <td class="py-2 px-4 border-b text-center">
                                     <button onclick="openModal('gedget', <?php echo $gedget['id_gedget']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded"> <i class="fas fa-edit"></i></button>
                                     <button onclick="deleteItem('gedget', <?php echo $gedget['id_gedget']; ?>)" class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
@@ -447,19 +449,32 @@ if ($id_bill > 0) {
             const modalTitle = document.getElementById('modalTitle');
             const modalForm = document.getElementById(`${type}Form`);
             const modalElement = document.getElementById(`${type}Modal`);
+            const quantityField = document.getElementById('quantityField');
             const createDateField = document.getElementById('createDateField');
+            const statusField = document.getElementById('statusField');
+            const quantityGedgetInput = document.getElementById('quantity_gedget');
 
             if (id) {
                 if (createDateField) {
+                    createDateField.style.display = 'none'; // ซ่อนฟิลด์วันที่สร้างในโหมดแก้ไข
+                }
+                if (quantityField) {
+                    quantityField.style.display = 'none';
+                }
+                if (createDateField) {
                     createDateField.style.display = 'none';
                 }
-
+                if (statusField) {
+                    statusField.classList.remove('hidden');
+                }
+                if (quantityGedgetInput) {
+                    quantityGedgetInput.removeAttribute('required');
+                }
                 fetch(`../function/get_${type}.php?id=${id}`)
                     .then(response => response.json())
                     .then(data => {
                         modalTitle.innerText = `แก้ไข ${type === 'service' ? 'บริการ' : type === 'gedget' ? 'อุปกรณ์' : 'กลุ่ม'}`;
                         modalForm.reset();
-
                         if (type === 'group') {
                             // จัดการข้อมูลกลุ่ม
                             if (data.group) {
@@ -495,9 +510,19 @@ if ($id_bill > 0) {
                         modalElement.classList.remove('hidden');
                     });
             } else {
-                // โค้ดสำหรับการเพิ่มใหม่ (ไม่เปลี่ยนแปลง)
+                // แสดงฟิลด์จำนวนและวันที่สร้าง
+                if (quantityField) {
+                    quantityField.style.display = 'block';
+                }
                 if (createDateField) {
                     createDateField.style.display = 'block';
+                }
+                // ซ่อนฟิลด์สถานะ
+                if (statusField) {
+                        statusField.classList.add('hidden');
+                }
+                if (quantityGedgetInput) {
+                    quantityGedgetInput.setAttribute('required', true);
                 }
                 modalTitle.innerText = `สร้าง ${type === 'service' ? 'บริการ' : type === 'gedget' ? 'อุปกรณ์' : 'กลุ่ม'}`;
                 modalForm.reset();
@@ -511,6 +536,10 @@ if ($id_bill > 0) {
         }
 
         function deleteItem(type, id) {
+            if (!id || isNaN(id)) {
+                alert('ID ไม่ถูกต้อง');
+                return;
+            }
             const itemName = type === 'service' ? 'บริการ' : type === 'gedget' ? 'อุปกรณ์' : 'กลุ่ม';
             if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบ ${itemName} นี้?`)) {
                 fetch(`../function/delete_${type}.php?id=${id}`, { method: 'DELETE' })
@@ -629,13 +658,8 @@ if ($id_bill > 0) {
             data.id_bill = <?php echo $id_bill; ?>;
 
             // ตรวจสอบข้อมูลตามประเภท
-            if (type === 'service') {
-                if (!data.code_service || !data.type_service || !data.type_gadget) {
-                    alert('กรุณากรอกข้อมูลให้ครบถ้วน');
-                    return;
-                }
-            } else if (type === 'gedget') {
-                if (!data.name_gedget || !data.quantity_gedget) {
+            if (type === 'gedget') {
+                if (!data.name_gedget || (!data.create_at && !data.id_gedget)) {
                     alert('กรุณากรอกข้อมูลให้ครบถ้วน');
                     return;
                 }

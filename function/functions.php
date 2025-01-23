@@ -189,25 +189,36 @@ function deleteService($id_service) {
     $stmt->bind_param("i", $id_service);
     return $stmt->execute();
 }
+
 function createGedget($data) {
     global $conn;
 
     // ตรวจสอบข้อมูลที่จำเป็น
-    if (empty($data['name_gedget']) || empty($data['quantity_gedget']) || empty($data['id_bill']) || empty($data['create_at'])) {
+    if (empty($data['name_gedget']) || empty($data['id_bill']) || empty($data['create_at']) || empty($data['quantity_gedget'])) {
         throw new Exception("กรุณากรอกข้อมูลให้ครบถ้วน");
     }
 
-    $sql = "INSERT INTO gedget (name_gedget, quantity_gedget, id_bill, create_at) VALUES (?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("siss", $data['name_gedget'], $data['quantity_gedget'], $data['id_bill'], $data['create_at']);
-    return $stmt->execute();
+    $status_gedget = 'ใช้งาน'; // กำหนดให้เป็น 'ใช้งาน' โดยอัตโนมัติ
+    $note = $data['note'] ?? null; // รับค่า note จากฟอร์ม (ถ้ามี)
+    $quantity_gedget = $data['quantity_gedget']; // จำนวน gedget ที่ต้องการเพิ่ม
+
+    // เพิ่มข้อมูล Gedget ตามจำนวนที่ระบุ
+    for ($i = 1; $i <= $quantity_gedget; $i++) {
+        $gedget_name = $data['name_gedget'] . " ตัวที่ " . $i; // เพิ่มลำดับที่ต่อท้ายชื่อ
+        $sql = "INSERT INTO gedget (name_gedget, id_bill, create_at, status_gedget, note) VALUES (?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sisss", $gedget_name, $data['id_bill'], $data['create_at'], $status_gedget, $note);
+        $stmt->execute();
+    }
+
+    return true;
 }
 
 function updateGedget($data) {
     global $conn;
-    $sql = "UPDATE gedget SET name_gedget = ?, quantity_gedget = ?, id_bill = ? WHERE id_gedget = ?";
+    $sql = "UPDATE gedget SET name_gedget = ?, status_gedget = ?, note = ? WHERE id_gedget = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("siii", $data['name_gedget'], $data['quantity_gedget'], $data['id_bill'], $data['id_gedget']);
+    $stmt->bind_param("sssi", $data['name_gedget'], $data['status_gedget'], $data['note'], $data['id_gedget']);
     return $stmt->execute();
 }
 

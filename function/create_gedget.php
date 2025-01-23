@@ -12,6 +12,13 @@ if (empty($data)) {
 }
 
 try {
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (empty($data['name_gedget']) || empty($data['id_bill']) || empty($data['create_at']) || empty($data['quantity_gedget'])) {
+        echo json_encode(['success' => false, 'message' => 'กรุณากรอกข้อมูลให้ครบถ้วน']);
+        exit;
+    }
+
+    // สร้าง Gedget
     if (createGedget($data)) {
         echo json_encode(['success' => true]);
     } else {

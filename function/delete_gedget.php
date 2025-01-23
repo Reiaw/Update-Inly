@@ -15,11 +15,11 @@ if ($id_gedget > 0) {
 
     if ($row_check_fk['count'] > 0) {
         // หากมีข้อมูลที่เกี่ยวข้อง แจ้งเตือนและไม่ทำการลบ
-        echo json_encode(['success' => false, 'message' => 'ไม่สามารถลบข้อมูลได้ เนื่องจากมีข้อมูลที่เกี่ยวข้องอยู่ในระบบ']);
+        echo json_encode(['success' => false, 'message' => 'ไม่สามารถลบข้อมูลได้ เนื่องจากมีข้อมูลที่เกี่ยวข้องอยู่ในกลุ่ม']);
     } else {
         // หากไม่มีข้อมูลที่เกี่ยวข้อง ทำการลบ gedget
         if (deleteGedget($id_gedget)) {
-            echo json_encode(['success' => true]);
+            echo json_encode(['success' => true, 'message' => 'ลบข้อมูลสำเร็จ']);
         } else {
             echo json_encode(['success' => false, 'message' => 'เกิดข้อผิดพลาดในการลบข้อมูล']);
         }
