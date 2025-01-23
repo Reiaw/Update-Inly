@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 22, 2025 at 09:12 AM
+-- Generation Time: Jan 23, 2025 at 08:39 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -141,32 +141,37 @@ INSERT INTO `customers` (`id_customer`, `name_customer`, `type_customer`, `phone
 CREATE TABLE `gedget` (
   `id_gedget` int(11) NOT NULL,
   `name_gedget` varchar(100) DEFAULT NULL,
-  `quantity_gedget` int(5) DEFAULT NULL,
   `id_bill` int(11) NOT NULL,
-  `create_at` date DEFAULT NULL
+  `create_at` date DEFAULT NULL,
+  `status_gedget` enum('ใช้งาน','ยกเลิก') DEFAULT 'ใช้งาน',
+  `note` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `gedget`
 --
 
-INSERT INTO `gedget` (`id_gedget`, `name_gedget`, `quantity_gedget`, `id_bill`, `create_at`) VALUES
-(14, 'ZTE รุ่น F620', 1, 13, NULL),
-(16, 'ubiquibi รุ่น injector ', 2, 13, NULL),
-(17, 'ubiquibi รุ่น uapaclr', 2, 13, NULL),
-(18, 'syndome รุ่น 1E00YA', 1, 13, NULL),
-(19, 'ZTE รุ่น F620', 1, 13, NULL),
-(20, 'Mikrotik รุ่น rb3011', 1, 13, NULL),
-(21, 'ubiquibi รุ่น us-8', 1, 13, NULL),
-(22, 'ubiquibi รุ่น llap ac lr', 5, 13, NULL),
-(23, 'syndome 1000vA', 1, 13, NULL),
-(24, 'Mikrotik Router RB3011', 1, 15, NULL),
-(25, 'Access point UAP ACLLR ', 2, 15, NULL),
-(26, 'UPS Poe Injecter', 2, 15, NULL),
-(29, 'Mikrotik รุ่น rb3011', 2, 14, '2025-01-15'),
-(30, 'asd', 2, 13, '2025-01-11'),
-(31, 'asd', 2, 13, '2025-01-15'),
-(32, 'asd', 2, 41, '2025-01-01');
+INSERT INTO `gedget` (`id_gedget`, `name_gedget`, `id_bill`, `create_at`, `status_gedget`, `note`) VALUES
+(17, 'ubiquibi รุ่น uapaclr', 13, NULL, 'ใช้งาน', NULL),
+(18, 'syndome รุ่น 1E00YA', 13, NULL, 'ใช้งาน', NULL),
+(19, 'ZTE รุ่น F620', 13, NULL, 'ใช้งาน', NULL),
+(20, 'Mikrotik รุ่น rb3011', 13, NULL, 'ใช้งาน', NULL),
+(21, 'ubiquibi รุ่น us-8', 13, NULL, 'ใช้งาน', NULL),
+(22, 'ubiquibi รุ่น llap ac lr', 13, NULL, 'ใช้งาน', NULL),
+(23, 'syndome 1000vA', 13, NULL, 'ใช้งาน', NULL),
+(24, 'Mikrotik Router RB3011', 15, NULL, 'ใช้งาน', NULL),
+(25, 'Access point UAP ACLLR ', 15, NULL, 'ใช้งาน', NULL),
+(26, 'UPS Poe Injecter', 15, NULL, 'ใช้งาน', NULL),
+(29, 'Mikrotik รุ่น rb3011', 14, '2025-01-15', 'ใช้งาน', NULL),
+(31, 'asd', 13, '2025-01-15', 'ใช้งาน', NULL),
+(32, 'asd', 41, '2025-01-01', 'ใช้งาน', NULL),
+(36, 'ฺฺBBc ตัวที่ 1', 15, '2025-01-23', 'ใช้งาน', ''),
+(37, 'ฺฺBBc ตัวที่ 2', 15, '2025-01-23', 'ใช้งาน', ''),
+(38, 'A ตัวที่ 1', 15, '2025-01-23', 'ใช้งาน', ''),
+(39, 'A ตัวที่ 1', 15, '2025-01-23', 'ใช้งาน', ''),
+(41, 'A ตัวที่ 2', 15, '2025-01-16', 'ใช้งาน', ''),
+(42, 'A ตัวที่ 3', 15, '2025-01-16', 'ใช้งาน', ''),
+(45, 'ZTE รุ่น F620 ตัวที่ 1', 15, '2025-01-23', 'ยกเลิก', 'ขี้เกียจใช้');
 
 -- --------------------------------------------------------
 
@@ -189,12 +194,13 @@ INSERT INTO `group_service` (`id_group`, `id_bill`, `group_name`) VALUES
 (56, 13, 'ICT กองคลัง'),
 (57, 13, 'ICT สำนักปลัด'),
 (58, 13, 'อื่นๆ'),
-(59, 15, 'กองยุทศาสตร์ (เก่า)'),
 (61, 14, 'A'),
 (62, 14, 'B'),
 (63, 13, '5'),
 (64, 14, 'A'),
-(65, 14, 'AXXXX');
+(65, 14, 'AXXXX'),
+(66, 15, 'A'),
+(67, 15, 'C');
 
 -- --------------------------------------------------------
 
@@ -228,10 +234,6 @@ INSERT INTO `group_servicedetail` (`id_group_detail`, `id_group`, `id_service`, 
 (74, 56, 31, NULL),
 (75, 56, 35, NULL),
 (76, 56, 37, NULL),
-(85, 59, 40, NULL),
-(86, 59, NULL, 24),
-(87, 59, NULL, 25),
-(88, 59, NULL, 26),
 (94, 62, NULL, 29),
 (95, 61, 39, NULL),
 (96, 61, NULL, 29),
@@ -239,7 +241,10 @@ INSERT INTO `group_servicedetail` (`id_group_detail`, `id_group`, `id_service`, 
 (98, 63, NULL, 31),
 (99, 64, 39, NULL),
 (100, 65, 39, NULL),
-(101, 65, NULL, 29);
+(101, 65, NULL, 29),
+(102, 66, 40, NULL),
+(103, 67, 42, NULL),
+(104, 67, NULL, 41);
 
 -- --------------------------------------------------------
 
@@ -263,7 +268,10 @@ CREATE TABLE `notifications` (
 INSERT INTO `notifications` (`id_notifications`, `id_user`, `id_bill`, `message`, `is_read`, `created_at`) VALUES
 (21, 15, 13, 'สัญญาใกล้หมดอายุ: ลูกค้า ปากแพรก หมายเลขบิล 2147483647 จะหมดอายุใน 58 วัน', 0, '2025-01-22 13:37:02'),
 (22, 15, 34, 'สัญญาใกล้หมดอายุ: ลูกค้า ปากแพรก หมายเลขบิล 254687 จะหมดอายุใน 10 วัน', 0, '2025-01-22 13:45:14'),
-(24, 15, 40, 'สัญญาใกล้หมดอายุ: ลูกค้า Rtop หมายเลขบิล 2147483647 จะหมดอายุใน 3 วัน', 1, '2025-01-22 15:03:59');
+(24, 15, 40, 'สัญญาใกล้หมดอายุ: ลูกค้า Rtop หมายเลขบิล 2147483647 จะหมดอายุใน 3 วัน', 1, '2025-01-22 15:03:59'),
+(25, 16, 40, 'สัญญาใกล้หมดอายุ: ลูกค้า Rtop หมายเลขบิล 2147483647 จะหมดอายุใน 3 วัน', 0, '2025-01-22 15:17:12'),
+(26, 16, 34, 'สัญญาใกล้หมดอายุ: ลูกค้า ปากแพรก หมายเลขบิล 254687 จะหมดอายุใน 10 วัน', 0, '2025-01-22 15:17:12'),
+(27, 16, 13, 'สัญญาใกล้หมดอายุ: ลูกค้า ปากแพรก หมายเลขบิล 2147483647 จะหมดอายุใน 58 วัน', 0, '2025-01-22 15:17:12');
 
 -- --------------------------------------------------------
 
@@ -289,8 +297,7 @@ INSERT INTO `overide` (`id_overide`, `mainpackage_price`, `ict_price`, `all_pric
 (28, 200, 100, 300, NULL, 35),
 (29, 100, 200, 300, NULL, 36),
 (30, 100, 100, 200, NULL, 37),
-(31, 100, 100, 200, NULL, 38),
-(32, 100, 0, 100, NULL, 39);
+(31, 100, 100, 200, NULL, 38);
 
 -- --------------------------------------------------------
 
@@ -317,8 +324,7 @@ INSERT INTO `package_list` (`id_package`, `name_package`, `info_package`, `id_se
 (18, ' Smart Help Call Center', '-', 39, '2025-01-16', '2025-01-21', 'ยกเลิก'),
 (19, 'A', '', 39, '2025-01-09', '2025-01-21', 'ยกเลิก'),
 (20, 'AA', '', 39, '2025-01-15', '2025-01-21', 'ยกเลิก'),
-(24, ' Smart Help Call Center', '', 39, '2025-01-16', '2025-01-21', 'ใช้งาน'),
-(25, ' Smart Help Call Center', '1', 40, '2025-01-07', '2025-01-21', 'ใช้งาน');
+(24, ' Smart Help Call Center', '', 39, '2025-01-16', '2025-01-21', 'ใช้งาน');
 
 -- --------------------------------------------------------
 
@@ -345,8 +351,7 @@ INSERT INTO `product_list` (`id_product`, `name_product`, `info_product`, `id_pa
 (35, 'AA', '', 19, '2025-01-09', '2025-01-21', 'ยกเลิก'),
 (36, 'AA', '', 20, '2025-01-15', '2025-01-21', 'ยกเลิก'),
 (37, '0', '', 15, '0000-00-00', '2025-01-21', 'ยกเลิก'),
-(38, '100', '', 24, '2025-01-16', '2025-01-21', 'ใช้งาน'),
-(39, '100', '100', 25, '2025-01-07', '2025-01-21', 'ใช้งาน');
+(38, '100', '', 24, '2025-01-16', '2025-01-21', 'ใช้งาน');
 
 -- --------------------------------------------------------
 
@@ -379,12 +384,12 @@ INSERT INTO `service_customer` (`id_service`, `code_service`, `type_service`, `t
 (37, 'C010003095', 'Fttx', 'เช่า', 'ใช้งาน', 13, '2025-01-17', '2025-01-17'),
 (38, 'C020003096', 'Fttx', 'เช่า', 'ใช้งาน', 13, '2025-01-17', '2025-01-17'),
 (39, '6711002934a', 'Smart City', 'ขาย', 'ใช้งาน', 14, '2025-01-17', '2025-01-21'),
-(40, '3451L0114', 'Fttx', 'เช่า', 'ยกเลิก', 15, '2025-01-17', '2025-01-17'),
-(41, '342J1009', 'Fttx', 'ขาย', 'ใช้งาน', 15, '2025-01-17', '2025-01-21'),
+(40, '1235', 'วงจเช่า', 'เช่า', 'ใช้งาน', 15, '2025-01-17', '2025-01-23'),
 (42, '034510533', 'Fttx', 'เช่าและขาย', 'ยกเลิก', 15, '2025-01-17', '2025-01-21'),
 (52, '123', 'Smart City', 'ขาย', 'ยกเลิก', 13, '2025-01-20', '2025-01-20'),
 (53, '3451L0114', 'Fttx+ICT solution', 'ขาย', 'ยกเลิก', 16, '2025-01-20', '2025-01-20'),
-(54, '1235', 'WiFi', 'ขาย', 'ยกเลิก', 16, '2025-01-20', '2025-01-20');
+(54, '1235', 'WiFi', 'ขาย', 'ยกเลิก', 16, '2025-01-20', '2025-01-20'),
+(55, '1235', 'Fttx+ICT solution', 'เช่าและขาย', 'ใช้งาน', 15, '2025-01-23', '2025-01-23');
 
 -- --------------------------------------------------------
 
@@ -526,7 +531,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `email`, `name`, `password`, `verify`, `otp`, `otp_expiry`, `otp_attempts`, `last_otp_sent`) VALUES
-(15, 'rattapoom.p@ku.th', 'Chatchai', '$2y$10$JRRG/Tl3jBYrIyvhSH.KJecyGXNhgW3W8xkxT8dIN2fJ7O1bNxgTe', 1, NULL, NULL, 0, '2025-01-10 14:52:09');
+(15, 'rattapoom.p@ku.th', 'Chatchai', '$2y$10$JRRG/Tl3jBYrIyvhSH.KJecyGXNhgW3W8xkxT8dIN2fJ7O1bNxgTe', 1, NULL, NULL, 0, '2025-01-10 14:52:09'),
+(16, 'A@example.com', 'John Doe', '$2y$10$JRRG/Tl3jBYrIyvhSH.KJecyGXNhgW3W8xkxT8dIN2fJ7O1bNxgTe', 1, NULL, NULL, 0, '2025-01-10 14:52:09');
 
 --
 -- Indexes for dumped tables
@@ -659,25 +665,25 @@ ALTER TABLE `customers`
 -- AUTO_INCREMENT for table `gedget`
 --
 ALTER TABLE `gedget`
-  MODIFY `id_gedget` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id_gedget` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT for table `group_service`
 --
 ALTER TABLE `group_service`
-  MODIFY `id_group` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+  MODIFY `id_group` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
 
 --
 -- AUTO_INCREMENT for table `group_servicedetail`
 --
 ALTER TABLE `group_servicedetail`
-  MODIFY `id_group_detail` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
+  MODIFY `id_group_detail` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=105;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id_notifications` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id_notifications` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `overide`
@@ -701,7 +707,7 @@ ALTER TABLE `product_list`
 -- AUTO_INCREMENT for table `service_customer`
 --
 ALTER TABLE `service_customer`
-  MODIFY `id_service` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `id_service` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
 
 --
 -- AUTO_INCREMENT for table `users`
