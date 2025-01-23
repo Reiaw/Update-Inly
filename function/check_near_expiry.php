@@ -10,7 +10,6 @@ if (!$user_id) {
     echo json_encode(['error' => 'User not logged in']);
     exit;
 }
-
 // ลบการแจ้งเตือนที่เก่ากว่า 10 วัน
 $sql_delete_old = "DELETE FROM notifications WHERE created_at < DATE_SUB(NOW(), INTERVAL 10 DAY)";
 $stmt_delete_old = $conn->prepare($sql_delete_old);
@@ -47,7 +46,7 @@ $sql_details = "SELECT
             DATEDIFF(bc.end_date, CURDATE()) as days_left
         FROM bill_customer bc
         INNER JOIN customers c ON bc.id_customer = c.id_customer
-        LEFT JOIN notifications n ON bc.id_bill = n.id_bill
+        LEFT JOIN notifications n ON bc.id_bill = n.id_bill AND n.id_user = ?
         WHERE bc.end_date IS NOT NULL 
         AND bc.end_date != '0000-00-00'
         AND bc.end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)
@@ -55,6 +54,7 @@ $sql_details = "SELECT
         AND bc.status_bill = 'ใช้งาน'
         ORDER BY bc.end_date ASC";
 $stmt_details = $conn->prepare($sql_details);
+$stmt_details->bind_param("i", $user_id);
 $stmt_details->execute();
 $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
 

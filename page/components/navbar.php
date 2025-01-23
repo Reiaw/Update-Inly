@@ -99,7 +99,43 @@ $near_expiry_count = count($notifications);
         top: 0;
         z-index: 1000; /* ให้ Navbar อยู่ด้านบนสุดของหน้าเว็บ */
     }
-        
+
+    /* สไตล์สำหรับหน้าจอเล็ก (Mobile) */
+    @media (max-width: 768px) {
+        .md\\:flex {
+            display: none;
+        }
+
+        .mobile-menu {
+            display: block;
+        }
+
+        .mobile-menu-button {
+            display: block;
+        }
+
+        .mobile-menu-items {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            z-index: 1000;
+        }
+
+        .mobile-menu-items.active {
+            display: block;
+        }
+
+        .mobile-menu-items a {
+            display: block;
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+    }
 </style>
 <nav class="bg-white shadow-md sticky-nav">
     <div class="container mx-auto px-4">
@@ -110,6 +146,13 @@ $near_expiry_count = count($notifications);
                     alt="Logo" 
                     class="h-10 w-auto">
                 <a href="#" class="ml-2 text-xl font-semibold text-gray-800">โทรคมนาคมแห่งชาติ</a>
+            </div>
+
+            <!-- Hamburger Menu สำหรับหน้าจอเล็ก -->
+            <div class="mobile-menu md:hidden">
+                <button class="mobile-menu-button text-gray-700 hover:text-blue-600 focus:outline-none">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
 
             <!-- Navigation Links -->
@@ -155,6 +198,17 @@ $near_expiry_count = count($notifications);
                     <?php endif; ?>
                 </div>
 
+                <a href="logout.php" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+
+            <!-- Mobile Menu Items -->
+            <div class="mobile-menu-items md:hidden">
+                <a href="index.php" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Main</a>
+                <a href="customer.php" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Customer</a>
+                <a href="bill.php" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Billing</a>
+                <a href="report.php" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Report</a>
                 <a href="logout.php" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
@@ -246,6 +300,26 @@ $near_expiry_count = count($notifications);
             });
         }
     });
+
+    // เปิด/ปิดเมนูบนมือถือ
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuButton = document.querySelector('.mobile-menu-button');
+        const mobileMenuItems = document.querySelector('.mobile-menu-items');
+
+        if (mobileMenuButton && mobileMenuItems) {
+            mobileMenuButton.addEventListener('click', function() {
+                mobileMenuItems.classList.toggle('active');
+            });
+
+            // ปิดเมนูเมื่อคลิกนอกพื้นที่
+            document.addEventListener('click', function(e) {
+                if (!mobileMenuButton.contains(e.target) && !mobileMenuItems.contains(e.target)) {
+                    mobileMenuItems.classList.remove('active');
+                }
+            });
+        }
+    });
+
     function markAsRead(notificationId) {
         fetch('../function/mark_as_read.php', {
             method: 'POST',

@@ -517,10 +517,15 @@ if ($id_bill > 0) {
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            location.reload();
+                            alert(data.message); // แสดงข้อความสำเร็จ
+                            location.reload(); // รีเฟรชหน้า
                         } else {
-                            alert(`เกิดข้อผิดพลาดในการลบ ${itemName}`);
+                            alert(data.message); // แสดงข้อความผิดพลาด
                         }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
                     });
             }
         }
