@@ -13,43 +13,50 @@ $report_type = isset($_GET['report_type']) ? $_GET['report_type'] : '';
 // รับค่าตัวกรองจากฟอร์ม
 $filter_type_customer = isset($_GET['filter_type_customer']) ? $_GET['filter_type_customer'] : '';
 $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
+
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>แดชบอร์ด</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gray-100">
     <?php include './components/navbar.php'; ?>
 
     <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4">Reports</h1>
+        <h1 class="text-2xl font-bold mb-4">รายงาน</h1>
         <form method="GET" action="">
             <!-- เลือกรายงาน -->
             <div class="mb-4">
-                <label for="report_type" class="block mb-2">Select Report Type:</label>
+                <label for="report_type" class="block mb-2">เลือกประเภทรายงาน:</label>
                 <select name="report_type" id="report_type" class="p-2 border rounded" onchange="this.form.submit()">
-                    <option value="">-- Select Report --</option>
-                    <option value="1" <?php echo $report_type == '1' ? 'selected' : ''; ?>>Report 1: Customers and Total Bills</option>
-                    <option value="2" <?php echo $report_type == '2' ? 'selected' : ''; ?>>Report 2: Customers and Related Bill Numbers</option>
-                    <option value="3" <?php echo $report_type == '3' ? 'selected' : ''; ?>>Report 3: Customers and Related Gadgets</option>
-                </select>
-            </div>
+                    <option value="">-- เลือกรายงาน --</option>
+                    <option value="1" <?php echo $report_type == '1' ? 'selected' : ''; ?>>รายงาน 1: ลูกค้าและจำนวนบิลทั้งหมด</option>
+                    <option value="2" <?php echo $report_type == '2' ? 'selected' : ''; ?>>รายงาน 2: ลูกค้าและหมายเลขบิลที่เกี่ยวข้อง</option>
+                    <option value="3" <?php echo $report_type == '3' ? 'selected' : ''; ?>>รายงาน 3: ลูกค้าและอุปกรณ์ที่เกี่ยวข้อง</option>
+                </select>  
+        <button 
+            onclick="exportToExcel()"
+            class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
+            <i class="fas fa-file-excel mr-2"></i>
+            ส่งออกเป็น Excel </button>
+        </div>
 
             <!-- ฟิลด์กรองข้อมูล (แสดงเฉพาะเมื่อเลือกรายงานแล้ว) -->
             <?php if ($report_type): ?>
                 <div class="flex flex-wrap items-end gap-4 mb-4">
                     <!-- ตัวกรอง type_customer -->
                     <div>
-                        <label for="filter_type_customer" class="block mb-2">Filter by Customer Type:</label>
+                        <label for="filter_type_customer" class="block mb-2">กรองตามประเภทลูกค้า:</label>
                         <select name="filter_type_customer" id="filter_type_customer" class="p-2 border rounded">
-                            <option value="">All</option>
+                            <option value="">ทั้งหมด</option>
                             <option value="อบต" <?php echo $filter_type_customer == 'อบต' ? 'selected' : ''; ?>>อบต</option>
                             <option value="อบจ" <?php echo $filter_type_customer == 'อบจ' ? 'selected' : ''; ?>>อบจ</option>
                             <option value="เทศบาล" <?php echo $filter_type_customer == 'เทศบาล' ? 'selected' : ''; ?>>เทศบาล</option>
@@ -59,9 +66,9 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
 
                     <!-- ตัวกรอง amphure -->
                     <div>
-                        <label for="filter_amphure" class="block mb-2">Filter by Amphure:</label>
+                        <label for="filter_amphure" class="block mb-2">กรองตามอำเภอ:</label>
                         <select name="filter_amphure" id="filter_amphure" class="p-2 border rounded">
-                            <option value="">All</option>
+                            <option value="">ทั้งหมด</option>
                             <?php
                             // ดึงข้อมูล amphures จากฐานข้อมูล
                             $sql_amphures = "SELECT * FROM amphures";
@@ -78,9 +85,9 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
                     <?php if ($report_type == '2'): ?>
                         <!-- ตัวกรอง type_service -->
                         <div>
-                            <label for="filter_type_service" class="block mb-2">Filter by Service Type:</label>
+                            <label for="filter_type_service" class="block mb-2">กรองตามประเภทบริการ:</label>
                             <select name="filter_type_service" id="filter_type_service" class="p-2 border rounded">
-                                <option value="">All</option>
+                                <option value="">ทั้งหมด</option>
                                 <option value="Fttx" <?php echo isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'Fttx' ? 'selected' : ''; ?>>Fttx</option>
                                 <option value="Fttx+ICT solution" <?php echo isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'Fttx+ICT solution' ? 'selected' : ''; ?>>Fttx+ICT solution</option>
                                 <option value="Fttx 2+ICT solution" <?php echo isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'Fttx 2+ICT solution' ? 'selected' : ''; ?>>Fttx 2+ICT solution</option>
@@ -95,9 +102,9 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
 
                         <!-- ตัวกรอง type_gadget -->
                         <div>
-                            <label for="filter_type_gadget" class="block mb-2">Filter by Gadget Type:</label>
+                            <label for="filter_type_gadget" class="block mb-2">กรองตามประเภทอุปกรณ์:</label>
                             <select name="filter_type_gadget" id="filter_type_gadget" class="p-2 border rounded">
-                                <option value="">All</option>
+                                <option value="">ทั้งหมด</option>
                                 <option value="เช่า" <?php echo isset($_GET['filter_type_gadget']) && $_GET['filter_type_gadget'] == 'เช่า' ? 'selected' : ''; ?>>เช่า</option>
                                 <option value="ขาย" <?php echo isset($_GET['filter_type_gadget']) && $_GET['filter_type_gadget'] == 'ขาย' ? 'selected' : ''; ?>>ขาย</option>
                                 <option value="เช่าและขาย" <?php echo isset($_GET['filter_type_gadget']) && $_GET['filter_type_gadget'] == 'เช่าและขาย' ? 'selected' : ''; ?>>เช่าและขาย</option>
@@ -105,14 +112,14 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
                         </div>
                     <?php endif; ?>
 
-                    <button type="submit" class="p-2 bg-blue-500 text-white rounded">Apply Filters</button>
+                    <button type="submit" class="p-2 bg-blue-500 text-white rounded">ใช้ตัวกรอง</button>
                 </div>
             <?php endif; ?>
         </form>
 
         <?php
         if ($report_type == '1') {
-            // Report 1: แสดง customer ทั้งหมดและจำนวนบิลทั้งหมดที่เกี่ยวข้อง
+            // รายงาน 1: แสดงลูกค้าทั้งหมดและจำนวนบิลทั้งหมดที่เกี่ยวข้อง
             $sql = "SELECT 
                         c.id_customer, 
                         c.name_customer, 
@@ -148,18 +155,18 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
             $result = $conn->query($sql);
         
             if ($result->num_rows > 0) {
-                echo "<h2 class='text-xl font-bold mt-4'>Report 1: Customers and Total Bills</h2>";
+                echo "<h2 class='text-xl font-bold mt-4'>รายงาน 1: ลูกค้าและจำนวนบิลทั้งหมด</h2>";
                 echo "<div class='overflow-x-auto mt-4'>";
                 echo "<table class='w-full border-collapse border border-gray-300'>";
                 echo "<thead><tr class='bg-gray-200'>
-                        <th class='p-2 border border-gray-300'>No.</th>
-                        <th class='p-2 border border-gray-300'>Customer Name</th>
-                        <th class='p-2 border border-gray-300'>Phone</th>
-                        <th class='p-2 border border-gray-300'>Address</th>
-                        <th class='p-2 border border-gray-300'>Total Bills</th>
-                        <th class='p-2 border border-gray-300'>Main Package Price</th>
-                        <th class='p-2 border border-gray-300'>ICT Price</th>
-                        <th class='p-2 border border-gray-300'>All Price</th>
+                        <th class='p-2 border border-gray-300'>ลำดับ</th>
+                        <th class='p-2 border border-gray-300'>ชื่อลูกค้า</th>
+                        <th class='p-2 border border-gray-300'>โทรศัพท์</th>
+                        <th class='p-2 border border-gray-300'>ที่อยู่</th>
+                        <th class='p-2 border border-gray-300'>จำนวนบิลทั้งหมด</th>
+                        <th class='p-2 border border-gray-300'>ราคาแพ็คเกจหลัก</th>
+                        <th class='p-2 border border-gray-300'>ราคา ICT</th>
+                        <th class='p-2 border border-gray-300'>ราคารวม</th>
                       </tr></thead>";
                 echo "<tbody>";
             
@@ -189,8 +196,8 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
                 }
             
                 echo "<tr class='bg-gray-100 font-bold'>
-                        <td class='p-2 border border-gray-300' colspan='4'>Total</td>
-                        <td class='p-2 border border-gray-300'>$total_customers Customers</td>
+                        <td class='p-2 border border-gray-300' colspan='4'>รวม</td>
+                        <td class='p-2 border border-gray-300'>$total_customers ลูกค้า</td>
                         <td class='p-2 border border-gray-300'>$total_mainpackage</td>
                         <td class='p-2 border border-gray-300'>$total_ict</td>
                         <td class='p-2 border border-gray-300'>$total_allprice</td>
@@ -198,10 +205,10 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
             
                 echo "</tbody></table></div>";
             } else {
-                echo "<p class='mt-4'>No data found for Report 1.</p>";
+                echo "<p class='mt-4'>ไม่พบข้อมูลสำหรับรายงาน 1</p>";
             }
         } elseif ($report_type == '2') {
-            // Report 2: แสดง customer และหมายเลขบิลที่เกี่ยวข้องทั้งหมด โดยไม่สนใจว่ามีบริการหรือไม่
+            // รายงาน 2: แสดงลูกค้าและหมายเลขบิลที่เกี่ยวข้องทั้งหมด โดยไม่สนใจว่ามีบริการหรือไม่
             $sql = "SELECT 
                     c.id_customer, 
                     c.name_customer, 
@@ -250,22 +257,22 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
             $result = $conn->query($sql);
         
             if ($result->num_rows > 0) {
-                echo "<h2 class='text-xl font-bold mt-4'>Report 2: Customers and Related Bill Numbers</h2>";
+                echo "<h2 class='text-xl font-bold mt-4'>รายงาน 2: ลูกค้าและหมายเลขบิลที่เกี่ยวข้อง</h2>";
                 echo "<div class='overflow-x-auto mt-4'>";
                 echo "<table class='w-full border-collapse border border-gray-300'>";
                 echo "<thead><tr class='bg-gray-200'>
-                        <th class='p-2 border border-gray-300'>No.</th>
-                        <th class='p-2 border border-gray-300'>Customer Name</th>
-                        <th class='p-2 border border-gray-300'>Bill Number</th>
-                        <th class='p-2 border border-gray-300'>Type Bill</th>
-                        <th class='p-2 border border-gray-300'>Create At</th>
-                        <th class='p-2 border border-gray-300'>End Date</th>
-                        <th class='p-2 border border-gray-300'>Type Service</th>
-                        <th class='p-2 border border-gray-300'>Service Code</th>
-                        <th class='p-2 border border-gray-300'>Type Gadget</th>
-                        <th class='p-2 border border-gray-300'>Main Package Price</th>
-                        <th class='p-2 border border-gray-300'>ICT Price</th>
-                        <th class='p-2 border border-gray-300'>All Price</th>
+                        <th class='p-2 border border-gray-300'>ลำดับ</th>
+                        <th class='p-2 border border-gray-300'>ชื่อลูกค้า</th>
+                        <th class='p-2 border border-gray-300'>หมายเลขบิล</th>
+                        <th class='p-2 border border-gray-300'>ประเภทบิล</th>
+                        <th class='p-2 border border-gray-300'>วันที่สร้าง</th>
+                        <th class='p-2 border border-gray-300'>วันที่สิ้นสุด</th>
+                        <th class='p-2 border border-gray-300'>ประเภทบริการ</th>
+                        <th class='p-2 border border-gray-300'>รหัสบริการ</th>
+                        <th class='p-2 border border-gray-300'>ประเภทอุปกรณ์</th>
+                        <th class='p-2 border border-gray-300'>ราคาแพ็คเกจหลัก</th>
+                        <th class='p-2 border border-gray-300'>ราคา ICT</th>
+                        <th class='p-2 border border-gray-300'>ราคารวม</th>
                     </tr></thead>";
                 echo "<tbody>";
             
@@ -338,17 +345,17 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
                     }
                 }
                 echo "<tr class='bg-gray-100 font-bold'>
-                        <td class='p-2 border border-gray-300' colspan='8'>Total</td>
-                        <td class='p-2 border border-gray-300'>$total_customers Customers</td>
+                        <td class='p-2 border border-gray-300' colspan='8'>รวม</td>
+                        <td class='p-2 border border-gray-300'>$total_customers ลูกค้า</td>
                         <td class='p-2 border border-gray-300'>$total_mainpackage</td>
                         <td class='p-2 border border-gray-300'>$total_ict</td>
                         <td class='p-2 border border-gray-300'>$total_allprice</td>
                       </tr>";
             } else {
-                echo "<p class='mt-4'>No data found for Report 2.</p>";
+                echo "<p class='mt-4'>ไม่พบข้อมูลสำหรับรายงาน 2</p>";
             }
         } elseif ($report_type == '3') {
-            // Report 3: แสดงข้อมูลลูกค้าและอุปกรณ์ที่เกี่ยวข้อง โดยที่บิลมีสถานะเป็น "ใช้งาน"
+            // รายงาน 3: แสดงข้อมูลลูกค้าและอุปกรณ์ที่เกี่ยวข้อง โดยที่บิลมีสถานะเป็น "ใช้งาน"
             $sql = "SELECT 
                         c.id_customer, 
                         c.name_customer, 
@@ -381,18 +388,18 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
             $result = $conn->query($sql);
         
             if ($result->num_rows > 0) {
-                echo "<h2 class='text-xl font-bold mt-4'>Report 3: Customers and Related Gadgets</h2>";
+                echo "<h2 class='text-xl font-bold mt-4'>รายงาน 3: ลูกค้าและอุปกรณ์ที่เกี่ยวข้อง</h2>";
                 echo "<div class='overflow-x-auto mt-4'>";
                 echo "<table class='w-full border-collapse border border-gray-300'>";
                 echo "<thead><tr class='bg-gray-200'>
-                        <th class='p-2 border border-gray-300'>No.</th>
-                        <th class='p-2 border border-gray-300'>Customer Name</th>
-                        <th class='p-2 border border-gray-300'>Phone</th>
-                        <th class='p-2 border border-gray-300'>Address</th>
-                        <th class='p-2 border border-gray-300'>Gadget Name</th>
-                        <th class='p-2 border border-gray-300'>Create_at</th>
-                        <th class='p-2 border border-gray-300'>Gadget Status</th>
-                        <th class='p-2 border border-gray-300'>Note</th>
+                        <th class='p-2 border border-gray-300'>ลำดับ</th>
+                        <th class='p-2 border border-gray-300'>ชื่อลูกค้า</th>
+                        <th class='p-2 border border-gray-300'>โทรศัพท์</th>
+                        <th class='p-2 border border-gray-300'>ที่อยู่</th>
+                        <th class='p-2 border border-gray-300'>ชื่ออุปกรณ์</th>
+                        <th class='p-2 border border-gray-300'>วันที่สร้าง</th>
+                        <th class='p-2 border border-gray-300'>สถานะอุปกรณ์</th>
+                        <th class='p-2 border border-gray-300'>หมายเหตุ</th>
                       </tr></thead>";
                 echo "<tbody>";
             
@@ -426,10 +433,22 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
             
                 echo "</tbody></table></div>";
             } else {
-                echo "<p class='mt-4'>No data found for Report 3.</p>";
+                echo "<p class='mt-4'>ไม่พบข้อมูลสำหรับรายงาน 3</p>";
             }
         }
         ?>
     </div>
+    <script>
+    function exportToExcel() {
+        // เลือกตารางที่ต้องการส่งออก
+        const table = document.querySelector('table');
+        
+        // สร้าง Workbook และ Worksheet จากตาราง
+        const workbook = XLSX.utils.table_to_book(table, {sheet: "Sheet 1"});
+        
+        // สร้างไฟล์ Excel และดาวน์โหลด
+        XLSX.writeFile(workbook, 'Report.xlsx');
+    }
+    </script>
 </body>
 </html>

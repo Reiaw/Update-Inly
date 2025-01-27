@@ -29,11 +29,11 @@ $customers = $conn->query("
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Management</title>
+    <title>การจัดการลูกค้า</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
@@ -78,22 +78,22 @@ $customers = $conn->query("
     <?php include './components/navbar.php'; ?>
 
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-2xl font-bold mb-4">จัดการลูกค้า</h1>
+        <h1 class="text-2xl font-bold mb-4">การจัดการลูกค้า</h1>
         
-        <!-- ปรับ UI ให้ปุ่ม "Add Customer" และฟอร์มค้นหาอยู่ในบรรทัดเดียวกัน -->
+        <!-- ปรับ UI ให้ปุ่ม "เพิ่มลูกค้า" และฟอร์มค้นหาอยู่ในบรรทัดเดียวกัน -->
         <div class="flex flex-wrap items-center justify-between mb-4">
-            <!-- ปุ่ม Add Customer และฟอร์ม Import อยู่ใน div เดียวกัน -->
+            <!-- ปุ่มเพิ่มลูกค้าและฟอร์ม Import อยู่ใน div เดียวกัน -->
             <div class="flex flex-wrap items-center gap-2">
-                <!-- ปุ่ม Add Customer -->
+                <!-- ปุ่มเพิ่มลูกค้า -->
                 <button onclick="openModal()" class="bg-blue-500 text-white px-4 py-2 rounded-md">
-                    <i class="fas fa-plus"></i> Add Customer
+                    <i class="fas fa-plus"></i> เพิ่มลูกค้า
                 </button>
 
                 <!-- ฟอร์มอัปโหลดไฟล์ Excel -->
                 <form id="uploadForm" enctype="multipart/form-data" class="flex items-center gap-2">
                     <input type="file" name="excelFile" id="excelFile" accept=".xls, .xlsx" class="border p-2 rounded-md">
                     <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded-md">
-                        <i class="fas fa-upload"></i> Import Excel
+                        <i class="fas fa-upload"></i> นำเข้า Excel
                     </button>
                 </form>
             </div>
@@ -101,23 +101,23 @@ $customers = $conn->query("
             <!-- ฟิลด์ค้นหา -->
             <div class="flex flex-wrap gap-2">
                 <div class="relative">
-                    <input type="text" id="searchName" placeholder="Search by name..." class="border p-2 rounded-md pl-10">
+                    <input type="text" id="searchName" placeholder="ค้นหาด้วยชื่อ..." class="border p-2 rounded-md pl-10">
                     <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i> <!-- ไอคอนค้นหา -->
                 </div>
                 <select id="searchType" class="border p-2 rounded-md">
-                    <option value="">All Types</option>
+                    <option value="">ทุกประเภท</option>
                     <?php foreach ($customer_types as $type): ?>
                         <option value="<?= $type['type_customer'] ?>"><?= $type['type_customer'] ?></option>
                     <?php endforeach; ?>
                 </select>
                 <select id="searchAmphure" class="border p-2 rounded-md">
-                    <option value="">All Amphures</option>
+                    <option value="">ทุกอำเภอ</option>
                     <?php foreach ($amphures as $amphure): ?>
                         <option value="<?= $amphure['id_amphures'] ?>"><?= $amphure['name_amphures'] ?></option>
                     <?php endforeach; ?>
                 </select>
                 <select id="searchTambon" class="border p-2 rounded-md">
-                    <option value="">All Tambons</option>
+                    <option value="">ทุกตำบล</option>
                     <!-- ตำบลจะโหลดแบบไดนามิกเมื่อเลือกอำเภอ -->
                 </select>
                 <button onclick="resetSearch()" class="bg-gray-500 text-white px-4 py-2 rounded-md">
@@ -135,7 +135,7 @@ $customers = $conn->query("
                     <th class="py-2">ประเภทลูกค้า</th>
                     <th class="py-2">เบอร์โทรศัพท์</th>
                     <th class="py-2">สถานะ</th>
-                    <th class="py-2">ที่อยู่ (Tambon, Amphure)</th>
+                    <th class="py-2">ที่อยู่ (ตำบล, อำเภอ)</th>
                     <th class="py-2">การดำเนินการ</th>
                 </tr>
             </thead>
@@ -165,7 +165,7 @@ $customers = $conn->query("
                                 <i class="fas fa-trash"></i>
                             </button>
                             <button onclick="window.location.href='bill.php?id_customer=<?= $customer['id_customer'] ?>'" class="bg-blue-500 text-white px-2 py-1 rounded-md ml-2">
-                                <i class="fas fa-info-circle"></i> Bills
+                                <i class="fas fa-info-circle"></i> บิล
                             </button>
                         </td>
                     </tr>
@@ -185,7 +185,7 @@ $customers = $conn->query("
     $(document).ready(function() {
         var table = $('#customerTable').DataTable({
             "pageLength": 10,
-            "lengthMenu": [[10, 20, 50, 100, -1], [10, 20, 50, 100, "All"]],
+            "lengthMenu": [[10, 20, 50, 100, -1], [10, 20, 50, 100, "ทั้งหมด"]],
             "language": {
                 "search": "ค้นหา:",
                 "lengthMenu": "แสดง _MENU_ แถวต่อหน้า",
@@ -226,7 +226,7 @@ $customers = $conn->query("
             if (amphureId) {
                 loadTambonss(amphureId);
             } else {
-                $('#searchTambon').html('<option value="">All Tambons</option>');
+                $('#searchTambon').html('<option value="">ทุกตำบล</option>');
             }
         });
 
@@ -242,7 +242,7 @@ $customers = $conn->query("
             .then(response => response.json())
             .then(data => {
                 const tambonSelect = document.getElementById('searchTambon');
-                tambonSelect.innerHTML = '<option value="">All Tambons</option>';
+                tambonSelect.innerHTML = '<option value="">ทุกตำบล</option>';
                 data.forEach(tambon => {
                     tambonSelect.innerHTML += `<option value="${tambon.name_tambons}">${tambon.name_tambons}</option>`;
                 });
@@ -254,13 +254,13 @@ $customers = $conn->query("
         $('#searchName').val('');
         $('#searchType').val('');
         $('#searchAmphure').val('');
-        $('#searchTambon').html('<option value="">All Tambons</option>');
+        $('#searchTambon').html('<option value="">ทุกตำบล</option>');
         $('#customerTable').DataTable().search('').columns().search('').draw();
     }
 
     function openModal() {
         document.getElementById('customerModal').classList.remove('hidden');
-        document.getElementById('modalTitle').innerText = 'Add Customer';
+        document.getElementById('modalTitle').innerText = 'เพิ่มลูกค้า';
         document.getElementById('customerForm').reset();
     }
 
@@ -281,7 +281,7 @@ $customers = $conn->query("
                 }
                 document.getElementById('id_address').value = data.id_address;
                 document.getElementById('info_address').value = data.info_address;
-                document.getElementById('modalTitle').innerText = 'Edit Customer';
+                document.getElementById('modalTitle').innerText = 'แก้ไขลูกค้า';
                 document.getElementById('customerModal').classList.remove('hidden');
             });
     }
@@ -335,10 +335,10 @@ $customers = $conn->query("
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Import successful!');
+                alert('นำเข้าข้อมูลสำเร็จ!');
                 location.reload(); // รีเฟรชหน้าเพื่อแสดงข้อมูลใหม่
             } else {
-                alert('Import failed: ' + data.message); // แจ้งเตือนข้อผิดพลาด
+                alert('นำเข้าข้อมูลล้มเหลว: ' + data.message); // แจ้งเตือนข้อผิดพลาด
             }
         })
         .catch(error => {
