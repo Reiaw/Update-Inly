@@ -14,129 +14,142 @@ if (!$user_id) {
 }
 
 // ดึงการแจ้งเตือนจากตาราง notifications ที่ยังไม่ได้อ่าน (is_read = 0)
-$sql_notifications = "SELECT n.id_notifications, n.message, n.created_at, n.is_read, bc.number_bill, c.name_customer
-                      FROM notifications n
-                      INNER JOIN bill_customer bc ON n.id_bill = bc.id_bill
-                      INNER JOIN customers c ON bc.id_customer = c.id_customer
-                      WHERE n.id_user = ? AND n.is_read = 0
-                      ORDER BY n.created_at DESC";
+// Update the notifications query in navbar.php to include task notifications
+$sql_notifications = "SELECT 
+        n.id_notifications, 
+        n.message, 
+        n.created_at, 
+        n.is_read, 
+        n.task_id,
+        n.id_bill,
+        COALESCE(bc.number_bill, '') as number_bill, 
+        COALESCE(c.name_customer, '') as name_customer,
+        COALESCE(c.id_customer, '') as id_customer,
+        COALESCE(t.name_task, '') as name_task, 
+        COALESCE(t.start_date, '') as start_date,
+        COALESCE(bc.end_date, '') as end_date  # Added this line
+    FROM notifications n
+    LEFT JOIN bill_customer bc ON n.id_bill = bc.id_bill
+    LEFT JOIN customers c ON bc.id_customer = c.id_customer
+    LEFT JOIN task t ON n.task_id = t.id_task
+    WHERE n.id_user = ? AND n.is_read = 0
+    ORDER BY n.created_at DESC";
 $stmt_notifications = $conn->prepare($sql_notifications);
 $stmt_notifications->bind_param("i", $user_id);
 $stmt_notifications->execute();
 $notifications = $stmt_notifications->get_result()->fetch_all(MYSQLI_ASSOC);
 
 $near_expiry_count = count($notifications);
+
 ?>
-
-<style>
-    .notification-dropdown {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 0.5rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        width: 300px;
-        max-height: 400px;
-        overflow-y: auto;
-    }
-
-    .notification-item {
-        position: relative; /* กำหนดให้เป็น relative เพื่อให้ปุ่มอ่านแล้วอยู่ภายใน */
-        padding: 0.75rem;
-        border-bottom: 1px solid #e2e8f0;
-        transition: background-color 0.2s ease-in-out;
-    }
-
-    .notification-item:hover {
-        background-color: #f7fafc;
-    }
-
-    .notification-item:last-child {
-        border-bottom: none;
-    }
-
-    .notification-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #2d3748;
-    }
-
-    .notification-days-left {
-        font-size: 0.875rem;
-        color: #4a5568;
-    }
-
-    .notification-date {
-        font-size: 0.75rem;
-        color: #718096;
-    }
-
-    .notification-badge {
-        background-color: #dc2626;
-        color: #ffffff;
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 9999px;
-    }
-
-    /* สไตล์สำหรับปุ่มอ่านแล้ว (ไอคอนกากบาท) */
-    .mark-as-read-button {
-        position: absolute; /* กำหนดให้อยู่ที่มุมขวาบน */
-        top: 0.5rem;
-        right: 0.5rem;
-        background: none;
-        border: none;
-        color: #718096; /* สีเทา */
-        font-size: 1.5rem; /* ปรับขนาดให้ใหญ่ขึ้น (ค่าเริ่มต้นคือ 1rem) */
-        cursor: pointer;
-        transition: color 0.2s ease-in-out;
-    }
-
-    .mark-as-read-button:hover {
-        color: #dc2626; /* สีแดงเมื่อ hover */
-    }
-    .sticky-nav {
-        position: sticky;
-        top: 0;
-        z-index: 1000; /* ให้ Navbar อยู่ด้านบนสุดของหน้าเว็บ */
-    }
-
-    /* สไตล์สำหรับหน้าจอเล็ก (Mobile) */
-    @media (max-width: 768px) {
-        .md\\:flex {
-            display: none;
-        }
-
-        .mobile-menu {
-            display: block;
-        }
-
-        .mobile-menu-button {
-            display: block;
-        }
-
-        .mobile-menu-items {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
+    <style>
+        .notification-dropdown {
             background-color: #ffffff;
-            border-top: 1px solid #e2e8f0;
-            z-index: 1000;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
         }
 
-        .mobile-menu-items.active {
-            display: block;
-        }
-
-        .mobile-menu-items a {
-            display: block;
-            padding: 1rem;
-            text-align: center;
+        .notification-item {
+            position: relative; /* กำหนดให้เป็น relative เพื่อให้ปุ่มอ่านแล้วอยู่ภายใน */
+            padding: 0.75rem;
             border-bottom: 1px solid #e2e8f0;
+            transition: background-color 0.2s ease-in-out;
         }
-    }
-</style>
+
+        .notification-item:hover {
+            background-color: #f7fafc;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .notification-content {
+            font-size: 0.875rem;  /* ขนาดตัวอักษรเล็กลง */
+            font-weight: 400;  /* ตัวอักษรบางลง */
+            color: #4a5568;  /* สีที่อ่อนกว่า */
+        }
+
+        .notification-days-left {
+            font-size: 0.875rem;
+            color: #4a5568;
+        }
+
+        .notification-date {
+            font-size: 0.75rem;
+            color: #718096;
+        }
+
+
+        /* สไตล์สำหรับปุ่มอ่านแล้ว (ไอคอนกากบาท) */
+        .mark-as-read-button {
+            position: absolute; /* กำหนดให้อยู่ที่มุมขวาบน */
+            top: 0.5rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            color: #718096; /* สีเทา */
+            font-size: 1.5rem; /* ปรับขนาดให้ใหญ่ขึ้น (ค่าเริ่มต้นคือ 1rem) */
+            cursor: pointer;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .mark-as-read-button:hover {
+            color: #dc2626; /* สีแดงเมื่อ hover */
+        }
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000; /* ให้ Navbar อยู่ด้านบนสุดของหน้าเว็บ */
+        }
+
+        /* สไตล์สำหรับหน้าจอเล็ก (Mobile) */
+        @media (max-width: 768px) {
+            .md\\:flex {
+                display: none;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+
+            .mobile-menu-button {
+                display: block;
+            }
+
+            .mobile-menu-items {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background-color: #ffffff;
+                border-top: 1px solid #e2e8f0;
+                z-index: 1000;
+            }
+
+            .mobile-menu-items.active {
+                display: block;
+            }
+
+            .mobile-menu-items a {
+                display: block;
+                padding: 1rem;
+                text-align: center;
+                border-bottom: 1px solid #e2e8f0;
+            }
+        }
+    </style>
 <nav class="bg-white shadow-md sticky-nav">
     <div class="container mx-auto px-4">
         <div class="flex justify-between items-center h-16">
@@ -177,18 +190,62 @@ $near_expiry_count = count($notifications);
                                 <h3 class="text-lg font-semibold mb-2">การแจ้งเตือน</h3>
                                 <ul>
                                     <?php foreach ($notifications as $notification): ?>
-                                        <li class="notification-item" data-notification-id="<?= $notification['id_notifications'] ?>">
+                                        <li class="notification-item" data-notification-id="<?= htmlspecialchars($notification['id_notifications']) ?>">
                                             <div class="text-sm text-gray-700">
-                                                <button onclick="markAsRead(<?= $notification['id_notifications'] ?>)" 
+                                                <button onclick="markAsRead(<?= htmlspecialchars($notification['id_notifications']) ?>)" 
                                                         class="mark-as-read-button">
                                                     ×
                                                 </button>
-                                                <p class="notification-title"><?= $notification['message'] ?></p>
-                                                <p class="notification-date"><?= date('Y-m-d H:i:s', strtotime($notification['created_at'])) ?></p>
-                                                <a href="bill.php?id_customer=<?= $notification['id_customer'] ?>&id_bill=<?= $notification['id_bill'] ?>" 
-                                                class="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition duration-300">
-                                                    ดูบิล
-                                                </a>
+                                                
+                                                <?php if (!empty($notification['id_bill'])): ?>
+                                                    <p class="notification-title"><?= htmlspecialchars("สัญญาใกล้หมดอายุ") ?></p>
+                                                    <p class="notification-content"><?= nl2br(htmlspecialchars($notification['message'])) ?></p>
+                                                    <?php 
+                                                        $end_date = new DateTime($notification['end_date']);
+                                                        $current_date = new DateTime();
+                                                        $end_date->modify('+1 day');
+                                                        $interval = $current_date->diff($end_date);
+                                                        $days_remaining = $interval->days;
+                                                    ?>
+                                                    <p class="notification-days-left text-orange-600">
+                                                        <i class="fas fa-clock mr-1"></i>
+                                                        <?php if ($days_remaining == 0): ?>
+                                                            หมดภายในวันนี้
+                                                        <?php else: ?>
+                                                            เหลือเวลาอีก <?= $days_remaining ?> วัน
+                                                        <?php endif; ?>
+                                                    </p>
+                                                    <p class="notification-date">วันที่แจ้งเตือน: <?= date('Y-m-d H:i:s', strtotime($notification['created_at'])) ?></p>
+                                                    <a href="bill.php?id_customer=<?= htmlspecialchars($notification['id_customer']) ?>&id_bill=<?= htmlspecialchars($notification['id_bill']) ?>" 
+                                                    class="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition duration-300">
+                                                        ดูบิล
+                                                    </a>
+                                                <?php endif; ?>
+
+                                                <?php if (!empty($notification['task_id'])): ?>
+                                                    <p class="notification-title"><?= htmlspecialchars("นัดหมาย") ?></p>
+                                                    <p class="notification-content"><?= nl2br(htmlspecialchars($notification['message'])) ?></p>
+                                                    <?php 
+                                                        $start_date = new DateTime($notification['start_date']);
+                                                        $current_date = new DateTime();
+                                                        $start_date->modify('+1 day');
+                                                        $interval = $current_date->diff($start_date);
+                                                        $days_until_start = $interval->days;
+                                                    ?>
+                                                    <p class="notification-days-left text-green-600">
+                                                        <i class="fas fa-calendar-alt mr-1"></i>
+                                                        <?php if ($days_until_start == 0): ?>
+                                                            เริ่มวันนี้
+                                                        <?php else: ?>
+                                                            อีก <?= $days_until_start ?> วันจะถึงวันเริ่มงาน
+                                                        <?php endif; ?>
+                                                    </p>
+                                                    <p class="notification-date">วันที่แจ้งเตือน: <?= date('Y-m-d H:i:s', strtotime($notification['created_at'])) ?></p>
+                                                    <a href="#" onclick="showTaskDetails(<?= htmlspecialchars($notification['task_id']) ?>)" 
+                                                    class="mt-2 inline-block bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 transition duration-300">
+                                                        ดูงาน
+                                                    </a>
+                                                <?php endif; ?>
                                             </div>
                                         </li>
                                     <?php endforeach; ?>
@@ -217,7 +274,7 @@ $near_expiry_count = count($notifications);
     </div>
 </nav>
 <script>
-    function updateNotificationDropdown(contracts) {
+    function updateNotificationDropdown(notifications) {
         const dropdown = document.getElementById('notificationDropdown');
         if (!dropdown) return;
 
@@ -228,58 +285,97 @@ $near_expiry_count = count($notifications);
         ul.innerHTML = '';
 
         // Add new notifications
-        contracts.forEach(contract => {
-            if (!contract.is_read) {  // เพิ่มเงื่อนไขให้แสดงเฉพาะการแจ้งเตือนที่ยังไม่ได้อ่าน
+        notifications.forEach(notification => {
+            if (!notification.is_read) {
                 const li = document.createElement('li');
                 li.className = 'notification-item';
-                li.setAttribute('data-notification-id', contract.id_notifications); // เพิ่ม data-notification-id
-                li.innerHTML = `
-                     <div class="text-sm text-gray-700">
-                        <p class="notification-title">สัญญาใกล้หมดอายุ</p>
-                        <p class="notification-title">ลูกค้า ${contract.name_customer}</p>
-                        <p class="notification-days-left">เหลือเวลาอีก ${contract.days_left} วัน</p>
-                        <p class="notification-date">หมายเลขบิล: ${contract.number_bill}</p>
-                        <a href="bill.php?id_customer=${contract.id_customer}&id_bill=${contract.id_bill}" 
-                        class="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition duration-300">
-                            ดูบิล
-                        </a>
-                        <button onclick="markAsRead(${contract.id_notifications})" 
-                                class="mark-as-read-button"">
-                            ×
-                        </button>
-                    </div>
-                `;
+                li.setAttribute('data-notification-id', notification.id_notifications);
+
+                let content = '';
+                if (notification.id_bill) {
+                    // Bill notification
+                    content = `
+                        <div class="text-sm text-gray-700">
+                            <p class="notification-title">${notification.message}</p>
+                            <p class="notification-days-left text-orange-600">
+                                <i class="fas fa-clock mr-1"></i>
+                                เหลือเวลาอีก ${notification.days_remaining} วัน
+                            </p>
+                            <p class="notification-date">วันที่แจ้งเตือน: ${new Date(notification.created_at).toLocaleString()}</p>
+                            <a href="bill.php?id_customer=${notification.id_customer}&id_bill=${notification.id_bill}" 
+                            class="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition duration-300">
+                                ดูบิล
+                            </a>
+                        </div>`;
+                } else if (notification.task_id) {
+                    // Task notification
+                    content = `
+                        <div class="text-sm text-gray-700">
+                            <p class="notification-title">${notification.message}</p>
+                            <p class="notification-days-left text-green-600">
+                                <i class="fas fa-calendar-alt mr-1"></i>
+                                อีก ${notification.days_until_start} วันจะถึงวันเริ่มงาน
+                            </p>
+                            <p class="notification-date">วันที่แจ้งเตือน: ${new Date(notification.created_at).toLocaleString()}</p>
+                            <a href="#" onclick="showTaskDetails(${notification.task_id})" 
+                            class="mt-2 inline-block bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 transition duration-300">
+                                ดูงาน
+                            </a>
+                        </div>`;
+                }
+
+                // Add mark as read button
+                content += `
+                    <button onclick="markAsRead(${notification.id_notifications})" 
+                            class="mark-as-read-button">
+                        ×
+                    </button>`;
+
+                li.innerHTML = content;
                 ul.appendChild(li);
             }
         });
     }
 
-    function checkNotifications() {
-        fetch('../function/check_near_expiry.php')
-            .then(response => response.json())
-            .then(data => {
-                const bellIcon = document.querySelector('.fa-bell');
-                const notificationCount = bellIcon.nextElementSibling;
-                if (data.near_expiry_count > 0) {
-                    if (!notificationCount) {
-                        const span = document.createElement('span');
-                        span.className = 'absolute top-0 right-0 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5';
-                        span.textContent = data.near_expiry_count;
-                        bellIcon.parentElement.appendChild(span);
-                    } else {
-                        notificationCount.textContent = data.near_expiry_count;
-                    }
-                    // Update dropdown content
-                    updateNotificationDropdown(data.contracts);
-                } else if (notificationCount) {
-                    notificationCount.remove();
+    function checkAllNotifications() {
+        Promise.all([
+            fetch('../function/check_near_expiry.php'),
+            fetch('../function/check_task_reminders.php')
+        ])
+        .then(responses => Promise.all(responses.map(r => r.json())))
+        .then(([billData, taskData]) => {
+            // Combine notifications from both sources
+            const notifications = [
+                ...(billData.contracts || []),
+                ...(taskData.tasks || [])
+            ];
+
+            const totalCount = notifications.filter(n => !n.is_read).length;
+
+            // Update notification count badge
+            const bellIcon = document.querySelector('.fa-bell');
+            let notificationCount = bellIcon.nextElementSibling;
+
+            if (totalCount > 0) {
+                if (!notificationCount) {
+                    const span = document.createElement('span');
+                    span.className = 'absolute top-0 right-0 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5';
+                    span.textContent = totalCount;
+                    bellIcon.parentElement.appendChild(span);
+                } else {
+                    notificationCount.textContent = totalCount;
                 }
-            });
+                // Update dropdown content with combined notifications
+                updateNotificationDropdown(notifications);
+            } else if (notificationCount) {
+                notificationCount.remove();
+            }
+        });
     }
 
     // ตรวจสอบทุก 5 นาที
-    setInterval(checkNotifications, 300000);
-    checkNotifications(); // ตรวจสอบทันทีเมื่อโหลดหน้า
+    setInterval(checkAllNotifications, 300000);
+    checkAllNotifications(); // ตรวจสอบทันทีเมื่อโหลดหน้า
 
      // เปิด/ปิด dropdown menu เมื่อคลิกที่ไอคอนกระดิ่ง
     document.addEventListener('DOMContentLoaded', function() {

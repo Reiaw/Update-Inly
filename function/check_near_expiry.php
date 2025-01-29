@@ -43,7 +43,7 @@ $sql_details = "SELECT
             bc.type_bill,
             n.id_notifications,
             n.is_read,
-            DATEDIFF(bc.end_date, CURDATE()) as days_left
+            DATEDIFF(bc.end_date, CURDATE()) as days_remaining
         FROM bill_customer bc
         INNER JOIN customers c ON bc.id_customer = c.id_customer
         LEFT JOIN notifications n ON bc.id_bill = n.id_bill AND n.id_user = ?
@@ -60,7 +60,9 @@ $near_expiry_contracts = $stmt_details->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // สร้างการแจ้งเตือนสำหรับสัญญาที่ใกล้หมดอายุ
 foreach ($near_expiry_contracts as $contract) {
-    $message = "สัญญาใกล้หมดอายุ: ลูกค้า {$contract['name_customer']} หมายเลขบิล {$contract['number_bill']} จะหมดอายุใน {$contract['days_left']} วัน";
+    $days_remaining = $contract['days_remaining'];
+    $message = "ลูกค้า: {$contract['name_customer']}\nหมายเลขบิล: {$contract['number_bill']}";
+
     
     // ตรวจสอบว่ามีการแจ้งเตือนนี้แล้วหรือไม่
     $sql_check = "SELECT id_notifications FROM notifications WHERE id_user = ? AND id_bill = ?";

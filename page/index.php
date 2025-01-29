@@ -6,6 +6,7 @@ if (!isset($_SESSION['email'])) {
 }
 require_once '../config/config.php';
 require_once '../function/functions.php';
+// Get bills data
 $sql = "
     SELECT bc.number_bill, bc.end_date, bc.type_bill, bc.status_bill, c.name_customer, c.phone_customer 
     FROM bill_customer bc
@@ -17,6 +18,26 @@ $bills = [];
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $bills[] = $row;
+    }
+}
+// Get tasks for the logged-in user
+$user_id = $_SESSION['user_id']; // Assuming you store user_id in session
+$task_sql = "
+    SELECT t.*, tg.user_id 
+    FROM task t
+    JOIN task_group tg ON t.id_task = tg.task_id
+    WHERE tg.user_id = ?
+";
+$stmt = $conn->prepare($task_sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$task_result = $stmt->get_result();
+
+$tasks = [];
+if ($task_result->num_rows > 0) {
+    while ($row = $task_result->fetch_assoc()) {
+        // Only add task if it's not already in the tasks array
+        $tasks[] = $row;
     }
 }
 ?>
@@ -154,6 +175,7 @@ if ($result->num_rows > 0) {
 
         <!-- Calendar Section -->
         <div class="bg-white shadow-lg rounded-lg p-8 calendar-section">
+        <button onclick="openTaskModal()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">เพิ่มงานใหม่</button>
             <h2 class="text-3xl font-bold text-gray-800 mb-8">ปฏิทิน</h2>
             <div id="calendar"></div>
         </div>
@@ -168,6 +190,8 @@ if ($result->num_rows > 0) {
 
     <!-- Include Modal -->
     <?php include './components/info_calender.php'; ?>
+    <?php include './components/info_task.php'; ?>
+    <?php include './components/task_modal.php'; ?>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -175,11 +199,14 @@ if ($result->num_rows > 0) {
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 events: [
+                    // Bill events
                     <?php foreach ($bills as $bill): ?>
                     {
                         title: 'หมดสัญญาบิล',
                         start: '<?php echo $bill['end_date']; ?>',
+                        backgroundColor: '#FF5722',
                         extendedProps: {
+                            type: 'bill',
                             phone: '<?php echo htmlspecialchars($bill['phone_customer']); ?>',
                             billnum: '<?php echo $bill['number_bill']; ?>',
                             billtype: '<?php echo $bill['type_bill']; ?>',
@@ -188,25 +215,51 @@ if ($result->num_rows > 0) {
                         }
                     },
                     <?php endforeach; ?>
+                    
+                    // Task events
+                    <?php foreach ($tasks as $task): ?>
+                    {
+                        title: '<?php echo htmlspecialchars($task['name_task']); ?>',
+                        start: '<?php echo $task['start_date']; ?>',
+                        end: '<?php echo $task['end_date']; ?>',
+                        extendedProps: {
+                            type: 'task',
+                            detail: '<?php echo htmlspecialchars($task['detail_task']); ?>',
+                            reminder: '<?php echo $task['reminder_date']; ?>'
+                        }
+                    },
+                    <?php endforeach; ?>
                 ],
                 eventClick: function(info) {
-                    // เติมข้อมูลลงใน modal
-                    document.getElementById('modalCustomerName').innerText = 'ชื่อลูกค้า: ' + info.event.extendedProps.customername;
-                    document.getElementById('modalBillCode').innerText = 'Bill Code: ' + info.event.extendedProps.billnum;
-                    document.getElementById('modalBillType').innerText = 'ประเภทบิล: ' + info.event.extendedProps.billtype;
-                    document.getElementById('modalPhone').innerText = 'เบอร์ติดต่อ: ' + info.event.extendedProps.phone;
-                    document.getElementById('modalBillStatus').innerText = 'สถานะบิล: ' + info.event.extendedProps.billstatus;
-                    // แสดง modal
-                    document.getElementById('eventModal').classList.remove('hidden');
+                    if (info.event.extendedProps.type === 'bill') {
+                        // Show bill modal
+                        document.getElementById('modalCustomerName').innerText = 'ชื่อลูกค้า: ' + info.event.extendedProps.customername;
+                        document.getElementById('modalBillCode').innerText = 'Bill Code: ' + info.event.extendedProps.billnum;
+                        document.getElementById('modalBillType').innerText = 'ประเภทบิล: ' + info.event.extendedProps.billtype;
+                        document.getElementById('modalPhone').innerText = 'เบอร์ติดต่อ: ' + info.event.extendedProps.phone;
+                        document.getElementById('modalBillStatus').innerText = 'สถานะบิล: ' + info.event.extendedProps.billstatus;
+                        document.getElementById('eventModal').classList.remove('hidden');
+                    } else {
+                        // Show task modal
+                        document.getElementById('taskDetailModal').classList.remove('hidden');
+                        document.getElementById('taskTitle').innerText = 'หัวข้อ: ' +info.event.title;
+                        document.getElementById('taskDetail').innerText = 'รายละเอียด: ' +info.event.extendedProps.detail;
+                        document.getElementById('taskDates').innerText = 'วันที่เริ่ม: ' + info.event.start.toLocaleDateString() + 
+                                                                    '\nวันที่สิ้นสุด: ' + (info.event.end ? info.event.end.toLocaleDateString() : 'ไม่ระบุ');
+                    }
                 }
             });
             calendar.render();
 
-            // ปิด modal เมื่อคลิกปุ่ม OK
+            // Close modals
             document.getElementById('okBtn').addEventListener('click', function() {
                 document.getElementById('eventModal').classList.add('hidden');
             });
-        });
+            
+            document.getElementById('closeTaskModal').addEventListener('click', function() {
+                document.getElementById('taskDetailModal').classList.add('hidden');
+            });
+        });   
     </script>
 </body>
 </html>

@@ -447,4 +447,58 @@ function getProductsByPackageId($id_package) {
     $result = $stmt->get_result();
     return $result->fetch_all(MYSQLI_ASSOC);
 }
+function getAllUsers() {
+    global $conn;
+    $sql = "SELECT id, name FROM users WHERE verify = 1";
+    $result = $conn->query($sql);
+    $users = [];
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $users[] = $row;
+        }
+    }
+    return $users;
+}
+
+// Add new task function
+function addTask($taskData, $assignedUsers) {
+    global $conn;
+    
+    // Start transaction
+    $conn->begin_transaction();
+    
+    try {
+        // Insert task
+        $sql = "INSERT INTO task (name_task, detail_task, start_date, end_date, user_id, reminder_date) 
+                VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssssii", 
+            $taskData['name_task'],
+            $taskData['detail_task'],
+            $taskData['start_date'],
+            $taskData['end_date'],
+            $_SESSION['user_id'], // Current user as creator
+            $taskData['reminder_date']
+        );
+        $stmt->execute();
+        $taskId = $conn->insert_id;
+        
+        // Add all assigned users to the task_group table
+        foreach ($assignedUsers as $userId) {
+            $sql2 = "INSERT INTO task_group (task_id, user_id) VALUES (?, ?)";
+            $stmt2 = $conn->prepare($sql2);
+            $stmt2->bind_param("ii", $taskId, $userId);
+            $stmt2->execute();
+        }
+        
+        // Commit transaction
+        $conn->commit();
+        return true;
+        
+    } catch (Exception $e) {
+        // Rollback on error
+        $conn->rollback();
+        return false;
+    }
+}
 ?>
