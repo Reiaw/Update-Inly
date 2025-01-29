@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 23, 2025 at 08:39 AM
+-- Generation Time: Jan 29, 2025 at 10:13 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -97,13 +97,13 @@ CREATE TABLE `bill_customer` (
 --
 
 INSERT INTO `bill_customer` (`id_bill`, `number_bill`, `type_bill`, `status_bill`, `id_customer`, `create_at`, `update_at`, `date_count`, `end_date`, `contact_count`, `contact_status`) VALUES
-(13, 2147483647, 'CIP+', 'ใช้งาน', 38, '2025-01-21', '2025-01-21', 120, '2025-03-21', 1, 'ต่อสัญญา'),
-(14, 101, 'Special Bill', 'ยกเลิกใช้งาน', 38, '2025-01-17', '2025-01-21', 0, '2025-02-07', 2, 'ต่อสัญญา'),
+(13, 214748364, 'CIP+', 'ใช้งาน', 38, '2025-01-21', '2025-01-24', 120, '2035-01-21', 1, 'ต่อสัญญา'),
+(14, 101, 'Special Bill', 'ใช้งาน', 38, '2025-01-17', '2025-01-21', 0, '2025-02-07', 2, 'ต่อสัญญา'),
 (15, 2147483647, 'CIP+', 'ใช้งาน', 38, '2025-01-17', '2025-01-17', 20, '2026-10-03', 3, 'ต่อสัญญา'),
 (16, 555555, 'CIP+', 'ใช้งาน', 38, '2025-01-20', '2025-01-20', 200, '2025-08-19', 2, 'ต่อสัญญา'),
-(17, 2147483647, 'CIP+', 'ใช้งาน', 40, '2025-01-20', '2025-01-20', 365, '2026-02-19', 2, 'ต่อสัญญา'),
-(34, 254687, 'CIP+', 'ใช้งาน', 38, '2025-01-19', '2025-01-20', 100, '2025-02-01', 3, 'ต่อสัญญา'),
-(40, 2147483647, 'CIP+', 'ใช้งาน', 40, '2025-01-15', '2025-01-20', 5, '2025-01-25', 3, 'ต่อสัญญา'),
+(17, 2147483647, 'CIP+', 'ยกเลิกใช้งาน', 40, '2025-01-20', '2025-01-20', 365, '2026-02-19', 2, 'ต่อสัญญา'),
+(34, 254687, 'CIP+', 'ใช้งาน', 38, '2025-01-19', '2025-01-19', 100, '2025-01-30', 3, 'ต่อสัญญา'),
+(40, 2147483647, 'CIP+', 'ยกเลิกใช้งาน', 40, '2025-01-15', '2025-01-20', 5, '2025-01-25', 3, 'ต่อสัญญา'),
 (41, 2147483647, 'CIP+', 'ใช้งาน', 40, '2025-01-21', '2025-01-22', 5, '2025-08-21', 3, 'ต่อสัญญา'),
 (42, 254687, 'Special Bill', 'ใช้งาน', 40, '2025-01-20', '2025-01-20', 725, '2027-01-30', 0, 'ยังไม่ได้เลือก');
 
@@ -255,23 +255,25 @@ INSERT INTO `group_servicedetail` (`id_group_detail`, `id_group`, `id_service`, 
 CREATE TABLE `notifications` (
   `id_notifications` int(11) NOT NULL,
   `id_user` int(11) NOT NULL,
-  `id_bill` int(11) NOT NULL,
+  `id_bill` int(11) DEFAULT NULL,
   `message` text NOT NULL,
   `is_read` tinyint(1) DEFAULT 0,
-  `created_at` datetime DEFAULT current_timestamp()
+  `created_at` datetime DEFAULT current_timestamp(),
+  `task_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `notifications`
 --
 
-INSERT INTO `notifications` (`id_notifications`, `id_user`, `id_bill`, `message`, `is_read`, `created_at`) VALUES
-(21, 15, 13, 'สัญญาใกล้หมดอายุ: ลูกค้า ปากแพรก หมายเลขบิล 2147483647 จะหมดอายุใน 58 วัน', 0, '2025-01-22 13:37:02'),
-(22, 15, 34, 'สัญญาใกล้หมดอายุ: ลูกค้า ปากแพรก หมายเลขบิล 254687 จะหมดอายุใน 10 วัน', 0, '2025-01-22 13:45:14'),
-(24, 15, 40, 'สัญญาใกล้หมดอายุ: ลูกค้า Rtop หมายเลขบิล 2147483647 จะหมดอายุใน 3 วัน', 1, '2025-01-22 15:03:59'),
-(25, 16, 40, 'สัญญาใกล้หมดอายุ: ลูกค้า Rtop หมายเลขบิล 2147483647 จะหมดอายุใน 3 วัน', 0, '2025-01-22 15:17:12'),
-(26, 16, 34, 'สัญญาใกล้หมดอายุ: ลูกค้า ปากแพรก หมายเลขบิล 254687 จะหมดอายุใน 10 วัน', 0, '2025-01-22 15:17:12'),
-(27, 16, 13, 'สัญญาใกล้หมดอายุ: ลูกค้า ปากแพรก หมายเลขบิล 2147483647 จะหมดอายุใน 58 วัน', 0, '2025-01-22 15:17:12');
+INSERT INTO `notifications` (`id_notifications`, `id_user`, `id_bill`, `message`, `is_read`, `created_at`, `task_id`) VALUES
+(52, 15, 34, 'ลูกค้า: ปากแพรก\nหมายเลขบิล: 254687', 1, '2025-01-29 14:57:11', NULL),
+(53, 15, 14, 'ลูกค้า: ปากแพรก\nหมายเลขบิล: 101', 0, '2025-01-29 14:57:11', NULL),
+(56, 15, NULL, 'หัวข้องาน: ตรวจงาน\nเพิ่มโดย: Chatchai', 0, '2025-01-29 14:57:11', 3),
+(61, 15, NULL, 'หัวข้องาน: ฺCG\nเพิ่มโดย: Chatchai', 0, '2025-01-29 16:00:30', 4),
+(62, 16, NULL, 'หัวข้องาน: ฺCG\nเพิ่มโดย: John Doe', 0, '2025-01-29 16:00:30', 4),
+(63, 15, NULL, 'หัวข้องาน: A\nเพิ่มโดย: Chatchai', 0, '2025-01-29 16:00:38', 2),
+(64, 15, NULL, 'หัวข้องาน: A\nเพิ่มโดย: Chatchai', 0, '2025-01-29 16:00:38', 2);
 
 -- --------------------------------------------------------
 
@@ -295,9 +297,10 @@ CREATE TABLE `overide` (
 INSERT INTO `overide` (`id_overide`, `mainpackage_price`, `ict_price`, `all_price`, `info_overide`, `id_product`) VALUES
 (27, 100, 100, 200, NULL, 34),
 (28, 200, 100, 300, NULL, 35),
-(29, 100, 200, 300, NULL, 36),
+(29, 105, 200, 300, NULL, 36),
 (30, 100, 100, 200, NULL, 37),
-(31, 100, 100, 200, NULL, 38);
+(31, 100, 100, 200, NULL, 38),
+(33, 500, 100, 600, NULL, 40);
 
 -- --------------------------------------------------------
 
@@ -321,10 +324,11 @@ CREATE TABLE `package_list` (
 
 INSERT INTO `package_list` (`id_package`, `name_package`, `info_package`, `id_service`, `create_at`, `update_at`, `status_package`) VALUES
 (15, ' Smart Help Call Center', 'AB', 39, '0000-00-00', '2025-01-21', 'ยกเลิก'),
-(18, ' Smart Help Call Center', '-', 39, '2025-01-16', '2025-01-21', 'ยกเลิก'),
+(18, ' Smart Help Call Center', '-', 39, '2025-01-16', '2025-01-21', 'ใช้งาน'),
 (19, 'A', '', 39, '2025-01-09', '2025-01-21', 'ยกเลิก'),
-(20, 'AA', '', 39, '2025-01-15', '2025-01-21', 'ยกเลิก'),
-(24, ' Smart Help Call Center', '', 39, '2025-01-16', '2025-01-21', 'ใช้งาน');
+(20, 'AA', '', 39, '2025-01-15', '2025-01-21', 'ใช้งาน'),
+(24, ' Smart Help Call Center', '', 39, '2025-01-16', '2025-01-21', 'ใช้งาน'),
+(26, 'CC', '', 57, '2025-01-16', '2025-01-24', 'ใช้งาน');
 
 -- --------------------------------------------------------
 
@@ -347,11 +351,12 @@ CREATE TABLE `product_list` (
 --
 
 INSERT INTO `product_list` (`id_product`, `name_product`, `info_product`, `id_package`, `create_at`, `update_at`, `status_product`) VALUES
-(34, 'AA', '', 18, '2025-01-16', '2025-01-21', 'ยกเลิก'),
+(34, 'AA', '', 18, '2025-01-16', '2025-01-21', 'ใช้งาน'),
 (35, 'AA', '', 19, '2025-01-09', '2025-01-21', 'ยกเลิก'),
-(36, 'AA', '', 20, '2025-01-15', '2025-01-21', 'ยกเลิก'),
-(37, '0', '', 15, '0000-00-00', '2025-01-21', 'ยกเลิก'),
-(38, '100', '', 24, '2025-01-16', '2025-01-21', 'ใช้งาน');
+(36, 'AA', '', 20, '2025-01-15', '2025-01-21', 'ใช้งาน'),
+(37, '0', '', 15, '0000-00-00', '2025-01-21', 'ใช้งาน'),
+(38, '100', '', 24, '2025-01-16', '2025-01-21', 'ใช้งาน'),
+(40, 'ค่าบริการ Smart Help Call Center', 'A', 26, '2025-01-16', '2025-01-24', 'ใช้งาน');
 
 -- --------------------------------------------------------
 
@@ -389,7 +394,8 @@ INSERT INTO `service_customer` (`id_service`, `code_service`, `type_service`, `t
 (52, '123', 'Smart City', 'ขาย', 'ยกเลิก', 13, '2025-01-20', '2025-01-20'),
 (53, '3451L0114', 'Fttx+ICT solution', 'ขาย', 'ยกเลิก', 16, '2025-01-20', '2025-01-20'),
 (54, '1235', 'WiFi', 'ขาย', 'ยกเลิก', 16, '2025-01-20', '2025-01-20'),
-(55, '1235', 'Fttx+ICT solution', 'เช่าและขาย', 'ใช้งาน', 15, '2025-01-23', '2025-01-23');
+(55, '1235', 'Fttx+ICT solution', 'เช่าและขาย', 'ใช้งาน', 15, '2025-01-23', '2025-01-23'),
+(57, 'AA', 'Fttx', 'เช่า', 'ใช้งาน', 41, '2025-01-24', '2025-01-24');
 
 -- --------------------------------------------------------
 
@@ -511,6 +517,55 @@ INSERT INTO `tambons` (`id_tambons`, `zip_code`, `name_tambons`, `id_amphures`) 
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `task`
+--
+
+CREATE TABLE `task` (
+  `id_task` int(11) NOT NULL,
+  `name_task` varchar(255) NOT NULL,
+  `detail_task` text DEFAULT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `reminder_date` int(11) DEFAULT NULL,
+  `created_at` date DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `task`
+--
+
+INSERT INTO `task` (`id_task`, `name_task`, `detail_task`, `start_date`, `end_date`, `user_id`, `reminder_date`, `created_at`) VALUES
+(2, 'A', '', '2025-01-30', '2025-01-31', 15, 1, '2025-01-29'),
+(3, 'ตรวจงาน', 'ออกนอกสภานที่', '2025-02-21', '2025-02-22', 15, 23, '2025-01-29'),
+(4, 'ฺCG', 'สักอย่าง', '2025-01-31', '2025-02-08', 15, 2, '2025-01-29');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `task_group`
+--
+
+CREATE TABLE `task_group` (
+  `id_task_group` int(11) NOT NULL,
+  `task_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `task_group`
+--
+
+INSERT INTO `task_group` (`id_task_group`, `task_id`, `user_id`) VALUES
+(1, 2, 15),
+(2, 2, 15),
+(3, 3, 15),
+(4, 4, 15),
+(5, 4, 16);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -595,7 +650,8 @@ ALTER TABLE `group_servicedetail`
 ALTER TABLE `notifications`
   ADD PRIMARY KEY (`id_notifications`),
   ADD KEY `id_user` (`id_user`),
-  ADD KEY `id_bill` (`id_bill`);
+  ADD KEY `id_bill` (`id_bill`),
+  ADD KEY `task_id` (`task_id`);
 
 --
 -- Indexes for table `overide`
@@ -631,6 +687,21 @@ ALTER TABLE `service_customer`
 ALTER TABLE `tambons`
   ADD PRIMARY KEY (`id_tambons`),
   ADD KEY `id_amphures` (`id_amphures`);
+
+--
+-- Indexes for table `task`
+--
+ALTER TABLE `task`
+  ADD PRIMARY KEY (`id_task`),
+  ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `task_group`
+--
+ALTER TABLE `task_group`
+  ADD PRIMARY KEY (`id_task_group`),
+  ADD KEY `task_id` (`task_id`),
+  ADD KEY `fk_user_id` (`user_id`);
 
 --
 -- Indexes for table `users`
@@ -683,31 +754,43 @@ ALTER TABLE `group_servicedetail`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id_notifications` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id_notifications` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
 
 --
 -- AUTO_INCREMENT for table `overide`
 --
 ALTER TABLE `overide`
-  MODIFY `id_overide` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id_overide` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `package_list`
 --
 ALTER TABLE `package_list`
-  MODIFY `id_package` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id_package` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `product_list`
 --
 ALTER TABLE `product_list`
-  MODIFY `id_product` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id_product` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `service_customer`
 --
 ALTER TABLE `service_customer`
-  MODIFY `id_service` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `id_service` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+
+--
+-- AUTO_INCREMENT for table `task`
+--
+ALTER TABLE `task`
+  MODIFY `id_task` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `task_group`
+--
+ALTER TABLE `task_group`
+  MODIFY `id_task_group` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -763,7 +846,8 @@ ALTER TABLE `group_servicedetail`
 --
 ALTER TABLE `notifications`
   ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `notifications_ibfk_2` FOREIGN KEY (`id_bill`) REFERENCES `bill_customer` (`id_bill`);
+  ADD CONSTRAINT `notifications_ibfk_2` FOREIGN KEY (`id_bill`) REFERENCES `bill_customer` (`id_bill`),
+  ADD CONSTRAINT `notifications_ibfk_3` FOREIGN KEY (`task_id`) REFERENCES `task` (`id_task`);
 
 --
 -- Constraints for table `overide`
@@ -794,6 +878,19 @@ ALTER TABLE `service_customer`
 --
 ALTER TABLE `tambons`
   ADD CONSTRAINT `tambons_ibfk_1` FOREIGN KEY (`id_amphures`) REFERENCES `amphures` (`id_amphures`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `task`
+--
+ALTER TABLE `task`
+  ADD CONSTRAINT `task_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `task_group`
+--
+ALTER TABLE `task_group`
+  ADD CONSTRAINT `fk_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `task_group_ibfk_1` FOREIGN KEY (`task_id`) REFERENCES `task` (`id_task`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
