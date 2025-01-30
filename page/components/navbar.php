@@ -27,7 +27,7 @@ $sql_notifications = "SELECT
         COALESCE(c.id_customer, '') as id_customer,
         COALESCE(t.name_task, '') as name_task, 
         COALESCE(t.start_date, '') as start_date,
-        COALESCE(bc.end_date, '') as end_date  # Added this line
+        COALESCE(bc.end_date, '') as end_date
     FROM notifications n
     LEFT JOIN bill_customer bc ON n.id_bill = bc.id_bill
     LEFT JOIN customers c ON bc.id_customer = c.id_customer
@@ -241,10 +241,14 @@ $near_expiry_count = count($notifications);
                                                         <?php endif; ?>
                                                     </p>
                                                     <p class="notification-date">วันที่แจ้งเตือน: <?= date('Y-m-d H:i:s', strtotime($notification['created_at'])) ?></p>
-                                                    <a href="#" onclick="showTaskDetails(<?= htmlspecialchars($notification['task_id']) ?>)" 
-                                                    class="mt-2 inline-block bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 transition duration-300">
-                                                        ดูงาน
+                                                    <a href="index.php" 
+                                                        onclick="event.preventDefault(); document.getElementById('taskForm<?= htmlspecialchars($notification['task_id']) ?>').submit();" 
+                                                        class="mt-2 inline-block bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 transition duration-300">
+                                                            ดูงาน
                                                     </a>
+                                                    <form id="taskForm<?= htmlspecialchars($notification['task_id']) ?>" action="index.php" method="POST" style="display: none;">
+                                                        <input type="hidden" name="task_id" value="<?= htmlspecialchars($notification['task_id']) ?>">
+                                                    </form>
                                                 <?php endif; ?>
                                             </div>
                                         </li>
@@ -338,38 +342,25 @@ $near_expiry_count = count($notifications);
     }
 
     function checkAllNotifications() {
-        Promise.all([
-            fetch('../function/check_near_expiry.php'),
-            fetch('../function/check_task_reminders.php')
-        ])
-        .then(responses => Promise.all(responses.map(r => r.json())))
+    Promise.all([
+        fetch('../function/check_near_expiry.php').then(r => r.json().catch(() => ({ success: false, contracts: [] }))),
+        fetch('../function/check_task_reminders.php').then(r => r.json().catch(() => ({ success: false, tasks: [] })))
+    ])
         .then(([billData, taskData]) => {
-            // Combine notifications from both sources
+            if (!billData.success && !taskData.success) {
+                console.error('Failed to fetch notifications');
+                return;
+            }
+
             const notifications = [
-                ...(billData.contracts || []),
-                ...(taskData.tasks || [])
+                ...(billData.success ? billData.contracts : []),
+                ...(taskData.success ? taskData.tasks : [])
             ];
 
-            const totalCount = notifications.filter(n => !n.is_read).length;
-
-            // Update notification count badge
-            const bellIcon = document.querySelector('.fa-bell');
-            let notificationCount = bellIcon.nextElementSibling;
-
-            if (totalCount > 0) {
-                if (!notificationCount) {
-                    const span = document.createElement('span');
-                    span.className = 'absolute top-0 right-0 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5';
-                    span.textContent = totalCount;
-                    bellIcon.parentElement.appendChild(span);
-                } else {
-                    notificationCount.textContent = totalCount;
-                }
-                // Update dropdown content with combined notifications
-                updateNotificationDropdown(notifications);
-            } else if (notificationCount) {
-                notificationCount.remove();
-            }
+            
+        })
+        .catch(error => {
+            console.error('Error checking notifications:', error);
         });
     }
 

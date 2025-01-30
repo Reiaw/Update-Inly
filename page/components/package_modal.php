@@ -24,7 +24,7 @@
                 </div>
                 <hr class="my-4">
                 <h5 class="text-lg font-bold mb-4">Products</h5>
-                <div id="productList">
+                <div id="productList" style="max-height: 300px; overflow-y: auto;">
                     <!-- Product fields will be dynamically added here -->
                 </div>
                 <button type="button" onclick="addProductField()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 mt-4">เพิ่ม Product</button>
@@ -118,6 +118,7 @@
             }
         });
     }
+
     function calculateAllPrice(input) {
         const productField = input.closest('.product-field');
         const mainpackagePrice = parseFloat(productField.querySelector('input[name="mainpackage_price[]"]').value) || 0;

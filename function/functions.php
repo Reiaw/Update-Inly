@@ -501,4 +501,28 @@ function addTask($taskData, $assignedUsers) {
         return false;
     }
 }
+function deleteTask($task_id) {
+    global $conn;
+    
+    $conn->begin_transaction();
+    try {
+        // ลบ task จากตาราง task_group
+        $sql = "DELETE FROM task_group WHERE task_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $task_id);
+        $stmt->execute();
+
+        // ลบ task จากตาราง task
+        $sql = "DELETE FROM task WHERE id_task = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $task_id);
+        $stmt->execute();
+
+        $conn->commit();
+        return true;
+    } catch (Exception $e) {
+        $conn->rollback();
+        return false;
+    }
+}
 ?>

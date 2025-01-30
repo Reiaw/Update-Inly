@@ -4,6 +4,7 @@ if (!isset($_SESSION['email'])) {
     header('Location: login.php');
     exit;
 }
+
 require_once '../config/config.php';
 require_once '../function/functions.php';
 // Get bills data
@@ -38,6 +39,21 @@ if ($task_result->num_rows > 0) {
     while ($row = $task_result->fetch_assoc()) {
         // Only add task if it's not already in the tasks array
         $tasks[] = $row;
+    }
+}
+
+if (isset($_POST['task_id'])) {
+    $task_id = intval($_POST['task_id']);
+
+    // ดึงข้อมูล task จากฐานข้อมูล
+    $task_sql = "SELECT * FROM task WHERE id_task = ?";
+    $stmt = $conn->prepare($task_sql);
+    $stmt->bind_param("i", $task_id);
+    $stmt->execute();
+    $task_result = $stmt->get_result();
+
+    if ($task_result->num_rows > 0) {
+        $task = $task_result->fetch_assoc();
     }
 }
 ?>
@@ -175,8 +191,8 @@ if ($task_result->num_rows > 0) {
 
         <!-- Calendar Section -->
         <div class="bg-white shadow-lg rounded-lg p-8 calendar-section">
-        <button onclick="openTaskModal()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">เพิ่มงานใหม่</button>
             <h2 class="text-3xl font-bold text-gray-800 mb-8">ปฏิทิน</h2>
+            <button onclick="openTaskModal()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">เพิ่มงานใหม่</button>
             <div id="calendar"></div>
         </div>
     </div>
@@ -195,6 +211,14 @@ if ($task_result->num_rows > 0) {
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            <?php if (isset($task)): ?>
+                // แสดง modal info_task
+                document.getElementById('taskDetailModal').classList.remove('hidden');
+                document.getElementById('taskTitle').innerText = 'หัวข้อ: ' + '<?php echo htmlspecialchars($task['name_task']); ?>';
+                document.getElementById('taskDetail').innerText = 'รายละเอียด: ' + '<?php echo htmlspecialchars($task['detail_task']); ?>';
+                document.getElementById('taskDates').innerText = 'วันที่เริ่ม: ' + '<?php echo $task['start_date']; ?>' + 
+                                                                '\nวันที่สิ้นสุด: ' + '<?php echo $task['end_date']; ?>';
+            <?php endif; ?>
             var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
@@ -225,7 +249,8 @@ if ($task_result->num_rows > 0) {
                         extendedProps: {
                             type: 'task',
                             detail: '<?php echo htmlspecialchars($task['detail_task']); ?>',
-                            reminder: '<?php echo $task['reminder_date']; ?>'
+                            reminder: '<?php echo $task['reminder_date']; ?>',
+                            task_id: '<?php echo $task['id_task']; ?>' // เพิ่ม task_id เข้าไป
                         }
                     },
                     <?php endforeach; ?>
@@ -242,15 +267,21 @@ if ($task_result->num_rows > 0) {
                     } else {
                         // Show task modal
                         document.getElementById('taskDetailModal').classList.remove('hidden');
-                        document.getElementById('taskTitle').innerText = 'หัวข้อ: ' +info.event.title;
-                        document.getElementById('taskDetail').innerText = 'รายละเอียด: ' +info.event.extendedProps.detail;
+                        document.getElementById('taskTitle').innerText = 'หัวข้อ: ' + info.event.title;
+                        document.getElementById('taskDetail').innerText = 'รายละเอียด: ' + info.event.extendedProps.detail;
                         document.getElementById('taskDates').innerText = 'วันที่เริ่ม: ' + info.event.start.toLocaleDateString() + 
-                                                                    '\nวันที่สิ้นสุด: ' + (info.event.end ? info.event.end.toLocaleDateString() : 'ไม่ระบุ');
+                                                                        '\nวันที่สิ้นสุด: ' + (info.event.end ? info.event.end.toLocaleDateString() : 'ไม่ระบุ');
+                        
+                        // ดึง task_id จาก extendedProps
+                        const taskId = info.event.extendedProps.task_id;
+                        
+                        // ตัวอย่างการส่ง task_id ไปยังปุ่มลบ task
+                        document.getElementById('deleteTaskButton').dataset.taskId = taskId;
                     }
                 }
             });
             calendar.render();
-
+            
             // Close modals
             document.getElementById('okBtn').addEventListener('click', function() {
                 document.getElementById('eventModal').classList.add('hidden');
@@ -259,7 +290,7 @@ if ($task_result->num_rows > 0) {
             document.getElementById('closeTaskModal').addEventListener('click', function() {
                 document.getElementById('taskDetailModal').classList.add('hidden');
             });
-        });   
+        });
     </script>
 </body>
 </html>
