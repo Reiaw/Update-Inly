@@ -174,6 +174,7 @@ $near_expiry_count = count($notifications);
                 <a href="customer.php" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Customer</a>
                 <a href="bill.php" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Billing</a>
                 <a href="report.php" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Report</a>
+                <a href="quotation.php" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Quotation</a>
                 
                 <!-- ไอคอนกระดิ่งและรายการแจ้งเตือน -->
                 <div class="relative">
@@ -216,10 +217,15 @@ $near_expiry_count = count($notifications);
                                                         <?php endif; ?>
                                                     </p>
                                                     <p class="notification-date">วันที่แจ้งเตือน: <?= date('Y-m-d H:i:s', strtotime($notification['created_at'])) ?></p>
-                                                    <a href="bill.php?id_customer=<?= htmlspecialchars($notification['id_customer']) ?>&id_bill=<?= htmlspecialchars($notification['id_bill']) ?>" 
-                                                    class="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition duration-300">
+                                                    <a href="bill.php" 
+                                                        onclick="event.preventDefault(); document.getElementById('billForm<?= htmlspecialchars($notification['id_bill']) ?>').submit();" 
+                                                        class="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition duration-300">
                                                         ดูบิล
                                                     </a>
+                                                    <form id="billForm<?= htmlspecialchars($notification['id_bill']) ?>" action="bill.php" method="POST" style="display: none;">
+                                                        <input type="hidden" name="id_bill" value="<?= htmlspecialchars($notification['id_bill']) ?>">
+                                                        <input type="hidden" name="id_customer" value="<?= htmlspecialchars($notification['id_customer']) ?>">
+                                                    </form>
                                                 <?php endif; ?>
 
                                                 <?php if (!empty($notification['task_id'])): ?>
@@ -270,6 +276,7 @@ $near_expiry_count = count($notifications);
                 <a href="customer.php" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Customer</a>
                 <a href="bill.php" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Billing</a>
                 <a href="report.php" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Report</a>
+                <a href="quotation.php" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Quotation</a>
                 <a href="logout.php" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>

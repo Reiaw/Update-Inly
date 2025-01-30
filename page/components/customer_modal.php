@@ -1,7 +1,7 @@
 <?php
 // components/customer_modal.php
-
 $amphures = getAmphures();
+$customerTypes = getCustomerTypes(); // ฟังก์ชันใหม่เพื่อดึงข้อมูลประเภทลูกค้าจากฐานข้อมูล
 ?>
 
 <div id="customerModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
@@ -28,13 +28,12 @@ $amphures = getAmphures();
 
                     <!-- ประเภทลูกค้า -->
                     <div>
-                        <label for="type_customer" class="block text-sm font-medium text-gray-700">ประเภท</label>
-                        <select name="type_customer" id="type_customer" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
+                        <label for="id_customer_type" class="block text-sm font-medium text-gray-700">ประเภท</label>
+                        <select name="id_customer_type" id="id_customer_type" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
                             <option value="" disabled selected>เลือกประเภท</option>
-                            <option value="อบต">อบต</option>
-                            <option value="อบจ">อบจ</option>
-                            <option value="เทศบาล">เทศบาล</option>
-                            <option value="โรงแรม">โรงแรม</option>
+                            <?php foreach ($customerTypes as $type): ?>
+                                <option value="<?= $type['id_customer_type'] ?>"><?= $type['type_customer'] ?></option>
+                            <?php endforeach; ?>
                         </select>
                         <p class="text-sm text-gray-500 mt-1">เลือกประเภทลูกค้า</p>
                     </div>
@@ -131,14 +130,14 @@ document.getElementById('customerForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
     const nameCustomer = document.getElementById('name_customer').value.trim();
-    const typeCustomer = document.getElementById('type_customer').value.trim();
+    const idCustomerType = document.getElementById('id_customer_type').value.trim();
     const phoneCustomer = document.getElementById('phone_customer').value.trim();
     const statusCustomer = document.getElementById('status_customer').value.trim();
     const idAmphures = document.getElementById('id_amphures').value.trim();
     const idTambons = document.getElementById('id_tambons').value.trim();
 
     // ตรวจสอบว่าข้อมูลทุกช่องถูกกรอกครบถ้วน (ยกเว้น info_address)
-    if (!nameCustomer || !typeCustomer || !phoneCustomer || !statusCustomer || !idAmphures || !idTambons) {
+    if (!nameCustomer || !idCustomerType || !phoneCustomer || !statusCustomer || !idAmphures || !idTambons) {
         alert('กรุณากรอกข้อมูลทุกช่องให้ครบถ้วน');
         return;
     }
@@ -150,5 +149,24 @@ document.getElementById('customerForm').addEventListener('submit', function(e) {
         return;
     }
 
+    // ส่งข้อมูลฟอร์มไปยังเซิร์ฟเวอร์
+    const formData = new FormData(document.getElementById('customerForm'));
+    fetch('../function/save_customer.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('บันทึกข้อมูลสำเร็จ');
+            closeModal();
+            // รีเฟรชหน้าหรืออัปเดตตารางลูกค้า
+        } else {
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
 });
 </script>

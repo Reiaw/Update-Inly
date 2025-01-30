@@ -11,7 +11,7 @@ require_once  '../config/config.php';
 require_once  '../function/functions.php';
 
 // ดึงข้อมูลประเภทลูกค้า
-$customer_types = $conn->query("SELECT DISTINCT type_customer FROM customers")->fetch_all(MYSQLI_ASSOC);
+$customer_types = $conn->query("SELECT * FROM customer_types")->fetch_all(MYSQLI_ASSOC);
 
 // ดึงข้อมูลอำเภอ
 $amphures = $conn->query("SELECT * FROM amphures")->fetch_all(MYSQLI_ASSOC);
@@ -20,11 +20,12 @@ $amphures = $conn->query("SELECT * FROM amphures")->fetch_all(MYSQLI_ASSOC);
 $tambons = []; // เริ่มต้นด้วยอาร์เรย์ว่าง
 
 $customers = $conn->query("
-    SELECT c.*, a.info_address, t.name_tambons, am.name_amphures, t.zip_code 
+    SELECT c.*, a.info_address, t.name_tambons, am.name_amphures, t.zip_code, ct.type_customer 
     FROM customers c 
     JOIN address a ON c.id_address = a.id_address 
     JOIN tambons t ON a.id_tambons = t.id_tambons 
     JOIN amphures am ON a.id_amphures = am.id_amphures
+    JOIN customer_types ct ON c.id_customer_type = ct.id_customer_type
 ")->fetch_all(MYSQLI_ASSOC);
 ?>
 
@@ -88,7 +89,9 @@ $customers = $conn->query("
                 <button onclick="openModal()" class="bg-blue-500 text-white px-4 py-2 rounded-md">
                     <i class="fas fa-plus"></i> เพิ่มลูกค้า
                 </button>
-
+                <button onclick="window.location.href='type_customer.php'" class="bg-blue-500 text-white px-4 py-2 rounded-md">
+                    จัดการประเภทลูกค้า
+                </button>
                 <!-- ฟอร์มอัปโหลดไฟล์ Excel -->
                 <form id="uploadForm" enctype="multipart/form-data" class="flex items-center gap-2">
                     <input type="file" name="excelFile" id="excelFile" accept=".xls, .xlsx" class="border p-2 rounded-md">
@@ -164,9 +167,12 @@ $customers = $conn->query("
                             <button onclick="deleteCustomer(<?= $customer['id_customer'] ?>)" class="bg-red-500 text-white px-2 py-1 rounded-md ml-2">
                                 <i class="fas fa-trash"></i>
                             </button>
-                            <button onclick="window.location.href='bill.php?id_customer=<?= $customer['id_customer'] ?>'" class="bg-blue-500 text-white px-2 py-1 rounded-md ml-2">
-                                <i class="fas fa-info-circle"></i> บิล
-                            </button>
+                            <form action="bill.php" method="POST" style="display: inline;">
+                                <input type="hidden" name="id_customer" value="<?= $customer['id_customer'] ?>">
+                                <button type="submit" class="bg-blue-500 text-white px-2 py-1 rounded-md ml-2">
+                                    <i class="fas fa-info-circle"></i> บิล
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>    
@@ -175,7 +181,7 @@ $customers = $conn->query("
     </div>
 
     <?php include './components/customer_modal.php'; ?>
-
+    
     <!-- jQuery และ DataTables JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
@@ -268,21 +274,29 @@ $customers = $conn->query("
         fetch(`../function/get_customer.php?id_customer=${id_customer}`)
             .then(response => response.json())
             .then(data => {
-                document.getElementById('id_customer').value = data.id_customer;
-                document.getElementById('name_customer').value = data.name_customer;
-                document.getElementById('type_customer').value = data.type_customer;
-                document.getElementById('phone_customer').value = data.phone_customer;
-                document.getElementById('status_customer').value = data.status_customer;
-                document.getElementById('id_amphures').value = data.id_amphures;
-                if (data.id_amphures) {
-                    loadTambons(data.id_amphures).then(() => {
-                        document.getElementById('id_tambons').value = data.id_tambons;
-                    });
+                // ตรวจสอบว่าข้อมูลที่ได้ไม่เป็น null หรือ undefined
+                if (data) {
+                    document.getElementById('id_customer').value = data.id_customer;
+                    document.getElementById('name_customer').value = data.name_customer;
+                    document.getElementById('id_customer_type').value = data.id_customer_type; // เปลี่ยนจาก type_customer เป็น id_customer_type
+                    document.getElementById('phone_customer').value = data.phone_customer;
+                    document.getElementById('status_customer').value = data.status_customer;
+                    document.getElementById('id_amphures').value = data.id_amphures;
+                    if (data.id_amphures) {
+                        loadTambons(data.id_amphures).then(() => {
+                            document.getElementById('id_tambons').value = data.id_tambons;
+                        });
+                    }
+                    document.getElementById('id_address').value = data.id_address;
+                    document.getElementById('info_address').value = data.info_address;
+                    document.getElementById('modalTitle').innerText = 'แก้ไขลูกค้า';
+                    document.getElementById('customerModal').classList.remove('hidden');
+                } else {
+                    console.error('ข้อมูลลูกค้าไม่ถูกต้องหรือไม่มีข้อมูล');
                 }
-                document.getElementById('id_address').value = data.id_address;
-                document.getElementById('info_address').value = data.info_address;
-                document.getElementById('modalTitle').innerText = 'แก้ไขลูกค้า';
-                document.getElementById('customerModal').classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('เกิดข้อผิดพลาดในการดึงข้อมูลลูกค้า:', error);
             });
     }
 

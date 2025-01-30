@@ -34,6 +34,43 @@ function getCustomerById($id_customer) {
     return $result->fetch_assoc();
 }
 
+function getCustomerTypes() {
+    global $conn;
+    $sql = "SELECT * FROM customer_types";
+    $result = $conn->query($sql);
+    $types = [];
+    if ($result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $types[] = $row;
+        }
+    }
+    return $types;
+}
+
+function createCustomerType($type_customer) {
+    global $conn;
+    $sql = "INSERT INTO customer_types (type_customer) VALUES (?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $type_customer);
+    return $stmt->execute();
+}
+
+function updateCustomerType($id_customer_type, $type_customer) {
+    global $conn;
+    $sql = "UPDATE customer_types SET type_customer = ? WHERE id_customer_type = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("si", $type_customer, $id_customer_type);
+    return $stmt->execute();
+}
+
+function deleteCustomerType($id_customer_type) {
+    global $conn;
+    $sql = "DELETE FROM customer_types WHERE id_customer_type = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_customer_type);
+    return $stmt->execute();
+}
+
 function createCustomer($data) {
     global $conn;
 
@@ -43,9 +80,10 @@ function createCustomer($data) {
     }
 
     // เพิ่มข้อมูลลูกค้า
-    $sql = "INSERT INTO customers (name_customer, type_customer, phone_customer, status_customer, id_address, create_at, update_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
+    $sql = "INSERT INTO customers (name_customer, phone_customer, status_customer, id_address, create_at, update_at, id_customer_type) 
+            VALUES (?, ?, ?, ?, NOW(), NOW(), ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssi", $data['name_customer'], $data['type_customer'], $data['phone_customer'], $data['status_customer'], $data['id_address']);
+    $stmt->bind_param("sssii", $data['name_customer'], $data['phone_customer'], $data['status_customer'], $data['id_address'], $data['id_customer_type']);
     return $stmt->execute();
 }
 
@@ -59,9 +97,9 @@ function updateCustomer($id_customer, $data) {
     }
 
     // อัปเดตข้อมูลในตาราง customers
-    $sql = "UPDATE customers SET name_customer = ?, type_customer = ?, phone_customer = ?, status_customer = ?, id_address = ?, update_at = NOW() WHERE id_customer = ?";
+    $sql = "UPDATE customers SET name_customer = ?, phone_customer = ?, status_customer = ?, id_address = ?, update_at = NOW(), id_customer_type = ? WHERE id_customer = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssii", $data['name_customer'], $data['type_customer'], $data['phone_customer'], $data['status_customer'], $data['id_address'], $id_customer);
+    $stmt->bind_param("sssiii", $data['name_customer'], $data['phone_customer'], $data['status_customer'], $data['id_address'], $data['id_customer_type'], $id_customer);
     $stmt->execute();
 
     // อัปเดตข้อมูลในตาราง address
@@ -524,5 +562,16 @@ function deleteTask($task_id) {
         $conn->rollback();
         return false;
     }
+}
+
+function getCustomerCountByType($id_customer_type) {
+    global $conn;
+    $sql = "SELECT COUNT(*) as count FROM customers WHERE id_customer_type = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id_customer_type);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    return $row['count'];
 }
 ?>

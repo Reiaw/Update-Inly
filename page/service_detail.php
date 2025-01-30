@@ -8,7 +8,7 @@ if (!isset($_SESSION['email'])) {
 require_once '../config/config.php';
 require_once '../function/functions.php';
 
-$id_service = isset($_GET['id_service']) ? intval($_GET['id_service']) : 0;
+$id_service = isset($_POST['id_service']) ? intval($_POST['id_service']) : 0;
 
 if ($id_service > 0) {
     // ดึงข้อมูล service

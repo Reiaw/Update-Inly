@@ -6,7 +6,7 @@ require_once 'functions.php';
 
 // รับข้อมูลจากฟอร์ม
 $name_customer = $_POST['name_customer'] ?? '';
-$type_customer = $_POST['type_customer'] ?? '';
+$id_customer_type = $_POST['id_customer_type'] ?? ''; // เปลี่ยนจาก type_customer เป็น id_customer_type
 $phone_customer = $_POST['phone_customer'] ?? '';
 $status_customer = $_POST['status_customer'] ?? '';
 $id_amphures = $_POST['id_amphures'] ?? '';
@@ -14,7 +14,7 @@ $id_tambons = $_POST['id_tambons'] ?? '';
 $info_address = $_POST['info_address'] ?? ''; // ไม่บังคับ
 
 // ตรวจสอบว่าข้อมูลทุกช่องถูกกรอกครบถ้วน (ยกเว้น info_address)
-if (empty($name_customer) || empty($type_customer) || empty($phone_customer) || empty($status_customer) || empty($id_amphures) || empty($id_tambons)) {
+if (empty($name_customer) || empty($id_customer_type) || empty($phone_customer) || empty($status_customer) || empty($id_amphures) || empty($id_tambons)) {
     echo json_encode(['success' => false, 'message' => 'กรุณากรอกข้อมูลทุกช่องให้ครบถ้วน']);
     exit;
 }
@@ -44,7 +44,7 @@ if ($stmt->execute()) {
     // เพิ่มลูกค้าใหม่โดยใช้ id_address ที่เพิ่งสร้าง
     $data = [
         'name_customer' => $name_customer,
-        'type_customer' => $type_customer,
+        'id_customer_type' => $id_customer_type, // เปลี่ยนจาก type_customer เป็น id_customer_type
         'phone_customer' => $phone_customer,
         'status_customer' => $status_customer,
         'id_address' => $id_address

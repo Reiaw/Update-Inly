@@ -8,7 +8,7 @@ if (!isset($_SESSION['email'])) {
 require_once '../config/config.php';
 require_once '../function/functions.php';
 
-$id_bill = isset($_GET['id_bill']) ? intval($_GET['id_bill']) : 0;
+$id_bill = isset($_POST['id_bill']) ? intval($_POST['id_bill']) : 0;
 
 if ($id_bill > 0) {
     // ดึงข้อมูลบิล
@@ -157,9 +157,10 @@ if ($id_bill > 0) {
                                 <td class="py-2 px-4 border-b text-center">
                                     <button onclick="openModal('service', <?php echo $service['id_service']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded"> <i class="fas fa-edit"></i></button>
                                     <button onclick="deleteItem('service', <?php echo $service['id_service']; ?>)" class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
-                                    <a href="service_detail.php?id_service=<?php echo $service['id_service']; ?>" class="bg-blue-500 text-white px-2 py-1 rounded-md">
-                                        <i class="fas fa-info-circle"></i> Info
-                                    </a>
+                                    <form action="service_detail.php" method="POST" style="display: inline;">
+                                        <input type="hidden" name="id_service" value="<?php echo $service['id_service']; ?>">
+                                        <button type="submit" class="bg-blue-500 text-white px-2 py-1 rounded-md"> <i class="fas fa-info-circle"></i> Info</button>
+                                    </form>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

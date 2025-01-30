@@ -11,125 +11,163 @@ if (!isset($_SESSION['email'])) {
 $report_type = isset($_GET['report_type']) ? $_GET['report_type'] : '';
 
 // รับค่าตัวกรองจากฟอร์ม
-$filter_type_customer = isset($_GET['filter_type_customer']) ? $_GET['filter_type_customer'] : '';
+$filter_customer_type = isset($_GET['filter_customer_type']) ? $_GET['filter_customer_type'] : '';
 $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
 
+// ดึงข้อมูลประเภทลูกค้า
+$customer_types = $conn->query("SELECT * FROM customer_types")->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>reports</title>
+    <title>Reports</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <style>
+        .dataTables_filter {
+            display: none;
+        }
+        .flex-wrap {
+            gap: 0.5rem;
+        }
+        .border {
+            border: 1px solid #e2e8f0;
+        }
+        .rounded-md {
+            border-radius: 0.375rem;
+        }
+        table thead th {
+            background-color: #4a5568;
+            color: white;
+            padding: 0.75rem;
+        }
+        table tbody tr {
+            background-color: rgb(255, 255, 255);
+        }
+        table tbody tr:hover {
+            background-color: rgb(198, 198, 198);
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
     <?php include './components/navbar.php'; ?>
 
-    <div class="container mx-auto p-4">
+    <div class="container mx-auto px-4 py-8">
         <h1 class="text-2xl font-bold mb-4">รายงาน</h1>
-        <form method="GET" action="">
-            <!-- เลือกรายงาน -->
-            <div class="mb-4">
-                <label for="report_type" class="block mb-2">เลือกประเภทรายงาน:</label>
-                <select name="report_type" id="report_type" class="p-2 border rounded" onchange="this.form.submit()">
-                    <option value="">-- เลือกรายงาน --</option>
-                    <option value="1" <?php echo $report_type == '1' ? 'selected' : ''; ?>>รายงาน 1: ลูกค้าและจำนวนบิลทั้งหมด</option>
-                    <option value="2" <?php echo $report_type == '2' ? 'selected' : ''; ?>>รายงาน 2: ลูกค้าและหมายเลขบิลที่เกี่ยวข้อง</option>
-                    <option value="3" <?php echo $report_type == '3' ? 'selected' : ''; ?>>รายงาน 3: ลูกค้าและอุปกรณ์ที่เกี่ยวข้อง</option>
-                </select>  
-        <button 
-            onclick="exportToExcel()"
-            class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
-            <i class="fas fa-file-excel mr-2"></i>
-            ส่งออกเป็น Excel </button>
-        </div>
+        
+        <!-- Control Panel -->
+        <div class="bg-white p-4 rounded-lg shadow mb-6">
+            <form method="GET" class="space-y-4">
+                <!-- Report Selection and Export Button Row -->
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex-grow">
+                        <select name="report_type" id="report_type" 
+                                class="w-full p-2 border rounded-md bg-white" 
+                                onchange="this.form.submit()">
+                            <option value="">-- เลือกรายงาน --</option>
+                            <option value="1" <?= $report_type == '1' ? 'selected' : '' ?>>รายงาน 1: ลูกค้าและจำนวนบิลทั้งหมด</option>
+                            <option value="2" <?= $report_type == '2' ? 'selected' : '' ?>>รายงาน 2: ลูกค้าและหมายเลขบิลที่เกี่ยวข้อง</option>
+                            <option value="3" <?= $report_type == '3' ? 'selected' : '' ?>>รายงาน 3: ลูกค้าและอุปกรณ์ที่เกี่ยวข้อง</option>
+                        </select>
+                    </div>
+                    <button type="button" onclick="exportToExcel()" 
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-all duration-300">
+                        <i class="fas fa-file-excel mr-2"></i>ส่งออกเป็น Excel
+                    </button>
+                </div>
 
-            <!-- ฟิลด์กรองข้อมูล (แสดงเฉพาะเมื่อเลือกรายงานแล้ว) -->
-            <?php if ($report_type): ?>
-                <div class="flex flex-wrap items-end gap-4 mb-4">
-                    <!-- ตัวกรอง type_customer -->
-                    <div>
-                        <label for="filter_type_customer" class="block mb-2">กรองตามประเภทลูกค้า:</label>
-                        <select name="filter_type_customer" id="filter_type_customer" class="p-2 border rounded">
-                            <option value="">ทั้งหมด</option>
-                            <option value="อบต" <?php echo $filter_type_customer == 'อบต' ? 'selected' : ''; ?>>อบต</option>
-                            <option value="อบจ" <?php echo $filter_type_customer == 'อบจ' ? 'selected' : ''; ?>>อบจ</option>
-                            <option value="เทศบาล" <?php echo $filter_type_customer == 'เทศบาล' ? 'selected' : ''; ?>>เทศบาล</option>
-                            <option value="โรงแรม" <?php echo $filter_type_customer == 'โรงแรม' ? 'selected' : ''; ?>>โรงแรม</option>
+                <?php if ($report_type): ?>
+                <!-- Filters Row -->
+                <div class="flex flex-wrap items-center gap-4">
+                    <!-- Customer Type Filter -->
+                    <div class="flex-grow">
+                        <select name="filter_customer_type" id="filter_customer_type" class="w-full p-2 border rounded-md">
+                            <option value="">ทุกประเภทลูกค้า</option>
+                            <?php foreach ($customer_types as $type): ?>
+                                <option value="<?= $type['id_customer_type'] ?>" 
+                                    <?= $filter_customer_type == $type['id_customer_type'] ? 'selected' : '' ?>>
+                                    <?= $type['type_customer'] ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 
-                    <!-- ตัวกรอง amphure -->
-                    <div>
-                        <label for="filter_amphure" class="block mb-2">กรองตามอำเภอ:</label>
-                        <select name="filter_amphure" id="filter_amphure" class="p-2 border rounded">
-                            <option value="">ทั้งหมด</option>
+                    <!-- Amphure Filter -->
+                    <div class="flex-grow">
+                        <select name="filter_amphure" id="filter_amphure" 
+                                class="w-full p-2 border rounded-md">
+                            <option value="">ทุกอำเภอ</option>
                             <?php
-                            // ดึงข้อมูล amphures จากฐานข้อมูล
                             $sql_amphures = "SELECT * FROM amphures";
                             $result_amphures = $conn->query($sql_amphures);
                             while ($row_amphures = $result_amphures->fetch_assoc()) {
                                 $selected = $filter_amphure == $row_amphures['id_amphures'] ? 'selected' : '';
-                                echo "<option value='" . $row_amphures['id_amphures'] . "' $selected>" . $row_amphures['name_amphures'] . "</option>";
+                                echo "<option value='" . $row_amphures['id_amphures'] . "' $selected>" 
+                                    . $row_amphures['name_amphures'] . "</option>";
                             }
                             ?>
                         </select>
                     </div>
 
-                    <!-- ตัวกรอง type_service และ type_gadget (แสดงเฉพาะใน Report 2) -->
                     <?php if ($report_type == '2'): ?>
-                        <!-- ตัวกรอง type_service -->
-                        <div>
-                            <label for="filter_type_service" class="block mb-2">กรองตามประเภทบริการ:</label>
-                            <select name="filter_type_service" id="filter_type_service" class="p-2 border rounded">
-                                <option value="">ทั้งหมด</option>
-                                <option value="Fttx" <?php echo isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'Fttx' ? 'selected' : ''; ?>>Fttx</option>
-                                <option value="Fttx+ICT solution" <?php echo isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'Fttx+ICT solution' ? 'selected' : ''; ?>>Fttx+ICT solution</option>
-                                <option value="Fttx 2+ICT solution" <?php echo isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'Fttx 2+ICT solution' ? 'selected' : ''; ?>>Fttx 2+ICT solution</option>
-                                <option value="SI service" <?php echo isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'SI service' ? 'selected' : ''; ?>>SI service</option>
-                                <option value="วงจเช่า" <?php echo isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'วงจเช่า' ? 'selected' : ''; ?>>วงจเช่า</option>
-                                <option value="IP phone" <?php echo isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'IP phone' ? 'selected' : ''; ?>>IP phone</option>
-                                <option value="Smart City" <?php echo isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'Smart City' ? 'selected' : ''; ?>>Smart City</option>
-                                <option value="WiFi" <?php echo isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'WiFi' ? 'selected' : ''; ?>>WiFi</option>
-                                <option value="อื่นๆ" <?php echo isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'อื่นๆ' ? 'selected' : ''; ?>>อื่นๆ</option>
-                            </select>
-                        </div>
+                    <!-- Service Type Filter -->
+                    <div class="flex-grow">
+                        <select name="filter_type_service" id="filter_type_service" 
+                                class="w-full p-2 border rounded-md">
+                            <option value="">ทุกประเภทบริการ</option>
+                            <option value="Fttx" <?= isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'Fttx' ? 'selected' : '' ?>>Fttx</option>
+                            <option value="Fttx+ICT solution" <?= isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'Fttx+ICT solution' ? 'selected' : '' ?>>Fttx+ICT solution</option>
+                            <option value="SI service" <?= isset($_GET['filter_type_service']) && $_GET['filter_type_service'] == 'SI service' ? 'selected' : '' ?>>SI service</option>
+                            <!-- Add other service types -->
+                        </select>
+                    </div>
 
-                        <!-- ตัวกรอง type_gadget -->
-                        <div>
-                            <label for="filter_type_gadget" class="block mb-2">กรองตามประเภทอุปกรณ์:</label>
-                            <select name="filter_type_gadget" id="filter_type_gadget" class="p-2 border rounded">
-                                <option value="">ทั้งหมด</option>
-                                <option value="เช่า" <?php echo isset($_GET['filter_type_gadget']) && $_GET['filter_type_gadget'] == 'เช่า' ? 'selected' : ''; ?>>เช่า</option>
-                                <option value="ขาย" <?php echo isset($_GET['filter_type_gadget']) && $_GET['filter_type_gadget'] == 'ขาย' ? 'selected' : ''; ?>>ขาย</option>
-                                <option value="เช่าและขาย" <?php echo isset($_GET['filter_type_gadget']) && $_GET['filter_type_gadget'] == 'เช่าและขาย' ? 'selected' : ''; ?>>เช่าและขาย</option>
-                            </select>
-                        </div>
+                    <!-- Gadget Type Filter -->
+                    <div class="flex-grow">
+                        <select name="filter_type_gadget" id="filter_type_gadget" 
+                                class="w-full p-2 border rounded-md">
+                            <option value="">ทุกประเภทอุปกรณ์</option>
+                            <option value="เช่า" <?= isset($_GET['filter_type_gadget']) && $_GET['filter_type_gadget'] == 'เช่า' ? 'selected' : '' ?>>เช่า</option>
+                            <option value="ขาย" <?= isset($_GET['filter_type_gadget']) && $_GET['filter_type_gadget'] == 'ขาย' ? 'selected' : '' ?>>ขาย</option>
+                            <option value="เช่าและขาย" <?= isset($_GET['filter_type_gadget']) && $_GET['filter_type_gadget'] == 'เช่าและขาย' ? 'selected' : '' ?>>เช่าและขาย</option>
+                        </select>
+                    </div>
                     <?php endif; ?>
 
-                    <button type="submit" class="p-2 bg-blue-500 text-white rounded">ใช้ตัวกรอง</button>
+                    <!-- Action Buttons -->
+                    <div class="flex gap-2">
+                        <button type="submit" 
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-search mr-2"></i>ค้นหา
+                        </button>
+    
+                    </div>
                 </div>
-            <?php endif; ?>
-        </form>
+                <?php endif; ?>
+            </form>
+        </div>
 
         <?php
         if ($report_type == '1') {
-            // รายงาน 1: แสดงลูกค้าทั้งหมดและจำนวนบิลทั้งหมดที่เกี่ยวข้อง
             $sql = "SELECT 
                         c.id_customer, 
                         c.name_customer, 
-                        c.phone_customer, 
-                        CONCAT(a.info_address, ' ต.', t.name_tambons, ' อ.', am.name_amphures) AS full_address, 
+                        c.phone_customer,
+                        ct.type_customer, 
+                        CONCAT(a.info_address, ' ต.', t.name_tambons, ' อ.', am.name_amphures) AS full_address,
                         COUNT(DISTINCT b.id_bill) AS total_bills,
-                        COALESCE(SUM(CASE WHEN sc.status_service = 'ใช้งาน' AND pl.status_package = 'ใช้งาน' AND pr.status_product = 'ใช้งาน' THEN o.mainpackage_price ELSE 0 END), 0) AS mainpackage_price,
-                        COALESCE(SUM(CASE WHEN sc.status_service = 'ใช้งาน' AND pl.status_package = 'ใช้งาน' AND pr.status_product = 'ใช้งาน' THEN o.ict_price ELSE 0 END), 0) AS ict_price,
-                        COALESCE(SUM(CASE WHEN sc.status_service = 'ใช้งาน' AND pl.status_package = 'ใช้งาน' AND pr.status_product = 'ใช้งาน' THEN o.all_price ELSE 0 END), 0) AS all_price
+                        COALESCE(SUM(CASE WHEN sc.status_service = 'ใช้งาน' AND pl.status_package = 'ใช้งาน' 
+                            AND pr.status_product = 'ใช้งาน' THEN o.mainpackage_price ELSE 0 END), 0) AS mainpackage_price,
+                        COALESCE(SUM(CASE WHEN sc.status_service = 'ใช้งาน' AND pl.status_package = 'ใช้งาน' 
+                            AND pr.status_product = 'ใช้งาน' THEN o.ict_price ELSE 0 END), 0) AS ict_price,
+                        COALESCE(SUM(CASE WHEN sc.status_service = 'ใช้งาน' AND pl.status_package = 'ใช้งาน' 
+                            AND pr.status_product = 'ใช้งาน' THEN o.all_price ELSE 0 END), 0) AS all_price
                     FROM customers c 
+                    LEFT JOIN customer_types ct ON c.id_customer_type = ct.id_customer_type
                     LEFT JOIN bill_customer b ON c.id_customer = b.id_customer 
                     LEFT JOIN address a ON c.id_address = a.id_address 
                     LEFT JOIN tambons t ON a.id_tambons = t.id_tambons 
@@ -140,18 +178,16 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
                     LEFT JOIN overide o ON pr.id_product = o.id_product 
                     WHERE b.status_bill = 'ใช้งาน'";
         
-            // เพิ่มเงื่อนไขกรอง type_customer
-            if (!empty($filter_type_customer)) {
-                $sql .= " AND c.type_customer = '$filter_type_customer'";
+            if (!empty($filter_customer_type)) {
+                $sql .= " AND c.id_customer_type = " . intval($filter_customer_type);
             }
         
-            // เพิ่มเงื่อนไขกรอง amphure
             if (!empty($filter_amphure)) {
-                $sql .= " AND a.id_amphures = $filter_amphure";
+                $sql .= " AND a.id_amphures = " . intval($filter_amphure);
             }
         
-            $sql .= " GROUP BY c.id_customer, c.name_customer, c.phone_customer, a.info_address, t.name_tambons, am.name_amphures";
-        
+            $sql .= " GROUP BY c.id_customer, c.name_customer, c.phone_customer, ct.type_customer, 
+                      a.info_address, t.name_tambons, am.name_amphures";
             $result = $conn->query($sql);
         
             if ($result->num_rows > 0) {
@@ -211,7 +247,8 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
             // รายงาน 2: แสดงลูกค้าและหมายเลขบิลที่เกี่ยวข้องทั้งหมด โดยไม่สนใจว่ามีบริการหรือไม่
             $sql = "SELECT 
                     c.id_customer, 
-                    c.name_customer, 
+                    c.name_customer,
+                    ct.type_customer,
                     b.number_bill, 
                     b.type_bill, 
                     b.create_at, 
@@ -222,7 +259,8 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
                     COALESCE(SUM(CASE WHEN pl.status_package = 'ใช้งาน' AND pr.status_product = 'ใช้งาน' THEN o.mainpackage_price ELSE 0 END), 0) AS mainpackage_price,
                     COALESCE(SUM(CASE WHEN pl.status_package = 'ใช้งาน' AND pr.status_product = 'ใช้งาน' THEN o.ict_price ELSE 0 END), 0) AS ict_price,
                     COALESCE(SUM(CASE WHEN pl.status_package = 'ใช้งาน' AND pr.status_product = 'ใช้งาน' THEN o.all_price ELSE 0 END), 0) AS all_price
-                FROM customers c 
+                 FROM customers c 
+                LEFT JOIN customer_types ct ON c.id_customer_type = ct.id_customer_type
                 LEFT JOIN bill_customer b ON c.id_customer = b.id_customer 
                 LEFT JOIN service_customer sc ON b.id_bill = sc.id_bill 
                 LEFT JOIN package_list pl ON sc.id_service = pl.id_service 
@@ -232,8 +270,8 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
                 WHERE b.status_bill = 'ใช้งาน'";
         
             // เพิ่มเงื่อนไขกรอง type_customer
-            if (!empty($filter_type_customer)) {
-                $sql .= " AND c.type_customer = '$filter_type_customer'";
+            if (!empty($filter_customer_type)) {
+                $sql .= " AND c.id_customer_type = " . intval($filter_customer_type);
             }
         
             // เพิ่มเงื่อนไขกรอง amphure
@@ -358,14 +396,16 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
             // รายงาน 3: แสดงข้อมูลลูกค้าและอุปกรณ์ที่เกี่ยวข้อง โดยที่บิลมีสถานะเป็น "ใช้งาน"
             $sql = "SELECT 
                         c.id_customer, 
-                        c.name_customer, 
+                        c.name_customer,
+                        ct.type_customer,
                         c.phone_customer, 
                         CONCAT(a.info_address, ' ต.', t.name_tambons, ' อ.', am.name_amphures) AS full_address, 
                         g.name_gedget, 
                         g.status_gedget,
                         g.create_at,
                         g.note
-                    FROM customers c 
+                      FROM customers c 
+                    LEFT JOIN customer_types ct ON c.id_customer_type = ct.id_customer_type
                     LEFT JOIN bill_customer b ON c.id_customer = b.id_customer 
                     INNER JOIN gedget g ON b.id_bill = g.id_bill 
                     LEFT JOIN address a ON c.id_address = a.id_address 
@@ -374,8 +414,8 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
                     WHERE b.status_bill = 'ใช้งาน'";
         
             // เพิ่มเงื่อนไขกรอง type_customer
-            if (!empty($filter_type_customer)) {
-                $sql .= " AND c.type_customer = '$filter_type_customer'";
+            if (!empty($filter_customer_type)) {
+                $sql .= " AND c.id_customer_type = " . intval($filter_customer_type);
             }
         
             // เพิ่มเงื่อนไขกรอง amphure
@@ -438,6 +478,7 @@ $filter_amphure = isset($_GET['filter_amphure']) ? $_GET['filter_amphure'] : '';
         }
         ?>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
     <script>
     function exportToExcel() {
         // เลือกตารางที่ต้องการส่งออก

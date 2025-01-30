@@ -8,8 +8,8 @@ if (!isset($_SESSION['email'])) {
 require_once '../config/config.php';
 require_once '../function/functions.php';
 
-$id_customer = isset($_GET['id_customer']) ? intval($_GET['id_customer']) : 0;
-$bill_id = isset($_GET['id_bill']) ? intval($_GET['id_bill']) : 0;
+$id_customer = isset($_POST['id_customer']) ? intval($_POST['id_customer']) : 0;
+$bill_id = isset($_POST['id_bill']) ? intval($_POST['id_bill']) : 0;
 $customer_name = '';
 if ($id_customer > 0) {
     $sql = "SELECT name_customer FROM customers WHERE id_customer = ?";
@@ -250,9 +250,12 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                                     <button onclick="openEditBillModal(<?php echo $bill['id_bill']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded-md">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <a href="service_bill.php?id_bill=<?php echo $bill['id_bill']; ?>" class="bg-blue-500 text-white px-2 py-1 rounded-md">
-                                        <i class="fas fa-info-circle"></i> Info
-                                    </a>
+                                    <form action="service_bill.php" method="POST" style="display: inline;">
+                                        <input type="hidden" name="id_bill" value="<?php echo $bill['id_bill']; ?>">
+                                        <button type="submit" class="bg-blue-500 text-white px-2 py-1 rounded-md">
+                                            <i class="fas fa-info-circle"></i> Info
+                                        </button>
+                                    </form>
                                     <div>
                                         <?php
                                         // ตรวจสอบว่า end_date น้อยกว่า 60 วันหรือไม่
