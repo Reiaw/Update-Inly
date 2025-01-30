@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 29, 2025 at 10:13 AM
+-- Generation Time: Jan 30, 2025 at 09:41 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -102,9 +102,9 @@ INSERT INTO `bill_customer` (`id_bill`, `number_bill`, `type_bill`, `status_bill
 (15, 2147483647, 'CIP+', 'ใช้งาน', 38, '2025-01-17', '2025-01-17', 20, '2026-10-03', 3, 'ต่อสัญญา'),
 (16, 555555, 'CIP+', 'ใช้งาน', 38, '2025-01-20', '2025-01-20', 200, '2025-08-19', 2, 'ต่อสัญญา'),
 (17, 2147483647, 'CIP+', 'ยกเลิกใช้งาน', 40, '2025-01-20', '2025-01-20', 365, '2026-02-19', 2, 'ต่อสัญญา'),
-(34, 254687, 'CIP+', 'ใช้งาน', 38, '2025-01-19', '2025-01-19', 100, '2025-01-30', 3, 'ต่อสัญญา'),
+(34, 254687, 'CIP+', 'ใช้งาน', 38, '2025-01-19', '2025-01-19', 100, '2025-01-29', 3, 'ต่อสัญญา'),
 (40, 2147483647, 'CIP+', 'ยกเลิกใช้งาน', 40, '2025-01-15', '2025-01-20', 5, '2025-01-25', 3, 'ต่อสัญญา'),
-(41, 2147483647, 'CIP+', 'ใช้งาน', 40, '2025-01-21', '2025-01-22', 5, '2025-08-21', 3, 'ต่อสัญญา'),
+(41, 2147483647, 'CIP+', 'ใช้งาน', 40, '2025-01-21', '2025-01-30', 5, '2025-06-21', 3, 'ต่อสัญญา'),
 (42, 254687, 'Special Bill', 'ใช้งาน', 40, '2025-01-20', '2025-01-20', 725, '2027-01-30', 0, 'ยังไม่ได้เลือก');
 
 -- --------------------------------------------------------
@@ -116,21 +116,42 @@ INSERT INTO `bill_customer` (`id_bill`, `number_bill`, `type_bill`, `status_bill
 CREATE TABLE `customers` (
   `id_customer` int(11) NOT NULL,
   `name_customer` varchar(100) DEFAULT NULL,
-  `type_customer` enum('อบต','อบจ','เทศบาล','โรงแรม') DEFAULT NULL,
   `phone_customer` varchar(50) DEFAULT NULL,
   `status_customer` enum('ใช้งาน','ไม่ได้ใช้งาน') DEFAULT NULL,
   `id_address` int(11) DEFAULT NULL,
   `create_at` datetime DEFAULT NULL,
-  `update_at` datetime DEFAULT NULL
+  `update_at` datetime DEFAULT NULL,
+  `id_customer_type` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `customers`
 --
 
-INSERT INTO `customers` (`id_customer`, `name_customer`, `type_customer`, `phone_customer`, `status_customer`, `id_address`, `create_at`, `update_at`) VALUES
-(38, 'ปากแพรก', 'เทศบาล', '0874652345 คุณต้น', 'ใช้งาน', 42, '2025-01-17 15:20:56', '2025-01-17 15:20:56'),
-(40, 'Rtop', 'อบต', '0898081659', 'ใช้งาน', 45, '2025-01-20 12:29:04', '2025-01-20 12:29:04');
+INSERT INTO `customers` (`id_customer`, `name_customer`, `phone_customer`, `status_customer`, `id_address`, `create_at`, `update_at`, `id_customer_type`) VALUES
+(38, 'ปากแพรก', '0874652345 คุณต้น', 'ใช้งาน', 42, '2025-01-17 15:20:56', '2025-01-17 15:20:56', 1),
+(40, 'Rtop', '0898081659', 'ใช้งาน', 45, '2025-01-20 12:29:04', '2025-01-30 14:11:17', 4);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `customer_types`
+--
+
+CREATE TABLE `customer_types` (
+  `id_customer_type` int(11) NOT NULL,
+  `type_customer` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `customer_types`
+--
+
+INSERT INTO `customer_types` (`id_customer_type`, `type_customer`) VALUES
+(1, 'อบต'),
+(2, 'อบจ'),
+(3, 'เทศบาล'),
+(4, 'โรงแรมA');
 
 -- --------------------------------------------------------
 
@@ -267,13 +288,9 @@ CREATE TABLE `notifications` (
 --
 
 INSERT INTO `notifications` (`id_notifications`, `id_user`, `id_bill`, `message`, `is_read`, `created_at`, `task_id`) VALUES
-(52, 15, 34, 'ลูกค้า: ปากแพรก\nหมายเลขบิล: 254687', 1, '2025-01-29 14:57:11', NULL),
-(53, 15, 14, 'ลูกค้า: ปากแพรก\nหมายเลขบิล: 101', 0, '2025-01-29 14:57:11', NULL),
-(56, 15, NULL, 'หัวข้องาน: ตรวจงาน\nเพิ่มโดย: Chatchai', 0, '2025-01-29 14:57:11', 3),
-(61, 15, NULL, 'หัวข้องาน: ฺCG\nเพิ่มโดย: Chatchai', 0, '2025-01-29 16:00:30', 4),
-(62, 16, NULL, 'หัวข้องาน: ฺCG\nเพิ่มโดย: John Doe', 0, '2025-01-29 16:00:30', 4),
-(63, 15, NULL, 'หัวข้องาน: A\nเพิ่มโดย: Chatchai', 0, '2025-01-29 16:00:38', 2),
-(64, 15, NULL, 'หัวข้องาน: A\nเพิ่มโดย: Chatchai', 0, '2025-01-29 16:00:38', 2);
+(70, 15, NULL, 'หัวข้องาน: ตรวจงาน\nเพิ่มโดย: Chatchai', 0, '2025-01-30 09:57:46', 3),
+(73, 15, 34, 'ลูกค้า: ปากแพรก\nหมายเลขบิล: 254687', 0, '2025-01-30 10:10:27', NULL),
+(74, 15, 14, 'ลูกค้า: ปากแพรก\nหมายเลขบิล: 101', 0, '2025-01-30 10:10:27', NULL);
 
 -- --------------------------------------------------------
 
@@ -536,9 +553,7 @@ CREATE TABLE `task` (
 --
 
 INSERT INTO `task` (`id_task`, `name_task`, `detail_task`, `start_date`, `end_date`, `user_id`, `reminder_date`, `created_at`) VALUES
-(2, 'A', '', '2025-01-30', '2025-01-31', 15, 1, '2025-01-29'),
-(3, 'ตรวจงาน', 'ออกนอกสภานที่', '2025-02-21', '2025-02-22', 15, 23, '2025-01-29'),
-(4, 'ฺCG', 'สักอย่าง', '2025-01-31', '2025-02-08', 15, 2, '2025-01-29');
+(3, 'ตรวจงาน', 'ออกนอกสภานที่', '2025-02-21', '2025-02-22', 16, 22, '2025-01-29');
 
 -- --------------------------------------------------------
 
@@ -557,11 +572,7 @@ CREATE TABLE `task_group` (
 --
 
 INSERT INTO `task_group` (`id_task_group`, `task_id`, `user_id`) VALUES
-(1, 2, 15),
-(2, 2, 15),
-(3, 3, 15),
-(4, 4, 15),
-(5, 4, 16);
+(3, 3, 15);
 
 -- --------------------------------------------------------
 
@@ -586,7 +597,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `email`, `name`, `password`, `verify`, `otp`, `otp_expiry`, `otp_attempts`, `last_otp_sent`) VALUES
-(15, 'rattapoom.p@ku.th', 'Chatchai', '$2y$10$JRRG/Tl3jBYrIyvhSH.KJecyGXNhgW3W8xkxT8dIN2fJ7O1bNxgTe', 1, NULL, NULL, 0, '2025-01-10 14:52:09'),
+(15, 'rattapoom.p@ku.th', 'Chatchai', '$2y$10$IC4s7Ji1xRzYZ.670JIemujaDdy.xuRZ6PW2lkuLgHcFw.2OGWXYO', 1, NULL, NULL, 0, '2025-01-10 14:52:09'),
 (16, 'A@example.com', 'John Doe', '$2y$10$JRRG/Tl3jBYrIyvhSH.KJecyGXNhgW3W8xkxT8dIN2fJ7O1bNxgTe', 1, NULL, NULL, 0, '2025-01-10 14:52:09');
 
 --
@@ -619,7 +630,14 @@ ALTER TABLE `bill_customer`
 --
 ALTER TABLE `customers`
   ADD PRIMARY KEY (`id_customer`),
-  ADD KEY `id_address` (`id_address`);
+  ADD KEY `id_address` (`id_address`),
+  ADD KEY `id_customer_type` (`id_customer_type`);
+
+--
+-- Indexes for table `customer_types`
+--
+ALTER TABLE `customer_types`
+  ADD PRIMARY KEY (`id_customer_type`);
 
 --
 -- Indexes for table `gedget`
@@ -718,7 +736,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `address`
 --
 ALTER TABLE `address`
-  MODIFY `id_address` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id_address` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT for table `bill_customer`
@@ -730,7 +748,13 @@ ALTER TABLE `bill_customer`
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `id_customer` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id_customer` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+
+--
+-- AUTO_INCREMENT for table `customer_types`
+--
+ALTER TABLE `customer_types`
+  MODIFY `id_customer_type` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `gedget`
@@ -754,7 +778,7 @@ ALTER TABLE `group_servicedetail`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id_notifications` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+  MODIFY `id_notifications` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
 
 --
 -- AUTO_INCREMENT for table `overide`
@@ -784,13 +808,13 @@ ALTER TABLE `service_customer`
 -- AUTO_INCREMENT for table `task`
 --
 ALTER TABLE `task`
-  MODIFY `id_task` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_task` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `task_group`
 --
 ALTER TABLE `task_group`
-  MODIFY `id_task_group` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id_task_group` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -819,7 +843,8 @@ ALTER TABLE `bill_customer`
 -- Constraints for table `customers`
 --
 ALTER TABLE `customers`
-  ADD CONSTRAINT `customers_ibfk_1` FOREIGN KEY (`id_address`) REFERENCES `address` (`id_address`);
+  ADD CONSTRAINT `customers_ibfk_1` FOREIGN KEY (`id_address`) REFERENCES `address` (`id_address`),
+  ADD CONSTRAINT `customers_ibfk_2` FOREIGN KEY (`id_customer_type`) REFERENCES `customer_types` (`id_customer_type`);
 
 --
 -- Constraints for table `gedget`
