@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         </button>
                     </div>
                     <label class="label">
-                        <a href="./auth/forgot-password.php" class="label-text-alt link link-hover">ลืมรหัสผ่าน?</a>
+                        <a href="../auth/forgot-password.php" class="label-text-alt link link-hover">ลืมรหัสผ่าน?</a>
                     </label>
                 </div>
                 <div class="form-control mt-6">
