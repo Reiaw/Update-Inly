@@ -1,12 +1,24 @@
 <?php
 session_start();
 if (!isset($_SESSION['email'])) {
-    header('Location: login.php');
+    header('Location: login.php?error=not_logged_in');
     exit;
 }
 
 require_once '../config/config.php';
 require_once '../function/functions.php';
+
+$groupNames = ['ค่าอุปกรณ์ Solution ใหม่', 'ค่าอุปกรณ์ทดแทน Solution เดิม', 'ค่าอุปกรณ์ Solution เดิม', 'ต้นทุนการดำเนินการ'];
+$sql = "SELECT id_customer, name_customer FROM customers";
+$result = $conn->query($sql);
+
+$customers = [];
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $customers[] = $row;
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -20,381 +32,559 @@ require_once '../function/functions.php';
 </head>
 <body class="bg-gray-100">
     <?php include './components/navbar.php'; ?>
-    
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-2xl font-bold mb-6">ใบเสนอราคา</h1>
-        
-        <div class="bg-white rounded-lg shadow p-6">
-            <form id="quotationForm">
-                <!-- VAT Input -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">
-                        VAT %:
-                        <input type="number" id="vatRate" class="border p-2 rounded w-32" value="7" min="0" max="100">
-                    </label>
-                </div>
-                <button type="button" id="exportExcel" class="bg-yellow-500 text-white px-4 py-2 rounded ml-2">Export to Excel</button>
-                <!-- ตารางรายการต้นทุน -->
-                <div class="overflow-x-auto">
-                    <table class="w-full border-collapse border">
-                        <thead>
-                            <tr class="bg-gray-100">
-                                <th class="border p-2">หมวดหมู่</th>
-                                <th class="border p-2">ชื่อรายการ</th>
-                                <th class="border p-2">จำนวนคน</th>
-                                <th class="border p-2">จำนวน</th>
-                                <th class="border p-2">ต้นทุน</th>
-                                <th class="border p-2">ราคาขาย</th>           
-                                <th class="border p-2">รวมต้นทุน</th>
-                                <th class="border p-2">รวมราคาขาย</th>
-                                <th class="border p-2">ส่วนต่าง</th>
-                                <th class="border p-2">การจัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="items">
-                            <!-- รายการจะถูกเพิ่มที่นี่ -->
-                        </tbody>
-                        <tfoot class="bg-gray-100 font-bold">
-                            <tr>
-                                <td colspan="6" class="border p-2 text-right">รวมทั้งหมด:</td>
-                                <td class="border p-2" id="totalCost">0</td>
-                                <td class="border p-2" id="totalPrice">0</td>
-                                <td class="border p-2" id="totalProfit">0</td>
-                                <td class="border p-2" id="totalPercent">0%</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
+    <div class="container mx-auto p-4">
+        <!-- Tab Buttons -->
+        <div class="flex mb-4">
+            <button id="quote-tab" onclick="saveGroupData();saveSalesData();switchTab('quote-form')" 
+                    class="px-4 py-2 rounded-t-lg bg-blue-500 text-white font-semibold">
+                ราคาประมาณ
+            </button>
+            <button id="summary-tab" onclick="saveGroupData();saveSalesData();switchTab('summary')" 
+                    class="px-4 py-2 rounded-t-lg bg-gray-200 ml-1 hover:bg-gray-300">
+                ขายขาด ISI (สรุป)
+            </button>
+        </div>
 
-                <!-- ปุ่มเพิ่มหมวดหมู่และรายการ -->
-                <div class="mt-4">
-                    <button type="button" id="addCategory" class="bg-green-500 text-white px-4 py-2 rounded">เพิ่มหมวดหมู่</button>
-                    <button type="button" id="addItem" class="bg-blue-500 text-white px-4 py-2 rounded ml-2">เพิ่มรายการ</button>
-                </div>
-
-                <!-- สรุปผลทั้งหมด -->
-                <div class="summary mt-8 p-4 bg-gray-50 rounded">
-                    <h2 class="text-xl font-bold mb-4">สรุปผลทั้งหมด</h2>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="bg-white p-4 rounded shadow">
-                            <h3 class="font-bold mb-2 text-gray-700">ราคาต้นทุน</h3>
-                            <p>รวมต้นทุนขาย: <span id="totalCostSummary">0</span> บาท</p>
-                            <p>VAT ต้นทุน: <span id="vatCost">0</span> บาท</p>
-                            <p class="font-bold text-red-600">รวมต้นทุนขาย + VAT: <span id="totalCostWithVat">0</span> บาท</p>
+        <!-- Tab Content -->
+        <div id="quote-form" class="tab-content bg-white p-4 rounded-b-lg shadow-md">
+            <h1 class="text-2xl font-bold mb-4">ใบเสนอราคา</h1>
+                <div class="mb-4 p-4 border rounded bg-gray-50">
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- เลือกลูกค้า -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">ลูกค้า:</label>
+                            <select id="customer-select" class="w-full p-2 border rounded mt-1">
+                                <option value="">-- เลือกลูกค้า --</option>
+                                <?php foreach ($customers as $customer): ?>
+                                    <option value="<?= $customer['id_customer'] ?>"><?= htmlspecialchars($customer['name_customer']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
-                        <div class="bg-white p-4 rounded shadow">
-                            <h3 class="font-bold mb-2 text-gray-700">ราคาขาย</h3>
-                            <p>รวมราคาขาย: <span id="totalPriceSummary">0</span> บาท</p>
-                            <p>VAT ราคาขาย: <span id="vatPrice">0</span> บาท</p>
-                            <p class="font-bold text-green-500">รวมราคาขาย + VAT: <span id="totalPriceWithVat">0</span> บาท</p>
-                        </div>
-                        <div class="bg-white p-4 rounded shadow">
-                            <h3 class="font-bold mb-2 text-gray-700">กำไรสุทธิ์</h3>
-                            <p>กำไรรวม: <span id="totalProfitSummary">0</span> บาท</p>
-                            <p>VAT ส่วนต่าง: <span id="vatDifference">0</span> บาท</p>
-                            <p class="font-bold text-blue-600">กำไรรวม + VAT: <span id="totalProfitWithVat">0</span> บาท</p>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">โครงการ:</label>
+                            <input type="text" id="project-name" class="w-full p-2 border rounded mt-1" placeholder="ระบุชื่อโครงการ..." >
                         </div>
                     </div>
                 </div>
-            </form>
+                <!-- Groups 1-3 Combined -->
+                <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+                    <h2 class="text-lg font-semibold mb-4">รายละเอียดประมาณการต้นทุนค่าอุปกรณ์ Solution</h2>
+                    <table class="w-full mb-4 border-collapse border border-gray-200">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="py-2 px-3 border border-gray-300 text-left">รายการ</th>
+                                <th class="py-2 px-3 border border-gray-300">ราคาต่อหน่วย(บาท)</th>
+                                <th class="py-2 px-3 border border-gray-300">จำนวน(หน่วย)</th>
+                                <th class="py-2 px-3 border border-gray-300">หมายเหตุ</th>
+                                <th class="py-2 px-3 border border-gray-300">เป็นเงินบาท(ไม่รวม vat)</th>
+                                <th class="py-2 px-3 border border-gray-300"></th>
+                            </tr>
+                        </thead>
+                        <?php foreach (array_slice($groupNames, 0, 3) as $index => $groupName): 
+                            $groupId = $index + 1;
+                        ?>
+                            <tbody>
+                                <tr class="bg-gray-100">
+                                    <th colspan="5" class="text-left py-2 px-3">กลุ่ม <?= $groupName ?></th>
+                                </tr>
+                            </tbody>
+                            <tbody id="group<?= $groupId ?>-items"></tbody>
+                            <tbody>
+                                <tr class="bg-gray-50">
+                                    <td colspan="3" class="text-right font-semibold py-2 px-3 border border-gray-300">รวมกลุ่ม <?= $groupName ?></td>
+                                    <td id="group<?= $groupId ?>-total" class="font-semibold py-2 px-3 border border-gray-300">0.00</td>
+                                    <td class="py-2 px-3 border border-gray-300"></td>
+                                </tr>
+                            </tbody>
+                        <?php endforeach; ?>
+                        <tfoot>
+                            <tr class="bg-gray-50">
+                                <td colspan="3" class="text-right font-semibold py-2 px-3 border border-gray-300">รวมทังสิ้น</td>
+                                <td id="combined-total" class="font-semibold py-2 px-3 border border-gray-300">0.00 บาท</td>
+                                <td class="py-2 px-3 border border-gray-300"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <?php foreach (array_slice($groupNames, 0, 3) as $index => $groupName): 
+                            $groupId = $index + 1;
+                        ?>
+                            <button onclick="addItem(<?= $groupId ?>)" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                                + เพิ่มรายการ<?= $groupName ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Group 4 -->
+                <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+                    <h2 class="text-lg font-semibold mb-4">รายละเอียดประมาณการต้นทุนค่าดำเนินการ</h2>
+                    <table class="w-full mb-4 border-collapse border border-gray-200">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="py-2 px-3 border border-gray-300 text-left">รายการ</th>
+                                <th class="py-2 px-3 border border-gray-300">ราคาต่อหน่วย(บาท)</th>
+                                <th class="py-2 px-3 border border-gray-300">จำนวน(หน่วย)</th>
+                                <th class="py-2 px-3 border border-gray-300">หมายเหตุ</th>
+                                <th class="py-2 px-3 border border-gray-300">บาท(ไม่รวม vat)</th>
+                                <th class="py-2 px-3 border border-gray-300"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="group4-items"></tbody>
+                            <tr class="bg-gray-100">
+                                <th colspan="5" class="text-left py-2 px-3">กลุ่ม <?= $groupNames[3] ?></th>
+                            </tr>
+                        <tfoot>
+                            <tr class="bg-gray-50">
+                                <td colspan="3" class="text-right font-semibold py-2 px-3 border border-gray-300">รวมทั้งหมด</td>
+                                <td id="group4-total" class="font-semibold py-2 px-3 border border-gray-300">0.00 บาท</td>
+                                <td class="py-2 px-3 border border-gray-300"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <button onclick="addItem(4)" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg w-full">
+                        + เพิ่มรายการ<?= $groupNames[3] ?>
+                    </button>
+                </div>
+                <!-- เพิ่ม Block สำหรับต้นทุนรวมโครงการและงบประมาณที่ขอใช้ -->
+                <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+                    <table class="w-full mb-4 border-collapse border border-gray-200">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="py-2 px-3 border border-gray-300 text-left">รายละเอียด</th>
+                                <th class="py-2 px-3 border border-gray-300">จำนวนเงิน (บาท)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-gray-100">
+                                <td class="text-left py-2 px-3">ต้นทุนรวมโครงการทั้งโครงการ</td>
+                                <td id="project-total" class="font-semibold py-2 px-3 border border-gray-300">0.00 บาท(ไม่รวม vat)</td>
+                            </tr>
+                            <tr class="bg-gray-50">
+                                <td class="text-left py-2 px-3">งบประมาณที่ขอใช้</td>
+                                <td id="requested-budget" class="font-semibold py-2 px-3 border border-gray-300">0.00 บาท(ไม่รวม vat)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="summary" class="tab-content hidden bg-white p-4 rounded-b-lg shadow-md">
+            <h2 class="text-2xl font-bold mb-4">สรุปรายการขายขาด ISI</h2>
+            
+            <!-- Update the summary tables HTML structure -->
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold mb-2"><?= $groupNames[0] ?></h3>
+                <table class="w-full border-collapse border border-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="py-2 px-3 border">รายการ</th>
+                            <th class="py-2 px-3 border">จำนวน</th>
+                            <th class="py-2 px-3 border">ราคาทุนต่อหน่วย</th>
+                            <th class="py-2 px-3 border">รวมทุน</th>
+                            <th class="py-2 px-3 border">ราคาขายต่อหน่วย</th>
+                            <th class="py-2 px-3 border">รวมขาย</th>
+                            <th class="py-2 px-3 border">ผลต่าง</th>
+                        </tr>
+                    </thead>
+                    <tbody id="group1-summary" class="text-center"></tbody>
+                    <tfoot>
+                        <tr class="bg-gray-50 font-semibold">
+                            <td colspan="3" class="py-2 px-3 border text-right">รวมทั้งสิ้น</td>
+                            <td id="group1-total-cost" class="py-2 px-3 border"></td>
+                            <td class="py-2 px-3 border"></td>
+                            <td id="group1-total-sales" class="py-2 px-3 border"></td>
+                            <td id="group1-total-difference" class="py-2 px-3 border"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold mb-2"><?= $groupNames[3] ?></h3>
+                <table class="w-full border-collapse border border-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="py-2 px-3 border">รายการ</th>
+                            <th class="py-2 px-3 border">จำนวน</th>
+                            <th class="py-2 px-3 border">ราคาทุนต่อหน่วย</th>
+                            <th class="py-2 px-3 border">รวมทุน</th>
+                            <th class="py-2 px-3 border">ราคาขายต่อหน่วย</th>
+                            <th class="py-2 px-3 border">รวมขาย</th>
+                            <th class="py-2 px-3 border">ผลต่าง</th>
+                        </tr>
+                    </thead>
+                    <tbody id="group4-summary" class="text-center"></tbody>
+                    <tfoot>
+                        <tr class="bg-gray-50 font-semibold">
+                            <td colspan="3" class="py-2 px-3 border text-right">รวมทั้งสิ้น</td>
+                            <td id="group4-total-cost" class="py-2 px-3 border"></td>
+                            <td class="py-2 px-3 border"></td>
+                            <td id="group4-total-sales" class="py-2 px-3 border"></td>
+                            <td id="group4-total-difference" class="py-2 px-3 border"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Add grand total section -->
+            <div class="mt-8 bg-gray-50 p-4 rounded-lg border">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-right font-semibold">รวมต้นทุนทั้งหมด:</div>
+                    <div id="grand-total-cost" class="font-semibold"></div>
+                    <div class="text-right font-semibold">รวมยอดขายทั้งหมด:</div>
+                    <div id="grand-total-sales" class="font-semibold"></div>
+                    <div class="text-right font-semibold">กำไรขั้นต้น:</div>
+                    <div id="total-profit" class="font-semibold text-green-600"></div>
+                </div>
+            </div>
         </div>
     </div>
-
+  
+    
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const itemsContainer = document.getElementById('items');
-            let currentCategory = '';
+        function addItem(groupId) {
+            const itemRow = `
+                <tr>
+                    <td><input type="text" class="item-name w-full p-1 border rounded" oninput="calculateTotal(${groupId})"></td>
+                    <td><input type="number" class="item-price w-full p-1 border rounded" oninput="calculateTotal(${groupId})"></td>
+                    <td><input type="number" class="item-quantity w-full p-1 border rounded" oninput="calculateTotal(${groupId})"></td>
+                    <td><input type="text" class="w-full p-1 border rounded" placeholder="หมายเหตุ..."></td>
+                    <td><span class="item-total">0.00</span></td>
+                    <td><button onclick="removeItem(this, ${groupId})" class="text-red-500"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `;
+            document.getElementById(`group${groupId}-items`).insertAdjacentHTML('beforeend', itemRow);
+            calculateTotal(groupId);
+        }
 
-            // เพิ่มหมวดหมู่
-            document.getElementById('addCategory').addEventListener('click', function() {
-                currentCategory = prompt('กรุณาใส่ชื่อหมวดหมู่:');
-                if (currentCategory) {
-                    addCategoryRow(currentCategory);
+        function removeItem(button, groupId) {
+            const row = button.closest('tr');
+            row.remove();
+            calculateTotal(groupId);
+        }
+
+        function calculateTotal(groupId) {
+            const rows = document.querySelectorAll(`#group${groupId}-items tr`);
+            let total = 0;
+
+            rows.forEach(row => {
+                const priceInput = row.querySelector('.item-price');
+                const quantityInput = row.querySelector('.item-quantity');
+
+                const price = parseFloat(priceInput.value) || 0;
+                const quantity = parseFloat(quantityInput.value) || 0;
+
+                const itemTotal = price * quantity;
+                row.querySelector('.item-total').textContent = itemTotal.toFixed(2);
+                total += itemTotal;
+            });
+
+            document.getElementById(`group${groupId}-total`).textContent = total.toFixed(2) ;
+
+            // Update combined total for groups 1-3
+            if (groupId >= 1 && groupId <= 3) {
+                updateCombinedTotal();
+            }
+
+            // Update total for group 4
+            if (groupId === 4) {
+                updateProjectTotal();
+            }
+        }
+
+        function updateCombinedTotal() {
+            const group1 = parseFloat(document.getElementById('group1-total').textContent) || 0;
+            const group2 = parseFloat(document.getElementById('group2-total').textContent) || 0;
+            const group3 = parseFloat(document.getElementById('group3-total').textContent) || 0;
+            const total = group1 + group2 + group3;
+            document.getElementById('combined-total').textContent = total.toFixed(2) ;
+
+            // Update requested budget (group 1 + 2)
+            const requestedBudget = group1 + group2;
+            document.getElementById('requested-budget').textContent = requestedBudget.toFixed(2) + ' บาท(ไม่รวม vat)';
+        }
+
+        function updateProjectTotal() {
+            const group1 = parseFloat(document.getElementById('group1-total').textContent) || 0;
+            const group2 = parseFloat(document.getElementById('group2-total').textContent) || 0;
+            const group3 = parseFloat(document.getElementById('group3-total').textContent) || 0;
+            const group4 = parseFloat(document.getElementById('group4-total').textContent) || 0;
+
+            const total = group1 + group2 + group3 + group4;
+            document.getElementById('project-total').textContent = total.toFixed(2) + ' บาท(ไม่รวม vat)';
+        }
+        function switchTab(tabId) {
+            // ซ่อนเนื้อหาทั้งหมดและรีเซ็ตสไตล์แท็บ
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            document.querySelectorAll('[id$="-tab"]').forEach(tabBtn => {
+                tabBtn.classList.replace('bg-blue-500', 'bg-gray-200');
+                tabBtn.classList.replace('text-white', 'text-black');
+            });
+
+            // แสดงเนื้อหาที่เลือกและอัปเดตสไตล์แท็บ
+            document.getElementById(tabId).classList.remove('hidden');
+            const activeTabBtn = document.getElementById(`${tabId}-tab`);
+            activeTabBtn.classList.replace('bg-gray-200', 'bg-blue-500');
+            activeTabBtn.classList.replace('text-black', 'text-white');
+
+            // หากเป็นแท็บสรุปให้โหลดข้อมูล
+            if (tabId === 'summary') {
+                loadGroupData();
+            }
+        }
+        function saveGroupData() {
+            let group1Data = [];
+            let group4Data = [];
+
+            // ดึงข้อมูลของกลุ่มที่ 1
+            document.querySelectorAll("#group1-items tr").forEach(row => {
+                let item = {
+                    name: row.querySelector(".item-name")?.value || "",
+                    price: row.querySelector(".item-price")?.value || 0,
+                    quantity: row.querySelector(".item-quantity")?.value || 0,
+                    total: row.querySelector(".item-total")?.textContent || "0.00",
+                    salesPrice: 0, // เพิ่มฟิลด์สำหรับราคาขาย
+                    salesTotal: 0  // เพิ่มฟิลด์สำหรับยอดรวมขาย
+                };
+                group1Data.push(item);
+            });
+
+            // ดึงข้อมูลของกลุ่มที่ 4 และรวมรายการเป็นรายการเดียว
+            let group4Item = {
+                name: "ค่าดำเนินการติดตั้ง",
+                price: 0,
+                quantity: 1,
+                total: 0,
+                salesPrice: 0,
+                salesTotal: 0
+            };
+
+            document.querySelectorAll("#group4-items tr").forEach(row => {
+                let price = parseFloat(row.querySelector(".item-price")?.value || 0);
+                let total = parseFloat(row.querySelector(".item-total")?.textContent || "0.00");
+
+                group4Item.price += price;
+                group4Item.total += total;
+            });
+
+            group4Data.push(group4Item);
+
+            // บันทึกลงใน localStorage
+            localStorage.setItem("group1Data", JSON.stringify(group1Data));
+            localStorage.setItem("group4Data", JSON.stringify(group4Data));
+        }
+
+        // ฟังก์ชันสำหรับบันทึกราคาขาย
+        function saveGroupData() {
+            // Calculate totals for all groups before saving
+            for (let i = 1; i <= 4; i++) {
+                calculateTotal(i);
+            }
+            updateCombinedTotal();
+            updateProjectTotal();
+
+            let group1Data = [];
+            let group4Data = [];
+
+            // Get data from group 1
+            document.querySelectorAll("#group1-items tr").forEach(row => {
+                let item = {
+                    name: row.querySelector(".item-name")?.value || "",
+                    price: row.querySelector(".item-price")?.value || 0,
+                    quantity: row.querySelector(".item-quantity")?.value || 0,
+                    total: row.querySelector(".item-total")?.textContent || "0.00",
+                    salesPrice: 0,
+                    salesTotal: 0
+                };
+                group1Data.push(item);
+            });
+
+            // Get data from group 4 and combine into one item
+            let group4Item = {
+                name: "ค่าดำเนินการติดตั้ง",
+                price: 0,
+                quantity: 1,
+                total: 0,
+                salesPrice: 0,
+                salesTotal: 0
+            };
+
+            document.querySelectorAll("#group4-items tr").forEach(row => {
+                let price = parseFloat(row.querySelector(".item-price")?.value || 0);
+                let total = parseFloat(row.querySelector(".item-total")?.textContent || "0.00");
+
+                group4Item.price += price;
+                group4Item.total += total;
+            });
+
+            group4Data.push(group4Item);
+
+            // Save to localStorage
+            localStorage.setItem("group1Data", JSON.stringify(group1Data));
+            localStorage.setItem("group4Data", JSON.stringify(group4Data));
+        }
+        function saveSalesData() {
+            const group1Data = JSON.parse(localStorage.getItem("group1Data")) || [];
+            const group4Data = JSON.parse(localStorage.getItem("group4Data")) || [];
+
+            // Save sales data for group 1
+            document.querySelectorAll('#group1-summary tr').forEach((row, index) => {
+                if (index < group1Data.length) {
+                    const salesPriceInput = row.querySelector('.sales-price');
+                    const salesTotalCell = row.querySelector('.sales-total');
+                    if (salesPriceInput && salesTotalCell) {
+                        group1Data[index].salesPrice = parseFloat(salesPriceInput.value) || 0;
+                        group1Data[index].salesTotal = parseFloat(salesTotalCell.textContent.replace(/,/g, '')) || 0;
+                    }
                 }
             });
 
-            // เพิ่มรายการ
-            document.getElementById('addItem').addEventListener('click', function() {
-                if (!currentCategory) {
-                    alert('กรุณาเพิ่มหมวดหมู่ก่อน');
-                    return;
+            // Save sales data for group 4
+            document.querySelectorAll('#group4-summary tr').forEach((row, index) => {
+                if (index < group4Data.length) {
+                    const salesPriceInput = row.querySelector('.sales-price');
+                    const salesTotalCell = row.querySelector('.sales-total');
+                    if (salesPriceInput && salesTotalCell) {
+                        group4Data[index].salesPrice = parseFloat(salesPriceInput.value) || 0;
+                        group4Data[index].salesTotal = parseFloat(salesTotalCell.textContent.replace(/,/g, '')) || 0;
+                    }
                 }
-                addItemRow(currentCategory);
             });
 
-            // เพิ่มแถวหมวดหมู่
-            function addCategoryRow(categoryName) {
-                const tr = document.createElement('tr');
-                tr.className = 'category-row bg-gray-200';
-                tr.innerHTML = `
-                    <td class="border p-2 font-bold" colspan="10">${categoryName}</td>
+            // Update all totals
+            updateGrandTotals();
+            // Save updated data back to localStorage
+            localStorage.setItem("group1Data", JSON.stringify(group1Data));
+            localStorage.setItem("group4Data", JSON.stringify(group4Data));
+        }
+        function loadGroupData() {
+            // ดึงข้อมูลจาก localStorage
+            const group1Data = JSON.parse(localStorage.getItem("group1Data")) || [];
+            const group4Data = JSON.parse(localStorage.getItem("group4Data")) || [];
+
+            // สร้างแถวตารางสำหรับกลุ่ม 1
+            const group1Summary = document.getElementById("group1-summary");
+            let group1TotalCost = 0;
+            let group1TotalSales = 0;
+
+            group1Summary.innerHTML = group1Data.map((item, index) => {
+                const cost = parseFloat(item.total);
+                group1TotalCost += cost;
+                const salesTotal = item.salesTotal || 0;
+                const difference = salesTotal - cost;
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-2 px-3 border">${item.name}</td>
+                        <td class="py-2 px-3 border">${item.quantity}</td>
+                        <td class="py-2 px-3 border">${parseFloat(item.price).toLocaleString()}</td>
+                        <td class="py-2 px-3 border">${cost.toLocaleString()}</td>
+                        <td class="py-2 px-3 border">
+                            <input type="number" 
+                                class="sales-price w-full p-1 border rounded text-right" 
+                                data-group="1" 
+                                data-index="${index}" 
+                                data-quantity="${item.quantity}"
+                                value="${item.salesPrice || ''}"
+                                oninput="calculateSalesTotal(this)">
+                        </td>
+                        <td class="py-2 px-3 border sales-total font-semibold">
+                            ${(item.salesTotal || 0).toLocaleString()}
+                        </td>
+                        <td class="py-2 px-3 border difference">${difference.toLocaleString()}</td>
+                    </tr>
                 `;
-                itemsContainer.appendChild(tr);
-            }
+            }).join('');
 
-            // เพิ่มแถวรายการ
-            function addItemRow(categoryName) {
-                const tr = document.createElement('tr');
-                tr.className = 'item-row';
-                tr.innerHTML = `
-                    <td class="border p-2">${categoryName}</td>
-                    <td class="border p-2"><input type="text" class="item-name w-full border p-2 rounded" placeholder="ชื่อรายการ" required></td>
-                    <td class="border p-2"><input type="number" class="people-count w-full border p-2 rounded" placeholder="จำนวนคน" value="0"></td>
-                    <td class="border p-2"><input type="number" class="quantity w-full border p-2 rounded" placeholder="จำนวน" required></td>
-                    <td class="border p-2"><input type="number" class="cost w-full border p-2 rounded" placeholder="ต้นทุน" required></td>
-                    <td class="border p-2"><input type="number" class="price w-full border p-2 rounded" placeholder="ราคาขาย" required></td>
-                    <td class="border p-2 total-cost">0</td>
-                    <td class="border p-2 total-price">0</td>
-                    <td class="border p-2 difference">0</td>
-                    <td class="border p-2"><button type="button" class="remove-item bg-red-500 text-white px-4 py-2 rounded">ลบ</button></td>
+            // สร้างแถวตารางสำหรับกลุ่ม 4
+            const group4Summary = document.getElementById("group4-summary");
+            let group4TotalCost = 0;
+            let group4TotalSales = 0;
+
+            group4Summary.innerHTML = group4Data.map((item, index) => {
+                const cost = parseFloat(item.total);
+                group4TotalCost += cost;
+                const salesTotal = item.salesTotal || 0;
+                const difference = salesTotal - cost;
+                
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-2 px-3 border">${item.name}</td>
+                        <td class="py-2 px-3 border">${item.quantity}</td>
+                        <td class="py-2 px-3 border">${parseFloat(item.price).toLocaleString()}</td>
+                        <td class="py-2 px-3 border">${cost.toLocaleString()}</td>
+                        <td class="py-2 px-3 border">
+                            <input type="number" 
+                                class="sales-price w-full p-1 border rounded text-right" 
+                                data-group="4" 
+                                data-index="${index}" 
+                                data-quantity="${item.quantity}"
+                                value="${item.salesPrice || ''}"
+                                oninput="calculateSalesTotal(this)">
+                        </td>
+                        <td class="py-2 px-3 border sales-total font-semibold">
+                            ${(item.salesTotal || 0).toLocaleString()}
+                        </td>
+                        <td class="py-2 px-3 border difference">${difference.toLocaleString()}</td>
+                    </tr>
                 `;
+            }).join('');
 
-                tr.querySelector('.remove-item').addEventListener('click', function() {
-                    tr.remove();
-                    calculateTotals();
-                });
+            // แสดงยอดรวมต้นทุน
+            document.getElementById('group1-total-cost').textContent = group1TotalCost.toLocaleString();
+            document.getElementById('group4-total-cost').textContent = group4TotalCost.toLocaleString();
+            updateGrandTotals();
+        }
+        function calculateSalesTotal(input) {
+            const row = input.closest('tr');
+            const quantity = parseFloat(input.dataset.quantity);
+            const salesPrice = parseFloat(input.value) || 0;
+            const salesTotal = quantity * salesPrice;
+            const cost = parseFloat(row.querySelector('td:nth-child(4)').textContent.replace(/,/g, '')) || 0;
+            const difference = salesTotal - cost;
 
-                tr.querySelectorAll('input').forEach(input => {
-                    input.addEventListener('input', calculateTotals);
-                });
+            row.querySelector('.sales-total').textContent = salesTotal.toLocaleString();
+            row.querySelector('.difference').textContent = difference.toLocaleString();
+            
+            updateGrandTotals();
+            saveSalesData();
+        }
+        function updateGrandTotals() {
+            // คำนวณยอดรวมต้นทุน
+            const group1Cost = parseFloat(document.getElementById('group1-total-cost').textContent.replace(/,/g, '')) || 0;
+            const group4Cost = parseFloat(document.getElementById('group4-total-cost').textContent.replace(/,/g, '')) || 0;
+            const grandTotalCost = group1Cost + group4Cost;
 
-                itemsContainer.appendChild(tr);
-            }
-
-            // คำนวณผลรวม
-            function calculateTotals() {
-                let totalCost = 0;
-                let totalPrice = 0;
-                let totalDifference = 0;
-                let categories = new Map();
-                let currentCategoryRows = [];
-
-                // ลบแถวสรุปเก่าทั้งหมด
-                document.querySelectorAll('.category-summary').forEach(row => row.remove());
-
-                // วนลูปผ่านทุกแถวเพื่อคำนวณ
-                document.querySelectorAll('#items tr').forEach(row => {
-                    if (row.classList.contains('category-row')) {
-                        if (currentCategoryRows.length > 0) {
-                            addCategorySummary(currentCategoryRows[0], categories.get(currentCategoryRows[0].cells[0].textContent.trim()));
-                        }
-                        currentCategoryRows = [row];
-                        categories.set(row.cells[0].textContent.trim(), {
-                            cost: 0,
-                            price: 0,
-                            difference: 0
-                        });
-                    } else if (row.classList.contains('item-row')) {
-                        currentCategoryRows.push(row);
-                        const categoryName = row.cells[0].textContent.trim();
-                        const cost = parseFloat(row.querySelector('.cost').value) || 0;
-                        const price = parseFloat(row.querySelector('.price').value) || 0;
-                        const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
-                        const peopleCount = parseInt(row.querySelector('.people-count').value) || 0;
-
-                        const itemTotalCost = peopleCount === 0 ? cost * quantity : cost * quantity * peopleCount;
-                        const itemTotalPrice = peopleCount === 0 ? price * quantity : price * quantity * peopleCount;
-                        const itemDifference = itemTotalPrice - itemTotalCost;
-
-                        row.querySelector('.total-cost').textContent = itemTotalCost.toFixed(2);
-                        row.querySelector('.total-price').textContent = itemTotalPrice.toFixed(2);
-                        row.querySelector('.difference').textContent = itemDifference.toFixed(2);
-
-                        const categoryTotals = categories.get(categoryName);
-                        if (categoryTotals) {
-                            categoryTotals.cost += itemTotalCost;
-                            categoryTotals.price += itemTotalPrice;
-                            categoryTotals.difference += itemDifference;
-                        }
-
-                        totalCost += itemTotalCost;
-                        totalPrice += itemTotalPrice;
-                        totalDifference += itemDifference;
-                    }
-                });
-
-                // เพิ่มสรุปสำหรับหมวดหมู่สุดท้าย
-                if (currentCategoryRows.length > 0) {
-                    addCategorySummary(currentCategoryRows[0], categories.get(currentCategoryRows[0].cells[0].textContent.trim()));
-                }
-
-                updateSummaryValues(totalCost, totalPrice, totalDifference);
-            }
-
-
-            // เพิ่มแถวสรุปหมวดหมู่
-            function addCategorySummary(categoryRow, totals) {
-                if (!totals) return;
-
-                const lastItemInCategory = findLastItemInCategory(categoryRow);
-                if (!lastItemInCategory) return;
-
-                // คำนวณเปอร์เซ็นต์กำไรในหมวดหมู่
-                const profitPercent = totals.cost > 0 ? (totals.difference * 100) / totals.cost : 0;
-
-                const summaryRow = document.createElement('tr');
-                summaryRow.className = 'category-summary bg-gray-100 font-bold';
-                summaryRow.innerHTML = `
-                    <td colspan="6" class="border p-2 text-right">รวมหมวดหมู่: ${categoryRow.cells[0].textContent.trim()}</td>
-                    <td class="border p-2">${totals.cost.toFixed(2)}</td>
-                    <td class="border p-2">${totals.price.toFixed(2)}</td>
-                    <td class="border p-2">${totals.difference.toFixed(2)}</td>
-                    <td class="border p-2">${profitPercent.toFixed(2)}%</td>
-                `;
-
-                lastItemInCategory.parentNode.insertBefore(summaryRow, lastItemInCategory.nextSibling);
-            }
-
-
-            // หาแถวสุดท้ายของหมวดหมู่
-            function findLastItemInCategory(categoryRow) {
-                let currentRow = categoryRow.nextElementSibling;
-                let lastItemRow = null;
-
-                while (currentRow && !currentRow.classList.contains('category-row')) {
-                    if (currentRow.classList.contains('item-row')) {
-                        lastItemRow = currentRow;
-                    }
-                    currentRow = currentRow.nextElementSibling;
-                }
-
-                return lastItemRow;
-            }
-
-            // อัพเดทค่าสรุปทั้งหมด
-            function updateSummaryValues(totalCost, totalPrice, totalDifference) {
-                const vatRate = parseFloat(document.getElementById('vatRate').value) || 0;
-                const vatMultiplier = vatRate / 100;
-
-                const vatCost = totalCost * vatMultiplier;
-                const vatPrice = totalPrice * vatMultiplier;
-                const vatDifference = vatPrice - vatCost;
-
-                const totalCostWithVat = totalCost + vatCost;
-                const totalPriceWithVat = totalPrice + vatPrice;
-                const totalProfitWithVat = totalPriceWithVat - totalCostWithVat;
-
-                const totalPercent = totalCost > 0 ? (totalDifference * 100) / totalCost : 0;
-
-                // อัพเดทค่าในตาราง
-                document.getElementById('totalCost').textContent = totalCost.toFixed(2);
-                document.getElementById('totalPrice').textContent = totalPrice.toFixed(2);
-                document.getElementById('totalProfit').textContent = totalDifference.toFixed(2);
-                document.getElementById('totalPercent').textContent = totalPercent.toFixed(2) + "%";
-
-                // อัพเดทค่า VAT
-                document.getElementById('vatCost').textContent = vatCost.toFixed(2);
-                document.getElementById('vatPrice').textContent = vatPrice.toFixed(2);
-                document.getElementById('vatDifference').textContent = vatDifference.toFixed(2);
-
-                // อัพเดทค่ารวม VAT
-                document.getElementById('totalCostWithVat').textContent = totalCostWithVat.toFixed(2);
-                document.getElementById('totalPriceWithVat').textContent = totalPriceWithVat.toFixed(2);
-                document.getElementById('totalProfitWithVat').textContent = totalProfitWithVat.toFixed(2);
-
-                // อัพเดทค่าสรุป
-                document.getElementById('totalCostSummary').textContent = totalCost.toFixed(2);
-                document.getElementById('totalPriceSummary').textContent = totalPrice.toFixed(2);
-                document.getElementById('totalProfitSummary').textContent = totalDifference.toFixed(2);
-            }
-
-            document.getElementById('vatRate').addEventListener('input', calculateTotals);
-            document.getElementById('exportExcel').addEventListener('click', function() {
-                // เรียกคำนวณผลรวมล่าสุดก่อนส่งออก
-                calculateTotals();
-
-                // สร้างข้อมูลสำหรับ Excel
-                const wb = XLSX.utils.book_new();
-                const ws_data = [];
-                
-                // ส่วนหัวตาราง
-                ws_data.push([
-                    'หมวดหมู่',
-                    'ชื่อรายการ',
-                    'จำนวนคน',
-                    'จำนวน',
-                    'ต้นทุน',
-                    'ราคาขาย',
-                    'รวมต้นทุน',
-                    'รวมราคาขาย',
-                    'ส่วนต่าง',
-                    'กำไร (%)'
-                ]);
-
-                // เพิ่มข้อมูลแต่ละรายการ
-                let currentCategory = '';
-                document.querySelectorAll('#items tr').forEach(row => {
-                    if (row.classList.contains('category-row')) {
-                        currentCategory = row.cells[0].textContent.trim();
-                    } else if (row.classList.contains('item-row')) {
-                        const itemData = [
-                            currentCategory,
-                            row.querySelector('.item-name').value,
-                            row.querySelector('.people-count').value || '0',
-                            row.querySelector('.quantity').value || '0',
-                            row.querySelector('.cost').value || '0',
-                            row.querySelector('.price').value || '0',
-                            row.querySelector('.total-cost').textContent,
-                            row.querySelector('.total-price').textContent,
-                            row.querySelector('.difference').textContent,
-                            ''
-                        ];
-                        ws_data.push(itemData);
-                    } else if (row.classList.contains('category-summary')) {
-                        ws_data.push([
-                            'ผลรวมของ ' + currentCategory,
-                            '', '', '', '', '',
-                            row.cells[1].textContent,
-                            row.cells[2].textContent,
-                            row.cells[3].textContent,
-                            row.cells[4].textContent
-                        ]);
-                    }
-                });
-                
-                // เพิ่มแถวสรุปทั้งหมดแบบ category-summary
-                ws_data.push([
-                    'ผลรวมทั้งหมด', '', '', '', '', '',
-                    document.getElementById('totalCost').textContent,
-                    document.getElementById('totalPrice').textContent,
-                    document.getElementById('totalProfit').textContent,
-                    document.getElementById('totalPercent').textContent
-                ]);
-
-                // เพิ่มแถวว่าง 2 แถวเพื่อแบ่งส่วน
-                ws_data.push([], []);
-
-                // ส่วนสรุปผลทั้งหมด
-                const vatRate = document.getElementById('vatRate').value;
-                
-                // สรุปก่อน VAT
-                ws_data.push(['สรุปผลทั้งหมด']);
-                ws_data.push(['ราคาต้นทุน']);
-                ws_data.push(['รวมต้นทุนขาย:', `${document.getElementById('totalCostSummary').textContent} บาท`]);
-                ws_data.push(['VAT ต้นทุน:', `${document.getElementById('vatCost').textContent} บาท`]);
-                ws_data.push(['รวมต้นทุน + VAT:', `${document.getElementById('totalCostWithVat').textContent} บาท`]);
-                
-                // สรุป VAT
-                ws_data.push([]);
-                ws_data.push([`ราาคาขาย`]);
-                ws_data.push(['รวมราคาขาย:', `${document.getElementById('totalPriceSummary').textContent} บาท`]);
-                ws_data.push(['VAT ราคาขาย:', `${document.getElementById('vatPrice').textContent} บาท`]);
-                ws_data.push(['รวมราคาขาย + VAT:', `${document.getElementById('totalPriceWithVat').textContent} บาท`]);
-                
-                // สรุปรวม VAT
-                ws_data.push([]);
-                ws_data.push(['กำไรสุทธิ']);
-                ws_data.push(['กำไรรวม:', `${document.getElementById('totalProfitSummary').textContent} บาท`]);
-                ws_data.push(['VAT ส่วนต่าง:', `${document.getElementById('vatDifference').textContent} บาท`]);
-                ws_data.push(['กำไรสุทธิ + VAT:', `${document.getElementById('totalProfitWithVat').textContent} บาท`]);
-
-                // สร้างไฟล์ Excel
-                const ws = XLSX.utils.aoa_to_sheet(ws_data);
-                XLSX.utils.book_append_sheet(wb, ws, "ใบเสนอราคา");
-                XLSX.writeFile(wb, `ใบเสนอราคา_${new Date().toISOString().slice(0,10)}.xlsx`);
+            // คำนวณยอดรวมขาย
+            let group1Sales = 0;
+            let group4Sales = 0;
+            
+            document.querySelectorAll('#group1-summary .sales-total').forEach(cell => {
+                group1Sales += parseFloat(cell.textContent.replace(/,/g, '')) || 0;
             });
-        });
-        
+            
+            document.querySelectorAll('#group4-summary .sales-total').forEach(cell => {
+                group4Sales += parseFloat(cell.textContent.replace(/,/g, '')) || 0;
+            });
+
+            const grandTotalSales = group1Sales + group4Sales;
+            const totalProfit = grandTotalSales - grandTotalCost;
+            const group1Difference = group1Sales - group1Cost;
+            const group4Difference = group4Sales - group4Cost;
+            // อัพเดทยอดรวมของแต่ละกลุ่ม
+            document.getElementById('group1-total-sales').textContent = group1Sales.toLocaleString();
+            document.getElementById('group4-total-sales').textContent = group4Sales.toLocaleString();
+            document.getElementById('group1-total-difference').textContent = group1Difference.toLocaleString();
+            document.getElementById('group4-total-difference').textContent = group4Difference.toLocaleString();
+
+            // อัพเดทยอดรวมทั้งหมด
+            document.getElementById('grand-total-cost').textContent = grandTotalCost.toLocaleString() + ' บาท';
+            document.getElementById('grand-total-sales').textContent = grandTotalSales.toLocaleString() + ' บาท';
+            document.getElementById('total-profit').textContent = totalProfit.toLocaleString() + ' บาท';
+        }
     </script>
 </body>
 </html>
