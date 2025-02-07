@@ -43,11 +43,23 @@ if ($result->num_rows > 0) {
                     class="px-4 py-2 rounded-t-lg bg-gray-200 ml-1 hover:bg-gray-300">
                 ขายขาด ISI (สรุป)
             </button>
+            <button id="investment-rental-tab" onclick="saveGroupData();saveSalesData();switchTab('investment-rental')" 
+                    class="px-4 py-2 rounded-t-lg bg-gray-200 ml-1 hover:bg-gray-300">
+                เช่า(ลงทุนเอง)
+            </button>
+            <button id="installation-rental-tab" onclick="saveGroupData();saveSalesData();switchTab('installation-rental')" 
+                    class="px-4 py-2 rounded-t-lg bg-gray-200 ml-1 hover:bg-gray-300">
+                เช่า(เก็บค่าติดตั้ง)
+            </button>
+            <button id="summarize-tab" onclick="saveGroupData();saveSalesData();switchTab('summarize')" 
+                    class="px-4 py-2 rounded-t-lg bg-gray-200 ml-1 hover:bg-gray-300">
+                สรุปทั้งหมด
+            </button>
         </div>
 
         <!-- Tab Content -->
         <div id="quote-form" class="tab-content bg-white p-4 rounded-b-lg shadow-md">
-            <h1 class="text-2xl font-bold mb-4">ใบเสนอราคา</h1>
+            <h2 class="text-2xl font-bold mb-4">งบประมาณการลงทุน</h2>
                 <div class="mb-4 p-4 border rounded bg-gray-50">
                     <div class="grid grid-cols-2 gap-4">
                         <!-- เลือกลูกค้า -->
@@ -152,17 +164,17 @@ if ($result->num_rows > 0) {
                         <thead>
                             <tr class="bg-gray-50">
                                 <th class="py-2 px-3 border border-gray-300 text-left">รายละเอียด</th>
-                                <th class="py-2 px-3 border border-gray-300">จำนวนเงิน (บาท)</th>
+                                <th class="py-2 px-3 border border-gray-300">จำนวนเงิน (บาทไม่รวม vat)</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="bg-gray-100">
                                 <td class="text-left py-2 px-3">ต้นทุนรวมโครงการทั้งโครงการ</td>
-                                <td id="project-total" class="font-semibold py-2 px-3 border border-gray-300">0.00 บาท(ไม่รวม vat)</td>
+                                <td id="project-total" class="font-semibold py-2 px-3 border border-gray-300">0.00</td>
                             </tr>
                             <tr class="bg-gray-50">
                                 <td class="text-left py-2 px-3">งบประมาณที่ขอใช้</td>
-                                <td id="requested-budget" class="font-semibold py-2 px-3 border border-gray-300">0.00 บาท(ไม่รวม vat)</td>
+                                <td id="requested-budget" class="font-semibold py-2 px-3 border border-gray-300">0.00</td>
                             </tr>
                         </tbody>
                     </table>
@@ -181,13 +193,17 @@ if ($result->num_rows > 0) {
                         <!-- Existing table header and content -->
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="py-2 px-3 border">รายการ</th>
-                                <th class="py-2 px-3 border">จำนวน</th>
+                                <th class="py-2 px-3 border" rowspan="2">รายการ</th>
+                                <th class="py-2 px-3 border" rowspan="2">จำนวน</th>
+                                <th class="py-2 px-3 border" colspan="2">ต้นทุนขาย</th>
+                                <th class="py-2 px-3 border" colspan="2">ราคาขาย ISI</th>
+                                <th class="py-2 px-3 border" rowspan="2">ผลต่าง</th>
+                            </tr>
+                            <tr>
                                 <th class="py-2 px-3 border">ราคาทุนต่อหน่วย</th>
-                                <th class="py-2 px-3 border">รวมทุน</th>
+                                <th class="py-2 px-3 border">รวมต้นทุน</th>
                                 <th class="py-2 px-3 border">ราคาขายต่อหน่วย</th>
                                 <th class="py-2 px-3 border">รวมขาย</th>
-                                <th class="py-2 px-3 border">ผลต่าง</th>
                             </tr>
                         </thead>
                         <tbody id="group1-summary" class="text-center"></tbody>
@@ -215,13 +231,17 @@ if ($result->num_rows > 0) {
                         <!-- Existing table header and content -->
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="py-2 px-3 border">รายการ</th>
-                                <th class="py-2 px-3 border">จำนวน</th>
+                                <th class="py-2 px-3 border" rowspan="2">รายการ</th>
+                                <th class="py-2 px-3 border" rowspan="2">จำนวน</th>
+                                <th class="py-2 px-3 border" colspan="2">ต้นทุนขาย</th>
+                                <th class="py-2 px-3 border" colspan="2">ราคาขาย ISI</th>
+                                <th class="py-2 px-3 border" rowspan="2">ผลต่าง</th>
+                            </tr>
+                            <tr>
                                 <th class="py-2 px-3 border">ราคาทุนต่อหน่วย</th>
-                                <th class="py-2 px-3 border">รวมทุน</th>
+                                <th class="py-2 px-3 border">รวมต้นทุน</th>
                                 <th class="py-2 px-3 border">ราคาขายต่อหน่วย</th>
                                 <th class="py-2 px-3 border">รวมขาย</th>
-                                <th class="py-2 px-3 border">ผลต่าง</th>
                             </tr>
                         </thead>
                         <tbody id="group4-summary" class="text-center"></tbody>
@@ -314,6 +334,146 @@ if ($result->num_rows > 0) {
                 </div>
             </div>
         </div>
+
+        <div id="investment-rental" class="tab-content hidden bg-white p-4 rounded-b-lg shadow-md">
+            <h2 class="text-2xl font-bold mb-4">แบบเช่า(ลงทุนเอง)</h2>
+
+            <!-- ตาราง รวมโครงการ -->
+            <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+                <h3 class="text-lg font-semibold mb-2">รวมโครงการ</h3>
+                <table class="w-full border-collapse border">
+                    <thead>
+                        <tr>
+                            <th class="py-2 px-3 border" rowspan="2">รายการ</th>
+                            <th class="py-2 px-3 border" rowspan="2">รวมต้นทุนโครงการ</th>
+                            <th class="py-2 px-3 border" rowspan="2">งบประมาณที่ขอใช้</th>
+                            <th class="py-2 px-3 border" colspan="2">รายได้ขั้นต่ำ (บาท/โครงการ)</th>
+                            <th class="py-2 px-3 border" rowspan="2">จุดคุ้มทุน(เดือน)</th>
+                        </tr>
+                        <tr>
+                            <th class="py-2 px-3 border">ค่าบริการรายเดือน</th>
+                            <th class="py-2 px-3 border">จำนวนรอบบิล</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="py-2 px-3 border">
+                                <div id="investment-rental-total">0.00</div>
+                            </td>
+                            <td class="py-2 px-3 border">
+                                <div id="investment-rental-budget">0.00</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-gray-50 font-semibold">
+                            <td class="py-2 px-3 border text-right" colspan="3">รวมทั้งสิ้น</td>
+                            <td colspan="2">
+                                <div id="investment-rental-summarize">0.00</div>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+                <h3 class="text-lg font-semibold mb-2">อัตตราค่าบริการและปันส่วนรายได้(รายเดือน)</h3>
+                <table id="investment-rentals" class="w-full border-collapse border">
+                    <thead>
+                        <tr>
+                            <th class="py-2 px-3 border">รายการโปรโมชั่น/แพ็คเกจ</th>
+                            <th class="py-2 px-3 border">ค่าบริการรายเดือนตามโปรโมชั่น</th>
+                            <th class="py-2 px-3 border">ค่าบริการอื่นๆ(ถ้ามี)</th>
+                            <th class="py-2 px-3 border">ค่าเช่า ICT&MA ขั้นต่ำ</th>
+                            <th class="py-2 px-3 border">ค่าเช่าเพิ่มตามดุลพินิจ</th>
+                            <th class="py-2 px-3 border">รายได้ขั้นค่าบริการ(บาท/เดือน)</th>
+                            <th class="py-2 px-3 border"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Service rows will be dynamically added here -->
+                    </tbody>
+                    
+                </table>
+                <button onclick="addServiceRow('investment-rentals')" 
+                        class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    + เพิ่มรายการบริการ
+                </button>
+            </div>
+        </div>
+        <div id="installation-rental" class="tab-content hidden bg-white p-4 rounded-b-lg shadow-md">
+            <h2 class="text-2xl font-bold mb-4">แบบเช่า(เก็บค่าติดตั้ง)</h2>
+            <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+                <h3 class="text-lg font-semibold mb-2">รวมโครงการ</h3>
+                <table class="w-full border-collapse border">
+                    <thead>
+                        <tr>
+                            <th class="py-2 px-3 border" rowspan="2">รายการ</th>
+                            <th class="py-2 px-3 border" rowspan="2">รวมต้นทุนโครงการ</th>
+                            <th class="py-2 px-3 border" rowspan="2">งบประมาณที่ขอใช้</th>
+                            <th class="py-2 px-3 border" colspan="3">รายได้ขั้นต่ำรวมทั้งโครงการ</th>
+                            <th class="py-2 px-3 border" rowspan="2">จุดคุ้มทุน(เดือน)</th>
+                        </tr>
+                        <tr>
+                            <th class="y-2 px-3 border">ค่าดำเนินการชำระครั้งเดียว</th>
+                            <th class="y-2 px-3 border">ค่าบริการรายเดือน</th>
+                            <th class="y-2 px-3 border">จำนวนรอบบิล</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="py-2 px-3 border">
+                                <div id="installation-rental-total">0.00</div>
+                            </td>
+                            <td class="py-2 px-3 border">
+                                <div id="installation-rental-budget">0.00</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-gray-50 font-semibold">
+                            <td class="py-2 px-3 border text-right" colspan="3">รวมทั้งสิ้น</td>
+                            <td id="installation-rental-onetime">0.00</td>
+                            <td class="py-2 px-3 border" colspan="2">
+                                <div id="installation-rental-allmonthly">0.00</div>
+                            </td>
+                        </tr>
+                        <tr class="bg-gray-50 font-semibold">
+                            <td class="py-2 px-3 border text-right" colspan="3">รวมรายได้ทั้งโครงการ</td>
+                            <td class="py-2 px-3 border" colspan="3">
+                                <div id="installation-rental-summarize">0.00</div>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+                <h3 class="text-lg font-semibold mb-2">อัตตราค่าบริการและปันส่วนรายได้(รายเดือน)</h3>
+                <table id="installation-rentals" class="w-full border-collapse border">
+                    <thead>
+                        <tr>
+                            <th class="py-2 px-3 border">รายการโปรโมชั่น/แพ็คเกจ</th>
+                            <th class="py-2 px-3 border">ค่าบริการรายเดือนตามโปรโมชั่น</th>
+                            <th class="py-2 px-3 border">ค่าบริการอื่นๆ(ถ้ามี)</th>
+                            <th class="py-2 px-3 border">ค่าเช่า ICT&MA ขั้นต่ำ</th>
+                            <th class="py-2 px-3 border">ค่าเช่าเพิ่มตามดุลพินิจ</th>
+                            <th class="py-2 px-3 border">รายได้ขั้นค่าบริการ(บาท/เดือน)</th>
+                            <th class="py-2 px-3 border"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Service rows will be dynamically added here -->
+                    </tbody>
+                </table>
+                <button onclick="addServiceRow('installation-rentals')" 
+                        class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    + เพิ่มรายการบริการ
+                </button>
+            </div>
+        </div>
+
+        <div id="summarize" class="tab-content hidden bg-white p-4 rounded-b-lg shadow-md">
+            <h2 class="text-2xl font-bold mb-4">สรุปผล</h2>
+        </div>
     </div>
   
     
@@ -377,7 +537,7 @@ if ($result->num_rows > 0) {
 
             // Update requested budget (group 1 + 2)
             const requestedBudget = group1 + group2;
-            document.getElementById('requested-budget').textContent = requestedBudget.toFixed(2) + ' บาท(ไม่รวม vat)';
+            document.getElementById('requested-budget').textContent = requestedBudget.toFixed(2) ;
         }
 
         function updateProjectTotal() {
@@ -387,7 +547,7 @@ if ($result->num_rows > 0) {
             const group4 = parseFloat(document.getElementById('group4-total').textContent) || 0;
 
             const total = group1 + group2 + group3 + group4;
-            document.getElementById('project-total').textContent = total.toFixed(2) + ' บาท(ไม่รวม vat)';
+            document.getElementById('project-total').textContent = total.toFixed(2) ;
         }
         function switchTab(tabId) {
             // ซ่อนเนื้อหาทั้งหมดและรีเซ็ตสไตล์แท็บ
@@ -398,8 +558,11 @@ if ($result->num_rows > 0) {
             // Reset all tab buttons to default style
             const quoteBtnTab = document.getElementById('quote-tab');
             const summaryBtnTab = document.getElementById('summary-tab');
+            const investmentRentalTab = document.getElementById('investment-rental-tab');
+            const installationRentalTab = document.getElementById('installation-rental-tab');
+            const summarizeTab = document.getElementById('summarize-tab');
             
-            [quoteBtnTab, summaryBtnTab].forEach(btn => {
+            [quoteBtnTab, summaryBtnTab, investmentRentalTab, installationRentalTab, summarizeTab].forEach(btn => {
                 if (btn) {
                     btn.classList.replace('bg-blue-500', 'bg-gray-200');
                     btn.classList.replace('text-white', 'text-black');
@@ -418,6 +581,14 @@ if ($result->num_rows > 0) {
                 activeTabBtn = quoteBtnTab;
             } else if (tabId === 'summary') {
                 activeTabBtn = summaryBtnTab;
+            } else if (tabId === 'investment-rental') {
+                activeTabBtn = investmentRentalTab;
+            } else if (tabId === 'installation-rental') {
+                activeTabBtn = installationRentalTab;
+            } else if (tabId === 'summarize') {
+                activeTabBtn = summarizeTab;
+                populateSummarizeTab();
+                updateSummarizeTab();
             }
 
             if (activeTabBtn) {
@@ -428,6 +599,8 @@ if ($result->num_rows > 0) {
             // หากเป็นแท็บสรุปให้โหลดข้อมูล
             if (tabId === 'summary') {
                 loadGroupData();
+            } else if (tabId === 'investment-rental' || tabId === 'installation-rental') {
+                loadProjectTotals();
             }
         }
         // ฟังก์ชันสำหรับบันทึกราคาขาย
@@ -438,6 +611,7 @@ if ($result->num_rows > 0) {
             }
             updateCombinedTotal();
             updateProjectTotal();
+            saveProjectTotals();
 
             let group1Data = [];
             let group4Data = [];
@@ -618,73 +792,556 @@ if ($result->num_rows > 0) {
             saveSalesData();
         }
         function updateGrandTotals() {
-        // Get VAT rate
-        const vatRate = parseFloat(document.getElementById('vat-rate').value) / 100;
+            // Get VAT rate
+            const vatRate = parseFloat(document.getElementById('vat-rate').value) / 100;
 
-        // Calculate base totals
-        const group1Cost = parseFloat(document.getElementById('group1-total-cost').textContent.replace(/,/g, '')) || 0;
-        const group4Cost = parseFloat(document.getElementById('group4-total-cost').textContent.replace(/,/g, '')) || 0;
-        const grandTotalCost = group1Cost + group4Cost;
+            // Calculate base totals
+            const group1Cost = parseFloat(document.getElementById('group1-total-cost').textContent.replace(/,/g, '')) || 0;
+            const group4Cost = parseFloat(document.getElementById('group4-total-cost').textContent.replace(/,/g, '')) || 0;
+            const grandTotalCost = group1Cost + group4Cost;
 
-        let group1Sales = 0;
-        let group4Sales = 0;
-        
-        document.querySelectorAll('#group1-summary .sales-total').forEach(cell => {
-            group1Sales += parseFloat(cell.textContent.replace(/,/g, '')) || 0;
-        });
-        
-        document.querySelectorAll('#group4-summary .sales-total').forEach(cell => {
-            group4Sales += parseFloat(cell.textContent.replace(/,/g, '')) || 0;
-        });
+            let group1Sales = 0;
+            let group4Sales = 0;
+            
+            document.querySelectorAll('#group1-summary .sales-total').forEach(cell => {
+                group1Sales += parseFloat(cell.textContent.replace(/,/g, '')) || 0;
+            });
+            
+            document.querySelectorAll('#group4-summary .sales-total').forEach(cell => {
+                group4Sales += parseFloat(cell.textContent.replace(/,/g, '')) || 0;
+            });
 
-        const grandTotalSales = group1Sales + group4Sales;
+            const grandTotalSales = group1Sales + group4Sales;
 
-        // Calculate VAT amounts
-        const costVat = grandTotalCost * vatRate;
-        const salesVat = grandTotalSales * vatRate;
+            // Calculate VAT amounts
+            const costVat = grandTotalCost * vatRate;
+            const salesVat = grandTotalSales * vatRate;
 
-        // Calculate totals with VAT
-        const grandTotalCostWithVat = grandTotalCost + costVat;
-        const grandTotalSalesWithVat = grandTotalSales + salesVat;
+            // Calculate totals with VAT
+            const grandTotalCostWithVat = grandTotalCost + costVat;
+            const grandTotalSalesWithVat = grandTotalSales + salesVat;
 
-        // Calculate profits
-        const totalProfit = grandTotalSales - grandTotalCost;
-        const totalProfitWithVat = grandTotalSalesWithVat - grandTotalCostWithVat;
+            // Calculate profits
+            const totalProfit = grandTotalSales - grandTotalCost;
+            const totalProfitWithVat = grandTotalSalesWithVat - grandTotalCostWithVat;
 
-        // Calculate profit percentages
-        const totalProfitPercentage = grandTotalCost !== 0 ? ((grandTotalSales * 100) / grandTotalCost) - 100 : 0;
-        const totalProfitPercentageWithVat = grandTotalCostWithVat !== 0 ? 
-            ((grandTotalSalesWithVat * 100) / grandTotalCostWithVat) - 100 : 0;
+            // Calculate profit percentages
+            const totalProfitPercentage = grandTotalCost !== 0 ? ((grandTotalSales * 100) / grandTotalCost) - 100 : 0;
+            const totalProfitPercentageWithVat = grandTotalCostWithVat !== 0 ? 
+                ((grandTotalSalesWithVat * 100) / grandTotalCostWithVat) - 100 : 0;
 
-        // Update group totals (remain unchanged)
-        const group1Difference = group1Sales - group1Cost;
-        const group4Difference = group4Sales - group4Cost;
-        
-        document.getElementById('group1-total-sales').textContent = group1Sales.toLocaleString();
-        document.getElementById('group4-total-sales').textContent = group4Sales.toLocaleString();
-        document.getElementById('group1-total-difference').textContent = group1Difference.toLocaleString();
-        document.getElementById('group4-total-difference').textContent = group4Difference.toLocaleString();
+            // Update group totals (remain unchanged)
+            const group1Difference = group1Sales - group1Cost;
+            const group4Difference = group4Sales - group4Cost;
+            
+            document.getElementById('group1-total-sales').textContent = group1Sales.toLocaleString();
+            document.getElementById('group4-total-sales').textContent = group4Sales.toLocaleString();
+            document.getElementById('group1-total-difference').textContent = group1Difference.toLocaleString();
+            document.getElementById('group4-total-difference').textContent = group4Difference.toLocaleString();
 
-        // Update group profit percentages
-        const group1ProfitPercentage = group1Cost !== 0 ? ((group1Sales * 100) / group1Cost) - 100 : 0;
-        const group4ProfitPercentage = group4Cost !== 0 ? ((group4Sales * 100) / group4Cost) - 100 : 0;
-        
-        document.getElementById('group1-profit-percentage').textContent = group1ProfitPercentage.toFixed(2) + '%';
-        document.getElementById('group4-profit-percentage').textContent = group4ProfitPercentage.toFixed(2) + '%';
+            // Update group profit percentages
+            const group1ProfitPercentage = group1Cost !== 0 ? ((group1Sales * 100) / group1Cost) - 100 : 0;
+            const group4ProfitPercentage = group4Cost !== 0 ? ((group4Sales * 100) / group4Cost) - 100 : 0;
+            
+            document.getElementById('group1-profit-percentage').textContent = group1ProfitPercentage.toFixed(2) + '%';
+            document.getElementById('group4-profit-percentage').textContent = group4ProfitPercentage.toFixed(2) + '%';
 
-        // Update all totals
-        document.getElementById('grand-total-cost').textContent = grandTotalCost.toLocaleString() + ' บาท';
-        document.getElementById('cost-vat').textContent = costVat.toLocaleString() + ' บาท';
-        document.getElementById('grand-total-cost-with-vat').textContent = grandTotalCostWithVat.toLocaleString() + ' บาท';
+            // Update all totals
+            document.getElementById('grand-total-cost').textContent = grandTotalCost.toLocaleString() + ' บาท';
+            document.getElementById('cost-vat').textContent = costVat.toLocaleString() + ' บาท';
+            document.getElementById('grand-total-cost-with-vat').textContent = grandTotalCostWithVat.toLocaleString() + ' บาท';
 
-        document.getElementById('grand-total-sales').textContent = grandTotalSales.toLocaleString() + ' บาท';
-        document.getElementById('sales-vat').textContent = salesVat.toLocaleString() + ' บาท';
-        document.getElementById('grand-total-sales-with-vat').textContent = grandTotalSalesWithVat.toLocaleString() + ' บาท';
+            document.getElementById('grand-total-sales').textContent = grandTotalSales.toLocaleString() + ' บาท';
+            document.getElementById('sales-vat').textContent = salesVat.toLocaleString() + ' บาท';
+            document.getElementById('grand-total-sales-with-vat').textContent = grandTotalSalesWithVat.toLocaleString() + ' บาท';
 
-        document.getElementById('total-profit').textContent = totalProfit.toLocaleString() + ' บาท';
-        document.getElementById('total-profit-with-vat').textContent = totalProfitWithVat.toLocaleString() + ' บาท';
-        document.getElementById('total-profit-percentage-with-vat').textContent = totalProfitPercentageWithVat.toFixed(2) + '%';
-    }
+            document.getElementById('total-profit').textContent = totalProfit.toLocaleString() + ' บาท';
+            document.getElementById('total-profit-with-vat').textContent = totalProfitWithVat.toLocaleString() + ' บาท';
+            document.getElementById('total-profit-percentage-with-vat').textContent = totalProfitPercentageWithVat.toFixed(2) + '%';
+        }
+        function saveProjectTotals() {
+            const projectTotal = document.getElementById('project-total').textContent;
+            const requestedBudget = document.getElementById('requested-budget').textContent;
+
+            localStorage.setItem('projectTotal', projectTotal);
+            localStorage.setItem('requestedBudget', requestedBudget);
+        }
+
+        function loadProjectTotals() {
+            const projectTotal = localStorage.getItem('projectTotal') || '0.00';
+            const requestedBudget = localStorage.getItem('requestedBudget') || '0.00';
+
+            // You can add code here to populate the rental tabs with these values
+            // For example:
+            document.getElementById('investment-rental-total').textContent = projectTotal;
+            document.getElementById('installation-rental-total').textContent = projectTotal;
+            document.getElementById('investment-rental-budget').textContent = requestedBudget;
+            document.getElementById('installation-rental-budget').textContent = requestedBudget;
+        }
+        // Update the HTML for investment-rental tab (inside the table tbody)
+        document.querySelector('#investment-rental tbody').innerHTML = `
+            <tr>
+                <td class="py-2 px-3 border">รวมโครงการ</td>
+                <td class="py-2 px-3 border">
+                    <div id="investment-rental-total">0.00</div>
+                </td>
+                <td class="py-2 px-3 border">
+                    <div id="investment-rental-budget">0.00</div>
+                </td>
+                <td class="py-2 px-3 border">
+                    <input type="number" 
+                        id="investment-monthly-fee" 
+                        class="w-full p-1 border rounded" 
+                        oninput="calculateInvestmentBreakeven()" 
+                        placeholder="ระบุค่าบริการรายเดือน...">
+                </td>
+                <td class="py-2 px-3 border">
+                    <input type="number" 
+                        id="investment-billing-cycles" 
+                        class="w-full p-1 border rounded" 
+                        oninput="calculateInvestmentBreakeven()" 
+                        placeholder="ระบุจำนวนรอบ...">
+                </td>
+                <td class="py-2 px-3 border">
+                    <div id="investment-breakeven">0.00</div>
+                </td>
+            </tr>
+        `;
+
+        // Update the HTML for installation-rental tab (inside the table tbody)
+        document.querySelector('#installation-rental tbody').innerHTML = `
+            <tr>
+                <td class="py-2 px-3 border">รวมโครงการ</td>
+                <td class="py-2 px-3 border">
+                    <div id="installation-rental-total">0.00</div>
+                </td>
+                <td class="py-2 px-3 border">
+                    <div id="installation-rental-budget">0.00</div>
+                </td>
+                <td class="py-2 px-3 border">
+                    <input type="number" 
+                        id="installation-one-time-fee" 
+                        class="w-full p-1 border rounded" 
+                        oninput="calculateInstallationBreakeven()" 
+                        placeholder="ระบุค่าดำเนินการ...">
+                </td>
+                <td class="py-2 px-3 border">
+                    <input type="number" 
+                        id="installation-monthly-fee" 
+                        class="w-full p-1 border rounded" 
+                        oninput="calculateInstallationBreakeven()" 
+                        placeholder="ระบุค่าบริการรายเดือน...">
+                </td>
+                <td class="py-2 px-3 border">
+                    <input type="number" 
+                        id="installation-billing-cycles" 
+                        class="w-full p-1 border rounded" 
+                        oninput="calculateInstallationBreakeven()" 
+                        placeholder="ระบุจำนวนรอบ...">
+                </td>
+                <td class="py-2 px-3 border">
+                    <div id="installation-breakeven">0.00</div>
+                </td>
+            </tr>
+        `;
+
+        // Add calculation functions
+        function calculateInvestmentBreakeven() {
+            const budget = parseFloat(document.getElementById('investment-rental-budget').textContent.replace(/,/g, '')) || 0;
+            const monthlyFee = parseFloat(document.getElementById('investment-monthly-fee').value) || 0;
+            const billingCycles = parseFloat(document.getElementById('investment-billing-cycles').value) || 0;
+            
+            // Calculate summarized values
+            const totalIncome = monthlyFee * billingCycles;
+            let breakeven = 0;
+            
+            if (monthlyFee > 0) {
+                breakeven = budget / monthlyFee;
+            }
+            
+            // Update elements
+            document.getElementById('investment-breakeven').textContent = breakeven.toFixed(2);
+            document.getElementById('investment-rental-summarize').textContent = totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 });
+            
+            // Save to localStorage
+            localStorage.setItem('investment-monthly-fee', monthlyFee);
+            localStorage.setItem('investment-billing-cycles', billingCycles);
+        }
+
+        function calculateInstallationBreakeven() {
+            const budget = parseFloat(document.getElementById('installation-rental-budget').textContent.replace(/,/g, '')) || 0;
+            const oneTimeFee = parseFloat(document.getElementById('installation-one-time-fee').value) || 0;
+            const monthlyFee = parseFloat(document.getElementById('installation-monthly-fee').value) || 0;
+            const billingCycles = parseFloat(document.getElementById('installation-billing-cycles').value) || 0;
+            
+            // Calculate summarized values
+            const monthlyIncome = monthlyFee * billingCycles;
+            const totalIncome = oneTimeFee + monthlyIncome;
+            let breakeven = 0;
+            
+            if (monthlyFee > 0) {
+                breakeven = (budget - oneTimeFee) / monthlyFee;
+            }
+            
+            // Update elements
+            document.getElementById('installation-breakeven').textContent = breakeven.toFixed(2);
+            document.getElementById('installation-rental-onetime').textContent = oneTimeFee.toLocaleString('en-US', { minimumFractionDigits: 2 });
+            document.getElementById('installation-rental-allmonthly').textContent = monthlyIncome.toLocaleString('en-US', { minimumFractionDigits: 2 });
+            document.getElementById('installation-rental-summarize').textContent = totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 });
+            
+            // Save to localStorage
+            localStorage.setItem('installation-one-time-fee', oneTimeFee);
+            localStorage.setItem('installation-monthly-fee', monthlyFee);
+            localStorage.setItem('installation-billing-cycles', billingCycles);
+        }
+
+
+        // Modify loadProjectTotals to include loading saved values
+        function loadProjectTotals() {
+            const projectTotal = localStorage.getItem('projectTotal') || '0.00';
+            const requestedBudget = localStorage.getItem('requestedBudget') || '0.00';
+
+            // Load values for investment rental
+            const investmentMonthly = parseFloat(localStorage.getItem('investment-monthly-fee')) || 0;
+            const investmentCycles = parseFloat(localStorage.getItem('investment-billing-cycles')) || 0;
+            document.getElementById('investment-rental-summarize').textContent = (investmentMonthly * investmentCycles).toLocaleString('en-US', { minimumFractionDigits: 2 });
+            document.getElementById('investment-rental-total').textContent = projectTotal;
+            document.getElementById('investment-rental-budget').textContent = requestedBudget;
+            document.getElementById('investment-monthly-fee').value = localStorage.getItem('investment-monthly-fee') || '';
+            document.getElementById('investment-billing-cycles').value = localStorage.getItem('investment-billing-cycles') || '';
+            calculateInvestmentBreakeven();
+
+            // Load values for installation rental
+            const installOneTime = parseFloat(localStorage.getItem('installation-one-time-fee')) || 0;
+            const installMonthly = parseFloat(localStorage.getItem('installation-monthly-fee')) || 0;
+            const installCycles = parseFloat(localStorage.getItem('installation-billing-cycles')) || 0;
+            document.getElementById('installation-rental-onetime').textContent = installOneTime.toLocaleString('en-US', { minimumFractionDigits: 2 });
+            document.getElementById('installation-rental-allmonthly').textContent = (installMonthly * installCycles).toLocaleString('en-US', { minimumFractionDigits: 2 });
+            document.getElementById('installation-rental-summarize').textContent = (installOneTime + (installMonthly * installCycles)).toLocaleString('en-US', { minimumFractionDigits: 2 });
+            document.getElementById('installation-rental-total').textContent = projectTotal;
+            document.getElementById('installation-rental-budget').textContent = requestedBudget;
+            document.getElementById('installation-one-time-fee').value = localStorage.getItem('installation-one-time-fee') || '';
+            document.getElementById('installation-monthly-fee').value = localStorage.getItem('installation-monthly-fee')     || '';
+            document.getElementById('installation-billing-cycles').value = localStorage.getItem('installation-billing-cycles') || '';
+            calculateInstallationBreakeven();
+        }
+        window.onload = function() {
+            // Clear all localStorage data
+            localStorage.removeItem('group1Data');
+            localStorage.removeItem('group4Data');
+            localStorage.removeItem('projectTotal');
+            localStorage.removeItem('requestedBudget');
+            localStorage.removeItem('investment-monthly-fee');
+            localStorage.removeItem('investment-billing-cycles');
+            localStorage.removeItem('installation-one-time-fee');
+            localStorage.removeItem('installation-monthly-fee');
+            localStorage.removeItem('installation-billing-cycles');
+
+            // Reset all form fields and calculated values
+            resetAllForms();
+        };
+
+        function resetAllForms() {
+            // Reset quote form
+            for (let i = 1; i <= 4; i++) {
+                const itemsContainer = document.getElementById(`group${i}-items`);
+                if (itemsContainer) {
+                    itemsContainer.innerHTML = '';
+                }
+                
+                const totalElement = document.getElementById(`group${i}-total`);
+                if (totalElement) {
+                    totalElement.textContent = '0.00';
+                }
+            }
+
+            // Reset combined total
+            const combinedTotal = document.getElementById('combined-total');
+            if (combinedTotal) {
+                combinedTotal.textContent = '0.00';
+            }
+
+            // Reset project totals
+            const projectTotal = document.getElementById('project-total');
+            if (projectTotal) {
+                projectTotal.textContent = '0.00';
+            }
+
+            const requestedBudget = document.getElementById('requested-budget');
+            if (requestedBudget) {
+                requestedBudget.textContent = '0.00';
+            }
+
+            // Reset summary tab
+            const summaryElements = [
+                'group1-total-cost', 'group1-total-sales', 'group1-total-difference',
+                'group4-total-cost', 'group4-total-sales', 'group4-total-difference',
+                'group1-profit-percentage', 'group4-profit-percentage',
+                'grand-total-cost', 'cost-vat', 'grand-total-cost-with-vat',
+                'grand-total-sales', 'sales-vat', 'grand-total-sales-with-vat',
+                'total-profit', 'total-profit-with-vat', 'total-profit-percentage-with-vat'
+            ];
+
+            summaryElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = '0.00';
+                }
+            });
+
+            // Reset VAT rate to default
+            const vatRate = document.getElementById('vat-rate');
+            if (vatRate) {
+                vatRate.value = '7';
+            }
+
+            // Reset customer select
+            const customerSelect = document.getElementById('customer-select');
+            if (customerSelect) {
+                customerSelect.value = '';
+            }
+
+            // Reset project name
+            const projectName = document.getElementById('project-name');
+            if (projectName) {
+                projectName.value = '';
+            }
+
+            // Reset investment rental tab
+            const investmentElements = {
+                'investment-rental-total': '0.00',
+                'investment-rental-budget': '0.00',
+                'investment-monthly-fee': '',
+                'investment-billing-cycles': '',
+                'investment-breakeven': '0.00'
+            };
+
+            Object.entries(investmentElements).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (element.tagName === 'INPUT') {
+                        element.value = value;
+                    } else {
+                        element.textContent = value;
+                    }
+                }
+            });
+
+            // Reset installation rental tab
+            const installationElements = {
+                'installation-rental-total': '0.00',
+                'installation-rental-budget': '0.00',
+                'installation-one-time-fee': '',
+                'installation-monthly-fee': '',
+                'installation-billing-cycles': '',
+                'installation-breakeven': '0.00'
+            };
+
+            Object.entries(installationElements).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (element.tagName === 'INPUT') {
+                        element.value = value;
+                    } else {
+                        element.textContent = value;
+                    }
+                }
+            });
+
+            // Reset summary tables
+            const group1Summary = document.getElementById('group1-summary');
+            const group4Summary = document.getElementById('group4-summary');
+            if (group1Summary) group1Summary.innerHTML = '';
+            if (group4Summary) group4Summary.innerHTML = '';
+        }
+        function addServiceRow(tableId) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            const newRow = `
+                <tr class="service-row">
+                    <td class="py-2 px-3 border">
+                        <input type="text" class="w-full p-1 border rounded promotion-name" placeholder="ชื่อโปรโมชั่น/แพ็คเกจ">
+                    </td>
+                    <td class="py-2 px-3 border">
+                        <input type="number" class="w-full p-1 border rounded monthly-service-fee" placeholder="ค่าบริการรายเดือน" oninput="calculateServiceIncome(this)">
+                    </td>
+                    <td class="py-2 px-3 border">
+                        <input type="number" class="w-full p-1 border rounded other-services-fee" placeholder="ค่าบริการอื่นๆ" oninput="calculateServiceIncome(this)">
+                    </td>
+                    <td class="py-2 px-3 border">
+                        <input type="number" class="w-full p-1 border rounded ict-ma-base-fee" placeholder="ค่าเช่า ICT&MA ขั้นต่ำ" oninput="calculateServiceIncome(this)">
+                    </td>
+                    <td class="py-2 px-3 border">
+                        <input type="number" class="w-full p-1 border rounded ict-ma-additional-fee" placeholder="ค่าเช่าเพิ่มตามดุลพินิจ" oninput="calculateServiceIncome(this)">
+                    </td>
+                    <td class="py-2 px-3 border service-income">0.00</td>
+                    <td class="py-2 px-3 border">
+                        <button onclick="removeServiceRow(this)" class="text-red-500"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', newRow);
+        }
+
+        function calculateServiceIncome(input) {
+            const row = input.closest('tr');
+            
+            // Get input values
+            const monthlyServiceFee = parseFloat(row.querySelector('.monthly-service-fee').value) || 0;
+            const otherServicesFee = parseFloat(row.querySelector('.other-services-fee').value) || 0;
+            const ictMaBaseFee = parseFloat(row.querySelector('.ict-ma-base-fee').value) || 0;
+            const ictMaAdditionalFee = parseFloat(row.querySelector('.ict-ma-additional-fee').value) || 0;
+            
+            // Calculate total service income
+            const serviceIncome = monthlyServiceFee + otherServicesFee + ictMaBaseFee + ictMaAdditionalFee;
+            
+            // Update service income cell
+            row.querySelector('.service-income').textContent = serviceIncome.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        function removeServiceRow(button) {
+            const row = button.closest('tr');
+            row.remove();
+        }
+
+        // Add event listeners to existing service rows
+        function attachServiceRowListeners() {
+            document.querySelectorAll('.service-row input').forEach(input => {
+                input.addEventListener('input', function() {
+                    calculateServiceIncome(this);
+                });
+            });
+        }
+        function populateSummarizeTab() {
+            // Clear existing content
+            const summarizeTab = document.getElementById('summarize');
+            summarizeTab.innerHTML = `
+                <h2 class="text-2xl font-bold mb-4">สรุปผล</h2>
+                
+                <!-- Sales Summary (Sell Outright ISI) -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h3 class="text-xl font-semibold mb-4">สรุปผลขายขาด ISI</h3>
+                    <table class="w-full border-collapse border border-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="py-2 px-3 border">รายการ</th>
+                                <th class="py-2 px-3 border">มูลค่า (บาท)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="py-2 px-3 border">รวมยอดขาย (ก่อน VAT)</td>
+                                <td id="summarize-total-sales" class="py-2 px-3 border text-right"></td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 px-3 border">VAT ขาย</td>
+                                <td id="summarize-sales-vat" class="py-2 px-3 border text-right"></td>
+                            </tr>
+                            <tr class="font-bold bg-gray-50">
+                                <td class="py-2 px-3 border">รวมยอดขายทั้งหมด (รวม VAT)</td>
+                                <td id="summarize-total-sales-with-vat" class="py-2 px-3 border text-right"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Investment Rental Summary -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h3 class="text-xl font-semibold mb-4">สรุปผลเช่า (ลงทุน)</h3>
+                    <table id="summarize-investment-rental" class="w-full border-collapse border border-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="py-2 px-3 border">รายการโปรโมชั่น</th>
+                                <th class="py-2 px-3 border">รายได้ขั้นค่าบริการ (บาท/เดือน)</th>
+                                <th class="py-2 px-3 border">VAT</th>
+                                <th class="py-2 px-3 border">รายได้รวม VAT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summarize-investment-rental-body">
+                            <!-- Rows will be dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Installation Rental Summary -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4">สรุปผลเช่า (เก็บค่าติดตั้ง)</h3>
+                    <table id="summarize-installation-rental" class="w-full border-collapse border border-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="py-2 px-3 border">รายการโปรโมชั่น</th>
+                                <th class="py-2 px-3 border">รายได้ขั้นค่าบริการ (บาท/เดือน)</th>
+                                <th class="py-2 px-3 border">VAT</th>
+                                <th class="py-2 px-3 border">รายได้รวม VAT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summarize-installation-rental-body">
+                            <!-- Rows will be dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function updateSummarizeTab() {
+            const vatRate = parseFloat(document.getElementById('vat-rate').value) / 100;
+            // Update sales summary
+            const grandTotalSales = document.getElementById('grand-total-sales').textContent;
+            const salesVat = document.getElementById('sales-vat').textContent;
+            const grandTotalSalesWithVat = document.getElementById('grand-total-sales-with-vat').textContent;
+
+            document.getElementById('summarize-total-sales').textContent = grandTotalSales;
+            document.getElementById('summarize-sales-vat').textContent = salesVat;
+            document.getElementById('summarize-total-sales-with-vat').textContent = grandTotalSalesWithVat;
+
+            // Populate Investment Rental Services
+            const investmentRentalBody = document.getElementById('summarize-investment-rental-body');
+            investmentRentalBody.innerHTML = '';
+            document.querySelectorAll('#investment-rentals .service-row').forEach(row => {
+                const promotionName = row.querySelector('.promotion-name').value;
+                const serviceIncome = parseFloat(row.querySelector('.service-income').textContent.replace(/,/g, '')) || 0;
+                
+                // Calculate VAT
+                const serviceVat = serviceIncome * vatRate;
+                const serviceIncomeWithVat = serviceIncome + serviceVat;
+                
+                if (promotionName) {
+                    investmentRentalBody.innerHTML += `
+                        <tr>
+                            <td class="py-2 px-3 border">${promotionName}</td>
+                            <td class="py-2 px-3 border text-right">${serviceIncome.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td class="py-2 px-3 border text-right">${serviceVat.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td class="py-2 px-3 border text-right">${serviceIncomeWithVat.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            // Populate Installation Rental Services
+            const installationRentalBody = document.getElementById('summarize-installation-rental-body');
+            installationRentalBody.innerHTML = '';
+            document.querySelectorAll('#installation-rentals .service-row').forEach(row => {
+                const promotionName = row.querySelector('.promotion-name').value;
+                const serviceIncome = parseFloat(row.querySelector('.service-income').textContent.replace(/,/g, '')) || 0;
+                
+                // Calculate VAT
+                const serviceVat = serviceIncome * vatRate;
+                const serviceIncomeWithVat = serviceIncome + serviceVat;
+                
+                if (promotionName) {
+                    installationRentalBody.innerHTML += `
+                        <tr>
+                            <td class="py-2 px-3 border">${promotionName}</td>
+                            <td class="py-2 px-3 border text-right">${serviceIncome.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td class="py-2 px-3 border text-right">${serviceVat.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td class="py-2 px-3 border text-right">${serviceIncomeWithVat.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+        // Call this when the page loads
+        window.addEventListener('DOMContentLoaded', attachServiceRowListeners);
+        window.addEventListener('DOMContentLoaded', populateSummarizeTab);
     </script>
 </body>
 </html>
