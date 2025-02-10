@@ -264,7 +264,7 @@ if ($result->num_rows > 0) {
 
             <!-- Add grand total section -->
              <!-- Add VAT rate control -->
-             <div class="mb-4 p-4 bg-white rounded-lg shadow">
+            <div class="mb-4 p-4 bg-white rounded-lg shadow">
                 <label class="font-semibold">อัตรา VAT:</label>
                 <select id="vat-rate" class="ml-2 p-2 border rounded" onchange="updateGrandTotals()">
                     <option value="0">0%</option>
@@ -472,7 +472,7 @@ if ($result->num_rows > 0) {
         </div>
 
         <div id="summarize" class="tab-content hidden bg-white p-4 rounded-b-lg shadow-md">
-            <h2 class="text-2xl font-bold mb-4">สรุปผล</h2>
+    
         </div>
     </div>
   
@@ -1215,8 +1215,13 @@ if ($result->num_rows > 0) {
             // Clear existing content
             const summarizeTab = document.getElementById('summarize');
             summarizeTab.innerHTML = `
-                <h2 class="text-2xl font-bold mb-4">สรุปผล</h2>
-                
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">สรุปผล</h2>
+                    <button onclick="exportAllToExcel()" 
+                            class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg flex items-center">
+                        <i class="fas fa-file-excel mr-2"></i>Export ข้อมูลทั้งหมดเป็น Excel
+                    </button>
+                </div>
                 <!-- Sales Summary (Sell Outright ISI) -->
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <h3 class="text-xl font-semibold mb-4">สรุปผลขายขาด ISI</h3>
@@ -1341,7 +1346,255 @@ if ($result->num_rows > 0) {
         }
         // Call this when the page loads
         window.addEventListener('DOMContentLoaded', attachServiceRowListeners);
-        window.addEventListener('DOMContentLoaded', populateSummarizeTab);
+        window.addEventListener('DOMContentLoaded', populateSummarizeTab)
+        
+
+        function exportAllToExcel() {
+            const wb = XLSX.utils.book_new();
+            
+            // Get project info
+            const customerName = document.querySelector('#customer-select option:checked')?.text || 'N/A';
+            const projectName = document.getElementById('project-name').value || 'N/A';
+
+            // 1. Create Investment Budget Sheet (งบประมาณการลงทุน)
+            const investmentData = [
+                ['ข้อมูลโครงการ'],
+                ['ลูกค้า:', customerName],
+                ['โครงการ:', projectName],
+                [''],
+                ['รายละเอียดประมาณการต้นทุนค่าอุปกรณ์ Solution'],
+                ['รายการ', 'ราคาต่อหน่วย (บาท)', 'จำนวน (หน่วย)', 'หมายเหตุ', 'เป็นเงินบาท (ไม่รวม VAT)']
+            ];
+
+            // Add items from each group
+            for (let groupId = 1; groupId <= 4; groupId++) {
+                const groupName = groupId <= 3 ? 
+                    ['ค่าอุปกรณ์ Solution ใหม่', 'ค่าอุปกรณ์ทดแทน Solution เดิม', 'ค่าอุปกรณ์ Solution เดิม'][groupId - 1] 
+                    : 'ต้นทุนการดำเนินการ';
+                
+                investmentData.push(['']);
+                investmentData.push([`กลุ่ม ${groupName}`]);
+                
+                document.querySelectorAll(`#group${groupId}-items tr`).forEach(row => {
+                    investmentData.push([
+                        row.querySelector('.item-name')?.value || '',
+                        row.querySelector('.item-price')?.value || '',
+                        row.querySelector('.item-quantity')?.value || '',
+                        row.querySelector('input[placeholder="หมายเหตุ..."]')?.value || '',
+                        row.querySelector('.item-total')?.textContent || ''
+                    ]);
+                });
+                
+                investmentData.push([
+                    `รวมกลุ่ม ${groupName}`,
+                    '',
+                    '',
+                    '',
+                    document.getElementById(`group${groupId}-total`)?.textContent || '0.00'
+                ]);
+            }
+
+            investmentData.push(['']);
+            investmentData.push([
+                'ต้นทุนรวมโครงการทั้งโครงการ',
+                '',
+                '',
+                '',
+                document.getElementById('project-total').textContent
+            ]);
+            investmentData.push([
+                'งบประมาณที่ขอใช้',
+                '',
+                '',
+                '',
+                document.getElementById('requested-budget').textContent
+            ]);
+
+            // 2. Create Sales Summary Sheet (ขายขาด ISI)
+            const salesData = [
+                ['สรุปรายการขายขาด ISI'],
+                [''],
+                ['ค่าอุปกรณ์ Solution ใหม่'],
+                ['รายการ', 'จำนวน', 'ราคาทุนต่อหน่วย', 'รวมต้นทุน', 'ราคาขายต่อหน่วย', 'รวมขาย', 'ผลต่าง']
+            ];
+
+            // Add Group 1 sales data
+            document.querySelectorAll('#group1-summary tr').forEach(row => {
+                salesData.push([
+                    row.cells[0]?.textContent || '',
+                    row.cells[1]?.textContent || '',
+                    row.cells[2]?.textContent || '',
+                    row.cells[3]?.textContent || '',
+                    row.querySelector('.sales-price')?.value || '',
+                    row.querySelector('.sales-total')?.textContent || '',
+                    row.querySelector('.difference')?.textContent || ''
+                ]);
+            });
+
+            salesData.push(['']);
+            salesData.push(['ต้นทุนการดำเนินการ']);
+            salesData.push(['รายการ', 'จำนวน', 'ราคาทุนต่อหน่วย', 'รวมต้นทุน', 'ราคาขายต่อหน่วย', 'รวมขาย', 'ผลต่าง']);
+
+            // Add Group 4 sales data
+            document.querySelectorAll('#group4-summary tr').forEach(row => {
+                salesData.push([
+                    row.cells[0]?.textContent || '',
+                    row.cells[1]?.textContent || '',
+                    row.cells[2]?.textContent || '',
+                    row.cells[3]?.textContent || '',
+                    row.querySelector('.sales-price')?.value || '',
+                    row.querySelector('.sales-total')?.textContent || '',
+                    row.querySelector('.difference')?.textContent || ''
+                ]);
+            });
+
+            // Add VAT summary
+            salesData.push(['']);
+            salesData.push(['สรุปยอดรวม']);
+            salesData.push(['รายการ', 'มูลค่า']);
+            salesData.push(['รวมยอดขาย (ก่อน VAT)', document.getElementById('grand-total-sales').textContent]);
+            salesData.push(['VAT', document.getElementById('sales-vat').textContent]);
+            salesData.push(['รวมยอดขายทั้งหมด (รวม VAT)', document.getElementById('grand-total-sales-with-vat').textContent]);
+            salesData.push(['กำไรขั้นต้น (ก่อน VAT)', document.getElementById('total-profit').textContent]);
+            salesData.push(['กำไรขั้นต้น (รวม VAT)', document.getElementById('total-profit-with-vat').textContent]);
+            salesData.push(['% กำไร', document.getElementById('total-profit-percentage-with-vat').textContent]);
+
+            // 3. Create Investment Rental Sheet (เช่า-ลงทุนเอง)
+            const investmentRentalData = [
+                ['แบบเช่า (ลงทุนเอง)'],
+                [''],
+                ['รวมโครงการ'],
+                ['รายการ', 'รวมต้นทุนโครงการ', 'งบประมาณที่ขอใช้', 'ค่าบริการรายเดือน', 'จำนวนรอบบิล', 'จุดคุ้มทุน (เดือน)'],
+                [
+                    'รวมโครงการ',
+                    document.getElementById('investment-rental-total').textContent,
+                    document.getElementById('investment-rental-budget').textContent,
+                    document.getElementById('investment-monthly-fee').value,
+                    document.getElementById('investment-billing-cycles').value,
+                    document.getElementById('investment-breakeven').textContent
+                ],
+                [''],
+                ['อัตราค่าบริการและปันส่วนรายได้ (รายเดือน)'],
+                ['รายการโปรโมชั่น/แพ็คเกจ', 'ค่าบริการรายเดือน', 'ค่าบริการอื่นๆ', 'ค่าเช่า ICT&MA ขั้นต่ำ', 'ค่าเช่าเพิ่ม', 'รายได้รวม']
+            ];
+
+            // Add investment rental services
+            document.querySelectorAll('#investment-rentals .service-row').forEach(row => {
+                investmentRentalData.push([
+                    row.querySelector('.promotion-name').value || '',
+                    row.querySelector('.monthly-service-fee').value || '',
+                    row.querySelector('.other-services-fee').value || '',
+                    row.querySelector('.ict-ma-base-fee').value || '',
+                    row.querySelector('.ict-ma-additional-fee').value || '',
+                    row.querySelector('.service-income').textContent || ''
+                ]);
+            });
+
+            // 4. Create Installation Rental Sheet (เช่า-เก็บค่าติดตั้ง)
+            const installationRentalData = [
+                ['แบบเช่า (เก็บค่าติดตั้ง)'],
+                [''],
+                ['รวมโครงการ'],
+                ['รายการ', 'รวมต้นทุนโครงการ', 'งบประมาณที่ขอใช้', 'ค่าดำเนินการ', 'ค่าบริการรายเดือน', 'จำนวนรอบบิล', 'จุดคุ้มทุน (เดือน)'],
+                [
+                    'รวมโครงการ',
+                    document.getElementById('installation-rental-total').textContent,
+                    document.getElementById('installation-rental-budget').textContent,
+                    document.getElementById('installation-one-time-fee').value,
+                    document.getElementById('installation-monthly-fee').value,
+                    document.getElementById('installation-billing-cycles').value,
+                    document.getElementById('installation-breakeven').textContent
+                ],
+                [''],
+                ['อัตราค่าบริการและปันส่วนรายได้ (รายเดือน)'],
+                ['รายการโปรโมชั่น/แพ็คเกจ', 'ค่าบริการรายเดือน', 'ค่าบริการอื่นๆ', 'ค่าเช่า ICT&MA ขั้นต่ำ', 'ค่าเช่าเพิ่ม', 'รายได้รวม']
+            ];
+
+            // Add installation rental services
+            document.querySelectorAll('#installation-rentals .service-row').forEach(row => {
+                installationRentalData.push([
+                    row.querySelector('.promotion-name').value || '',
+                    row.querySelector('.monthly-service-fee').value || '',
+                    row.querySelector('.other-services-fee').value || '',
+                    row.querySelector('.ict-ma-base-fee').value || '',
+                    row.querySelector('.ict-ma-additional-fee').value || '',
+                    row.querySelector('.service-income').textContent || ''
+                ]);
+            });
+
+            // 5. Create Summary Sheet (สรุปผล)
+            const summaryData = [
+                ['สรุปผลโครงการ'],
+                [''],
+                ['สรุปผลขายขาด ISI'],
+                ['รายการ', 'มูลค่า (บาท)'],
+                ['รวมยอดขาย (ก่อน VAT)', document.getElementById('summarize-total-sales').textContent],
+                ['VAT ขาย', document.getElementById('summarize-sales-vat').textContent],
+                ['รวมยอดขายทั้งหมด (รวม VAT)', document.getElementById('summarize-total-sales-with-vat').textContent],
+                [''],
+                ['สรุปผลเช่า (ลงทุน)']
+            ];
+
+            // Add investment rental summary
+            document.querySelectorAll('#summarize-investment-rental-body tr').forEach(row => {
+                summaryData.push([
+                    row.cells[0].textContent,
+                    row.cells[1].textContent,
+                    row.cells[2].textContent,
+                    row.cells[3].textContent
+                ]);
+            });
+
+            summaryData.push(['']);
+            summaryData.push(['สรุปผลเช่า (เก็บค่าติดตั้ง)']);
+
+            // Add installation rental summary
+            document.querySelectorAll('#summarize-installation-rental-body tr').forEach(row => {
+                summaryData.push([
+                    row.cells[0].textContent,
+                    row.cells[1].textContent,
+                    row.cells[2].textContent,
+                    row.cells[3].textContent
+                ]);
+            });
+
+            // Create worksheets with array data
+            const wsInvestment = XLSX.utils.aoa_to_sheet(investmentData);
+            const wsSales = XLSX.utils.aoa_to_sheet(salesData);
+            const wsInvestmentRental = XLSX.utils.aoa_to_sheet(investmentRentalData);
+            const wsInstallationRental = XLSX.utils.aoa_to_sheet(installationRentalData);
+            const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+
+            // Add column widths and cell styles
+            const worksheets = {
+                'งบประมาณการลงทุน': wsInvestment,
+                'ขายขาด ISI': wsSales,
+                'เช่า (ลงทุนเอง)': wsInvestmentRental,
+                'เช่า (เก็บค่าติดตั้ง)': wsInstallationRental,
+                'สรุปผล': wsSummary
+            };
+
+            // Apply formatting to all worksheets
+            Object.entries(worksheets).forEach(([name, ws]) => {
+                // Set column widths
+                const cols = [];
+                for (let i = 0; i < 10; i++) {
+                    cols.push({ wch: 20 }); // Set default width for all columns
+                }
+                ws['!cols'] = cols;
+
+                // Add worksheets to workbook
+                XLSX.utils.book_append_sheet(wb, ws, name);
+            });
+
+            // Generate Excel file with current date and customer name
+            const date = new Date().toISOString().split('T')[0];
+            const fileName = `quotation_${customerName}_${date}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+
+        // Add export button when the page loads
+        window.addEventListener('DOMContentLoaded', addExportButton);
     </script>
 </body>
 </html>
