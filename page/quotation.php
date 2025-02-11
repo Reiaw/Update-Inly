@@ -89,7 +89,6 @@ if ($result->num_rows > 0) {
                                 <th class="py-2 px-3 border border-gray-300">จำนวน(หน่วย)</th>
                                 <th class="py-2 px-3 border border-gray-300">หมายเหตุ</th>
                                 <th class="py-2 px-3 border border-gray-300">เป็นเงินบาท(ไม่รวม vat)</th>
-                                <th class="py-2 px-3 border border-gray-300"></th>
                             </tr>
                         </thead>
                         <?php foreach (array_slice($groupNames, 0, 3) as $index => $groupName): 
@@ -139,7 +138,6 @@ if ($result->num_rows > 0) {
                                 <th class="py-2 px-3 border border-gray-300">จำนวน(หน่วย)</th>
                                 <th class="py-2 px-3 border border-gray-300">หมายเหตุ</th>
                                 <th class="py-2 px-3 border border-gray-300">บาท(ไม่รวม vat)</th>
-                                <th class="py-2 px-3 border border-gray-300"></th>
                             </tr>
                         </thead>
                         <tbody id="group4-items"></tbody>
@@ -266,12 +264,9 @@ if ($result->num_rows > 0) {
              <!-- Add VAT rate control -->
             <div class="mb-4 p-4 bg-white rounded-lg shadow">
                 <label class="font-semibold">อัตรา VAT:</label>
-                <select id="vat-rate" class="ml-2 p-2 border rounded" onchange="updateGrandTotals()">
-                    <option value="0">0%</option>
-                    <option value="7" selected>7%</option>
-                </select>
+                <select id="vat-rate" class="ml-2 p-2 border rounded" onchange="updateGrandTotals()"></select>
             </div>
-
+                            
             <!-- Update grand total section with VAT calculations -->
             <div class="mt-8 bg-white p-6 rounded-xl border shadow-md">
                 <div class="grid grid-cols-2 gap-6">
@@ -386,7 +381,6 @@ if ($result->num_rows > 0) {
                             <th class="py-2 px-3 border">ค่าเช่า ICT&MA ขั้นต่ำ</th>
                             <th class="py-2 px-3 border">ค่าเช่าเพิ่มตามดุลพินิจ</th>
                             <th class="py-2 px-3 border">รายได้ขั้นค่าบริการ(บาท/เดือน)</th>
-                            <th class="py-2 px-3 border"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -457,11 +451,10 @@ if ($result->num_rows > 0) {
                             <th class="py-2 px-3 border">ค่าเช่า ICT&MA ขั้นต่ำ</th>
                             <th class="py-2 px-3 border">ค่าเช่าเพิ่มตามดุลพินิจ</th>
                             <th class="py-2 px-3 border">รายได้ขั้นค่าบริการ(บาท/เดือน)</th>
-                            <th class="py-2 px-3 border"></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Service rows will be dynamically added here -->
+               
                     </tbody>
                 </table>
                 <button onclick="addServiceRow('installation-rentals')" 
@@ -475,9 +468,18 @@ if ($result->num_rows > 0) {
     
         </div>
     </div>
-  
-    
     <script>
+        const vatSelect = document.getElementById("vat-rate");
+        // สร้างตัวเลือก VAT ตั้งแต่ 0% ถึง 100%
+        for (let i = 0; i <= 100; i++) {
+            const option = document.createElement("option");
+            option.value = i;
+            option.textContent = `${i}%`;
+            vatSelect.appendChild(option);
+        }
+        // ตั้งค่าเริ่มต้นเป็น 7%
+        vatSelect.value = "7"
+
         function addItem(groupId) {
             const itemRow = `
                 <tr>
@@ -1452,9 +1454,15 @@ if ($result->num_rows > 0) {
             salesData.push(['']);
             salesData.push(['สรุปยอดรวม']);
             salesData.push(['รายการ', 'มูลค่า']);
+            salesData.push([''])
+            salesData.push(['รวมต้นทุน (ก่อน VAT)', document.getElementById('grand-total-cost').textContent]);
+            salesData.push(['VAT ทุน', document.getElementById('cost-vat').textContent]);
+            salesData.push(['รวมต้นทุนทั้งหมด (รวม VAT)', document.getElementById('grand-total-cost-with-vat').textContent]);
+            salesData.push([''])
             salesData.push(['รวมยอดขาย (ก่อน VAT)', document.getElementById('grand-total-sales').textContent]);
-            salesData.push(['VAT', document.getElementById('sales-vat').textContent]);
+            salesData.push(['VAT ขาย', document.getElementById('sales-vat').textContent]);
             salesData.push(['รวมยอดขายทั้งหมด (รวม VAT)', document.getElementById('grand-total-sales-with-vat').textContent]);
+            salesData.push([''])
             salesData.push(['กำไรขั้นต้น (ก่อน VAT)', document.getElementById('total-profit').textContent]);
             salesData.push(['กำไรขั้นต้น (รวม VAT)', document.getElementById('total-profit-with-vat').textContent]);
             salesData.push(['% กำไร', document.getElementById('total-profit-percentage-with-vat').textContent]);
@@ -1532,7 +1540,8 @@ if ($result->num_rows > 0) {
                 ['VAT ขาย', document.getElementById('summarize-sales-vat').textContent],
                 ['รวมยอดขายทั้งหมด (รวม VAT)', document.getElementById('summarize-total-sales-with-vat').textContent],
                 [''],
-                ['สรุปผลเช่า (ลงทุน)']
+                ['สรุปผลเช่า (ลงทุน)'],
+                ['รายการโปรโมชั่น', 'รายได้ขั้นค่าบริการ (บาท/เดือน)', 'VAT', 'รายได้รวม VAT']
             ];
 
             // Add investment rental summary
@@ -1546,7 +1555,7 @@ if ($result->num_rows > 0) {
             });
 
             summaryData.push(['']);
-            summaryData.push(['สรุปผลเช่า (เก็บค่าติดตั้ง)']);
+            summaryData.push(['สรุปผลเช่า (เก็บค่าติดตั้ง)'],['รายการโปรโมชั่น', 'รายได้ขั้นค่าบริการ (บาท/เดือน)', 'VAT', 'รายได้รวม VAT']);
 
             // Add installation rental summary
             document.querySelectorAll('#summarize-installation-rental-body tr').forEach(row => {
