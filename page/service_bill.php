@@ -99,7 +99,11 @@ if ($id_bill > 0) {
             <h2 class="text-xl font-bold mb-4">ข้อมูลหมายเลขบริการบิลนี้</h2>
                 <div class="flex justify-between items-center mb-4">
                     <!-- ปุ่มเพิ่มบริการ -->
-                    <button onclick="openModal('service')" class="bg-blue-500 text-white px-4 py-2 rounded-md">เพิ่มบริการ</button>
+                     <div>
+                        <button onclick="openModal('service')" class="bg-blue-500 text-white px-4 py-2 rounded-md">เพิ่มบริการ</button>
+                        <button onclick="window.location.href='bill.php'"class="bg-blue-500 text-white px-4 py-2 rounded-md">กลับ</button>
+                     </div>
+
                     <!-- ตัวค้นหาและตัวกรอง -->
                     <div class="flex items-center">
                         <div class="relative">

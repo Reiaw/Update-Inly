@@ -14,7 +14,7 @@
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="number_bill" class="block text-sm font-medium text-gray-700">หมายเลขบิล</label>
-                        <input type="text" name="number_bill" id="number_bill" placeholder="ใส่หมายเลขบิล" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
+                       <input type="text" name="number_bill" id="number_bill" placeholder="ใส่หมายเลขบิล" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" required>
                     </div>  
                     <?php if (!isset($id_customer) || $id_customer == 0): ?>
                     <div>

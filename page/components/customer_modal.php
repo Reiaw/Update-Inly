@@ -44,7 +44,7 @@ $customerTypes = getCustomerTypes(); // ฟังก์ชันใหม่เ�
                     <!-- เบอร์โทรศัพท์ -->
                     <div>
                         <label for="phone_customer" class="block text-sm font-medium text-gray-700">เบอร์โทรศัพท์</label>
-                        <input type="text" name="phone_customer" id="phone_customer" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" placeholder="กรอกเบอร์โทรศัพท์" required>
+                        <input type="text" name="phone_customer" id="phone_customer" class="mt-1 p-2 border rounded-md w-full focus:ring-blue-500 focus:border-blue-500" placeholder="กรอกเบอร์โทรศัพท์">
                         <p class="text-sm text-gray-500 mt-1">กรอกเบอร์โทรศัพท์ที่ถูกต้อง</p>
                     </div>
 
@@ -131,42 +131,14 @@ document.getElementById('customerForm').addEventListener('submit', function(e) {
 
     const nameCustomer = document.getElementById('name_customer').value.trim();
     const idCustomerType = document.getElementById('id_customer_type').value.trim();
-    const phoneCustomer = document.getElementById('phone_customer').value.trim();
     const statusCustomer = document.getElementById('status_customer').value.trim();
     const idAmphures = document.getElementById('id_amphures').value.trim();
     const idTambons = document.getElementById('id_tambons').value.trim();
 
     // ตรวจสอบว่าข้อมูลทุกช่องถูกกรอกครบถ้วน (ยกเว้น info_address)
-    if (!nameCustomer || !idCustomerType || !phoneCustomer || !statusCustomer || !idAmphures || !idTambons) {
+    if (!nameCustomer || !idCustomerType || !statusCustomer || !idAmphures || !idTambons) {
         alert('กรุณากรอกข้อมูลทุกช่องให้ครบถ้วน');
         return;
     }
-
-    // ตรวจสอบว่าเบอร์โทรศัพท์มีรูปแบบที่ถูกต้อง (สามารถใส่ชื่อได้)
-    const phonePattern = /^[0-9]{10}.*$/;
-    if (!phonePattern.test(phoneCustomer)) {
-        alert('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (สามารถใส่ชื่อได้)');
-        return;
-    }
-
-    // ส่งข้อมูลฟอร์มไปยังเซิร์ฟเวอร์
-    const formData = new FormData(document.getElementById('customerForm'));
-    fetch('../function/save_customer.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('บันทึกข้อมูลสำเร็จ');
-            closeModal();
-            // รีเฟรชหน้าหรืออัปเดตตารางลูกค้า
-        } else {
-            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
 });
 </script>

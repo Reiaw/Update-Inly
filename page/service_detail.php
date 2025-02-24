@@ -89,6 +89,7 @@ if ($id_service > 0) {
             <button type="button" onclick="openModal()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
                 เพิ่ม Package
             </button>
+            <button onclick="window.location.href='bill.php'"class="bg-blue-500 text-white px-4 py-2 rounded-md">กลับ</button>
         </div>
 
         <!-- ตารางแสดง Package -->

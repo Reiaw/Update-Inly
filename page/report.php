@@ -477,7 +477,7 @@ $customer_types = $conn->query("SELECT * FROM customer_types")->fetch_all(MYSQLI
             }
         }
         ?>
-    </div>
+    </div>  
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
     <script>
     function exportToExcel() {

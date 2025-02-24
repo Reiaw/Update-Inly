@@ -149,7 +149,9 @@ $customers = $conn->query("
                         <td class="py-2 text-center"></td>
                         <td class="py-2 text-center"><?= $customer['name_customer'] ?></td>
                         <td class="py-2 text-center"><?= $customer['type_customer'] ?></td>
-                        <td class="py-2 text-center"><?= $customer['phone_customer'] ?></td>
+                        <td class="py-2 text-center">
+                            <?= empty($customer['phone_customer']) ? 'ไม่มีเบอร์' : $customer['phone_customer'] ?>
+                        </td>
                         <td class="py-2 text-center">
                             <?php if ($customer['status_customer'] === 'ใช้งาน'): ?>
                                 <i class="fas fa-circle text-green-500"></i><?= $customer['status_customer'] ?> <!-- ไอคอน Online -->

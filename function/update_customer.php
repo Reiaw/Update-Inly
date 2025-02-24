@@ -15,16 +15,19 @@ $info_address = $_POST['info_address'] ?? ''; // ไม่บังคับ
 $id_address = $_POST['id_address'] ?? '';
 
 // ตรวจสอบว่าข้อมูลทุกช่องถูกกรอกครบถ้วน (ยกเว้น info_address)
-if (empty($name_customer) || empty($id_customer_type) || empty($phone_customer) || empty($status_customer) || empty($id_amphures) || empty($id_tambons) || empty($id_address)) {
+if (empty($name_customer) || empty($id_customer_type)  || empty($status_customer) || empty($id_amphures) || empty($id_tambons) || empty($id_address)) {
     echo json_encode(['success' => false, 'message' => 'กรุณากรอกข้อมูลทุกช่องให้ครบถ้วน']);
     exit;
 }
 
 // ตรวจสอบว่าเบอร์โทรศัพท์มีรูปแบบที่ถูกต้อง (สามารถใส่ชื่อได้)
 $phonePattern = '/^[0-9]{10}.*$/';
-if (!preg_match($phonePattern, $phone_customer)) {
-    echo json_encode(['success' => false, 'message' => 'กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (สามารถใส่ชื่อได้)']);
-    exit;
+// ตรวจสอบว่ามีการกรอกเบอร์โทรศัพท์หรือไม่
+if (!empty($phone_customer)) {
+    if (!preg_match($phonePattern, $phone_customer)) {
+        echo json_encode(['success' => false, 'message' => 'กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (สามารถใส่ชื่อได้)']);
+        exit;
+    }
 }
 
 // ตรวจสอบว่าชื่อลูกค้าไม่ซ้ำกันในฐานข้อมูล (เฉพาะเมื่อมีการเปลี่ยนชื่อ)
