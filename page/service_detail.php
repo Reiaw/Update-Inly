@@ -9,6 +9,7 @@ require_once '../config/config.php';
 require_once '../function/functions.php';
 
 $id_service = isset($_POST['id_service']) ? intval($_POST['id_service']) : 0;
+$id_bill = isset($_POST['id_bill']) ? intval($_POST['id_bill']) : 0;
 
 if ($id_service > 0) {
     // ดึงข้อมูล service
@@ -90,8 +91,12 @@ if ($id_service > 0) {
             <button type="button" onclick="openModal()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
                 เพิ่ม Package
             </button>   
-            <button onclick="window.location.href='service_bill.php?id_service=<?php echo urlencode($id_service); ?>'" class="bg-blue-500 text-white px-4 py-2 rounded-md">กลับ</button>
-
+            <form action="service_bill.php" method="POST" style="display: inline;">
+                <input type="hidden" name="id_bill" value="<?php echo $id_bill; ?>">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md">
+                    กลับ
+                </button>
+            </form>
         </div>
 
         <!-- ตารางแสดง Package -->

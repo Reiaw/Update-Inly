@@ -6,7 +6,7 @@ require_once 'functions.php';
 
 // ตรวจสอบว่ามีไฟล์ถูกอัปโหลดหรือไม่ (สำหรับการนำเข้าข้อมูลจากไฟล์ Excel)
 if (!isset($_FILES['excelFile']) || $_FILES['excelFile']['error'] !== UPLOAD_ERR_OK) {
-    echo json_encode(['success' => false, 'message' => 'No file uploaded or file upload error.']);
+    echo json_encode(['success' => false, 'message' => 'ไม่มีไฟล์ถูกอัปโหลดหรือเกิดข้อผิดพลาดในการอัปโหลดไฟล์']);
     exit;
 }
 
@@ -30,7 +30,7 @@ try {
     ];
 
     if ($header !== $expectedHeader) {
-        echo json_encode(['success' => false, 'message' => 'Invalid Excel format.']);
+        echo json_encode(['success' => false, 'message' => 'รูปแบบไฟล์ Excel ไม่ถูกต้อง']);
         exit;
     }
 
@@ -46,19 +46,19 @@ try {
 
         // ตรวจสอบคอลัมน์ที่จำเป็นต้องมีค่า (ไม่เป็น null)
         if (empty($type) || empty($phone) || empty($status) || empty($tambon) || empty($amphure)) {
-            echo json_encode(['success' => false, 'message' => 'Required fields are missing in the Excel file.']);
+            echo json_encode(['success' => false, 'message' => 'ข้อมูลที่จำเป็นหายไปในไฟล์ Excel']);
             exit;
         }
 
         // ตรวจสอบรูปแบบเบอร์โทรศัพท์ (ต้องมีตัวเลข 9-10 หลัก)
         if (!preg_match('/^\D*\d{9,10}\D*$/', $phone)) {
-            echo json_encode(['success' => false, 'message' => 'Invalid phone number format in the Excel file. Phone must contain 9-10 digits.']);
+            echo json_encode(['success' => false, 'message' => 'รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง เบอร์โทรต้องมี 9-10 หลัก']);
             exit;
         }
 
         // ตรวจสอบค่าของ status ต้องเป็น "ใช้งาน" หรือ "ไม่ได้ใช้งาน" เท่านั้น
         if ($status !== 'ใช้งาน' && $status !== 'ไม่ได้ใช้งาน') {
-            echo json_encode(['success' => false, 'message' => 'Invalid status value. Status must be either "ใช้งาน" or "ไม่ได้ใช้งาน".']);
+            echo json_encode(['success' => false, 'message' => 'ค่าสถานะไม่ถูกต้อง ต้องเป็น "ใช้งาน" หรือ "ไม่ได้ใช้งาน" เท่านั้น']);
             exit;
         }
 
@@ -80,6 +80,20 @@ try {
             exit; // หยุดการทำงานและส่งข้อความกลับไปยังผู้ใช้
         }
 
+        // ค้นหา id_customer_type จากประเภทลูกค้า
+        $customerTypeQuery = $conn->prepare("SELECT id_customer_type FROM customer_types WHERE type_customer = ?");
+        $customerTypeQuery->bind_param("s", $type);
+        $customerTypeQuery->execute();
+        $customerTypeResult = $customerTypeQuery->get_result();
+        $customerTypeData = $customerTypeResult->fetch_assoc();
+        $id_customer_type = $customerTypeData['id_customer_type'] ?? null;
+
+        // ถ้าไม่พบประเภทลูกค้าในฐานข้อมูล
+        if (!$id_customer_type) {
+            echo json_encode(['success' => false, 'message' => 'ประเภทลูกค้าไม่ถูกต้องในไฟล์ Excel']);
+            exit;
+        }
+
         // ดึง id_amphures และ id_tambons จากชื่ออำเภอและตำบล
         $amphureQuery = $conn->prepare("SELECT id_amphures FROM amphures WHERE name_amphures = ?");
         $amphureQuery->bind_param("s", $amphure);
@@ -89,7 +103,7 @@ try {
         $id_amphures = $amphureData['id_amphures'] ?? null;
 
         if (!$id_amphures) {
-            echo json_encode(['success' => false, 'message' => 'Invalid Amphure in the Excel file.']);
+            echo json_encode(['success' => false, 'message' => 'อำเภอไม่ถูกต้องในไฟล์ Excel']);
             exit;
         }
 
@@ -101,7 +115,7 @@ try {
         $id_tambons = $tambonData['id_tambons'] ?? null;
 
         if (!$id_tambons) {
-            echo json_encode(['success' => false, 'message' => 'Invalid Tambon in the Excel file.']);
+            echo json_encode(['success' => false, 'message' => 'ตำบลไม่ถูกต้องในไฟล์ Excel']);
             exit;
         }
 
@@ -111,13 +125,13 @@ try {
         $addressQuery->execute();
         $id_address = $conn->insert_id;
 
-        // เพิ่มข้อมูลลงในตาราง customers
-        $customerQuery = $conn->prepare("INSERT INTO customers (name_customer, type_customer, phone_customer, status_customer, id_address, create_at, update_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
-        $customerQuery->bind_param("ssssi", $name, $type, $phone, $status, $id_address);
+        // เพิ่มข้อมูลลงในตาราง customers รองรับ id_customer_type
+        $customerQuery = $conn->prepare("INSERT INTO customers (name_customer, phone_customer, status_customer, id_address, id_customer_type, create_at, update_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
+        $customerQuery->bind_param("sssii", $name, $phone, $status, $id_address, $id_customer_type);
         $customerQuery->execute();
     }
 
-    echo json_encode(['success' => true, 'message' => 'Data imported successfully.']);
+    echo json_encode(['success' => true, 'message' => 'นำเข้าข้อมูลสำเร็จ']);
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }

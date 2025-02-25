@@ -9,9 +9,9 @@ require_once '../config/config.php';
 require_once '../function/functions.php';
 
 $id_bill = isset($_POST['id_bill']) ? intval($_POST['id_bill']) : 0;
-$id_service = isset($_POST['id_service']) ? intval($_POST['id_service']) : 0;
 
-if ($id_bill > 0 | $id_service > 0 ) {
+
+if ($id_bill > 0  ) {
     // ดึงข้อมูลบิล
     $sql = "SELECT * FROM bill_customer WHERE id_bill = ?";
     $stmt = $conn->prepare($sql);
@@ -165,7 +165,10 @@ if ($id_bill > 0 | $id_service > 0 ) {
                                     <button onclick="deleteItem('service', <?php echo $service['id_service']; ?>)" class="bg-red-500 text-white px-2 py-1 rounded"><i class="fas fa-trash"></i></button>
                                     <form action="service_detail.php" method="POST" style="display: inline;">
                                         <input type="hidden" name="id_service" value="<?php echo $service['id_service']; ?>">
-                                        <button type="submit" class="bg-blue-500 text-white px-2 py-1 rounded-md"> <i class="fas fa-info-circle"></i> Info</button>
+                                        <input type="hidden" name="id_bill" value="<?php echo $bill['id_bill']; ?>"> <!-- เพิ่มส่วนนี้ -->
+                                        <button type="submit" class="bg-blue-500 text-white px-2 py-1 rounded-md"> 
+                                            <i class="fas fa-info-circle"></i> Info
+                                        </button>
                                     </form>
                                 </td>
                             </tr>
