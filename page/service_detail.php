@@ -37,6 +37,7 @@ if ($id_service > 0) {
     header('Location: service_bill.php');
     exit;
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -88,8 +89,9 @@ if ($id_service > 0) {
         <div class="mt-6">
             <button type="button" onclick="openModal()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
                 เพิ่ม Package
-            </button>
-            <button onclick="window.location.href='bill.php'"class="bg-blue-500 text-white px-4 py-2 rounded-md">กลับ</button>
+            </button>   
+            <button onclick="window.location.href='service_bill.php?id_service=<?php echo urlencode($id_service); ?>'" class="bg-blue-500 text-white px-4 py-2 rounded-md">กลับ</button>
+
         </div>
 
         <!-- ตารางแสดง Package -->

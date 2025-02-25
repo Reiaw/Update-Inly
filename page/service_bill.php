@@ -9,8 +9,9 @@ require_once '../config/config.php';
 require_once '../function/functions.php';
 
 $id_bill = isset($_POST['id_bill']) ? intval($_POST['id_bill']) : 0;
+$id_service = isset($_POST['id_service']) ? intval($_POST['id_service']) : 0;
 
-if ($id_bill > 0) {
+if ($id_bill > 0 | $id_service > 0 ) {
     // ดึงข้อมูลบิล
     $sql = "SELECT * FROM bill_customer WHERE id_bill = ?";
     $stmt = $conn->prepare($sql);
@@ -63,6 +64,7 @@ if ($id_bill > 0) {
     header('Location: bill.php');
     exit;
 }
+
 ?>
 
 <!DOCTYPE html>

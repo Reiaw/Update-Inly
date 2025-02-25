@@ -185,9 +185,14 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                     
                     <!-- ตัวค้นหาและตัวกรอง -->
                     <div class="flex items-center">
+                        <!-- เพิ่มช่องค้นหาชื่อลูกค้า -->
+                        <div class="relative">
+                            <input type="text" id="searchCustomerName" placeholder="ค้นหาชื่อลูกค้า..." class="border p-2 rounded-md pl-10 mr-2">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
                         <div class="relative">
                             <input type="text" id="searchNumberBill" placeholder="ค้นหาเลขบิล" class="border p-2 rounded-md pl-10 mr-2">
-                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i> <!-- ไอคอนค้นหา -->
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                         </div>
                         <select id="filterTypeBill" class="p-2 border rounded-md mr-2">
                             <option value="">ทั้งหมด</option>
@@ -200,7 +205,9 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                             <option value="ใช้งาน">ใช้งาน</option>
                             <option value="ยกเลิกใช้งาน">ยกเลิกใช้งาน</option>
                         </select>
-                        <button onclick="resetFilters()" class="bg-gray-500 text-white px-4 py-2 rounded-md"> <i class="fas fa-sync-alt"></i></button>
+                        <button onclick="resetFilters()" class="bg-gray-500 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
                     </div>
                 </div>
             <table id="billTable" class="min-w-full bg-white border border-gray-300">
@@ -289,15 +296,17 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
     <script>
     // เรียกใช้ DataTables
     function resetFilters() {
-        const table = $('#billTable').DataTable();
+        $('#searchCustomerName').val('');
         $('#searchNumberBill').val('');
         $('#filterTypeBill').val('');
         $('#filterStatusBill').val('');
         table.search('').columns().search('').draw();
     }
 
+    let table; // ประกาศตัวแปร global
+
     $(document).ready(function() {
-        const table = $('#billTable').DataTable({
+        table = $('#billTable').DataTable({
             "pageLength": 10,
             "lengthMenu": [[10, 20, 50, 100, -1], [10, 20, 50, 100, "All"]],
             "language": {
@@ -312,7 +321,9 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                 }
             },
         });
-
+            $('#searchCustomerName').on('keyup', function() {
+            table.column(1).search(this.value).draw();
+        });
         // Event listeners for filters
         $('#searchNumberBill').on('keyup', function() {
             table.column(2).search(this.value).draw();
