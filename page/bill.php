@@ -43,21 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute();
         $id_bill = $stmt->insert_id;
 
-        // สร้างบริการตามจำนวนที่ระบุ
-        if (isset($_POST['code_service'])) {
-            foreach ($_POST['code_service'] as $index => $code_service) {
-                $type_service = $_POST['type_service'][$index];
-                $type_gadget = $_POST['type_gadget'][$index];
-                $status_service = $_POST['status_service'][$index];
+        echo "<script>
+            alert('บิลสร้างเรียบร้อยแล้ว');
+            window.location.href = 'bill.php';
+        </script>";
 
-                $sql = "INSERT INTO service_customer (code_service, type_service, type_gadget, status_service, id_bill, create_at, update_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ssssi", $code_service, $type_service, $type_gadget, $status_service, $id_bill);
-                $stmt->execute();
-            }
-        }
-
-        echo "<script>alert('บิลและบริการถูกสร้างเรียบร้อยแล้ว');</script>";
     } elseif (isset($_POST['update_bill'])) {
         // รับข้อมูลจากฟอร์ม
         $id_bill = $_POST['id_bill'];
@@ -78,8 +68,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("issssssi", $id_customer, $number_bill, $type_bill, $status_bill, $create_at, $date_count, $end_date, $id_bill);
         $stmt->execute();
-
-        echo "<script>alert('บิลถูกอัปเดตเรียบร้อยแล้ว');</script>";
+        echo "<script>
+            alert('อัปเดตข้อมูลสำเร็จ');
+            window.location.href = 'bill.php';  // แก้เป็นเปลี่ยนเส้นทาง
+        </script>";
     }   
 }
 
@@ -250,6 +242,10 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                                     <button onclick="openEditBillModal(<?php echo $bill['id_bill']; ?>)" class="bg-yellow-500 text-white px-2 py-1 rounded-md">
                                         <i class="fas fa-edit"></i>
                                     </button>
+                                    <button onclick="deleteBill(<?= $bill['id_bill'] ?>)" 
+                                            class="bg-red-500 text-white px-2 py-1 rounded-md">
+                                        <i class="fas fa-trash"></i>
+                                    </button>    
                                     <form action="service_bill.php" method="POST" style="display: inline;">
                                         <input type="hidden" name="id_bill" value="<?php echo $bill['id_bill']; ?>">
                                         <button type="submit" class="bg-blue-500 text-white px-2 py-1 rounded-md">
@@ -268,8 +264,7 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
                                             echo '<button onclick="openContractModal(' . $bill['id_bill'] . ')" class="bg-green-500 text-white px-2 py-1 rounded-md"><i class="fas fa-file-contract"></i> สัญญา</button>';
                                         }
                                         ?>
-                                    </div>
-                                    
+                                    </div>      
                                 </td>
                             </tr>
                             <?php $counter++; ?>
@@ -333,29 +328,29 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
     });;
 
     function openEditBillModal(id_bill) {
-        // ดึงข้อมูลบิลและบริการจากฐานข้อมูล
-        fetch(`../function/get_bill.php?id_bill=${id_bill}`)
-            .then(response => response.json())
-            .then(data => {
-                // เตรียมข้อมูลสำหรับฟอร์มแก้ไข
-                document.getElementById('id_bill').value = data.bill.id_bill;
-                document.getElementById('id_customer').value = data.bill.id_customer;
-                document.getElementById('number_bill').value = data.bill.number_bill;
-                document.getElementById('type_bill').value = data.bill.type_bill;
-                document.getElementById('status_bill').value = data.bill.status_bill;
-                document.getElementById('create_at').value = data.bill.create_at;
-                document.getElementById('date_count').value = data.bill.date_count;
+    // ดึงข้อมูลบิลจากเซิร์ฟเวอร์
+    fetch(`../function/get_bill.php?id_bill=${id_bill}`)
+        .then(response => response.json())
+        .then(data => {
+            // เติมข้อมูลลงในฟอร์ม
+            document.getElementById('id_bill').value = data.id_bill;
+            document.getElementById('id_customer').value = data.id_customer;
+            document.getElementById('number_bill').value = data.number_bill;
+            document.getElementById('type_bill').value = data.type_bill;
+            document.getElementById('status_bill').value = data.status_bill;
+            document.getElementById('create_at').value = data.create_at.split(' ')[0]; // เอาเฉพาะวันที่
+            document.getElementById('date_count').value = data.date_count;
 
-                // ซ่อนส่วนของบริการ
-                document.getElementById('services-container').innerHTML = '';
-                document.getElementById('addServiceButton').classList.add('hidden');
+            // เปลี่ยนหัวข้อ Modal และปุ่ม
+            document.querySelector('#createBillModal h3').textContent = "แก้ไขบิล";
+            document.getElementById('createBillButton').classList.add('hidden');
+            document.getElementById('updateBillButton').classList.remove('hidden');
 
-                // เปิด Modal
-                document.getElementById('createBillModal').classList.remove('hidden');
-                document.getElementById('createBillButton').classList.add('hidden');
-                document.getElementById('updateBillButton').classList.remove('hidden');
-            });
-    }
+            // แสดง Modal
+            document.getElementById('createBillModal').classList.remove('hidden');
+        })
+        .catch(error => console.error('Error:', error));
+}
   
     function removeServiceField(button) {
         const serviceDiv = button.parentElement;
@@ -387,6 +382,21 @@ $bills = $result->fetch_all(MYSQLI_ASSOC);
             durationField.classList.add('hidden');
         }
     });
+    function deleteBill(id_bill) {
+        if (confirm('คุณแน่ใจที่จะลบบิลนี้ใช่หรือไม่?')) {
+            fetch(`../function/delete_bill.php?id_bill=${id_bill}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    }
     </script>
 </body>
 </html>
