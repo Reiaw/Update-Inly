@@ -125,70 +125,12 @@ if (isset($_POST['task_id'])) {
 
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-12 main-content">
-        <!-- Timeline Section -->
         <div class="bg-white shadow-lg rounded-lg p-8 timeline-section">
-            <h2 class="text-3xl font-bold text-gray-800 mb-8">เส้นเวลาของบริษัท</h2>
-            <div class="space-y-12">
-                <!-- 2016 -->
-                <div class="flex flex-col md:flex-row gap-8 items-start">
-                    <div class="w-full md:w-1/3">
-                        <h2 class="text-2xl font-bold mb-2 text-gray-800">2016</h2>
-                        <h3 class="text-xl text-gray-700 mb-4">ความร่วมมือระหว่างโรงงานและสำนักงาน</h3>
-                        <p class="text-gray-600">
-                            บริษัทยึดมั่นในปรัชญาที่เน้นลูกค้าเป็นศูนย์กลาง ดำเนินการระบบการจัดการคุณภาพ และรักษาการสื่อสารที่ใกล้ชิดกับลูกค้าเพื่อให้บริการและผลิตภัณฑ์ที่เชื่อถือได้
-                        </p>
-                    </div>
-                    <div class="w-full md:w-2/3">
-                        <img src="/api/placeholder/800/400" alt="Office 2016" class="w-full h-64 object-cover rounded-lg shadow-lg">
-                    </div>
-                </div>
-
-                <!-- 2018 -->
-                <div class="flex flex-col md:flex-row gap-8 items-start">
-                    <div class="w-full md:w-1/3">
-                        <h2 class="text-2xl font-bold mb-2 text-gray-800">2018</h2>
-                        <h3 class="text-xl text-gray-700 mb-4">การมาตรฐานของบริษัท</h3>
-                        <p class="text-gray-600">
-                            เมื่อบริษัทเติบโตขึ้น เรายังคงยึดมั่นในหลักการของความซื่อสัตย์ นวัตกรรม ความเป็นมืออาชีพ และประสิทธิภาพ พยายามให้บริการที่ดีขึ้นแก่ลูกค้าของเรา
-                        </p>
-                    </div>
-                    <div class="w-full md:w-2/3 grid grid-cols-2 gap-4">
-                        <img src="/api/placeholder/400/300" alt="Meeting 2018" class="w-full h-48 object-cover rounded-lg shadow-lg">
-                        <img src="/api/placeholder/400/300" alt="Team 2018" class="w-full h-48 object-cover rounded-lg shadow-lg">
-                    </div>
-                </div>
-
-                <!-- 2019 -->
-                <div class="flex flex-col md:flex-row gap-8 items-start">
-                    <div class="w-full md:w-1/3">
-                        <h2 class="text-2xl font-bold mb-2 text-gray-800">2019</h2>
-                        <h3 class="text-xl text-gray-700 mb-4">การควบคุมคุณภาพอย่างเข้มงวด</h3>
-                        <p class="text-gray-600">
-                            บริษัทยึดมั่นในแนวทาง "คุณภาพมาก่อน" ควบคุมคุณภาพผลิตภัณฑ์อย่างเข้มงวด และปรับปรุงกระบวนการผลิตอย่างต่อเนื่องเพื่อให้มั่นใจในผลิตภัณฑ์ที่มั่นคงและเชื่อถือได้
-                        </p>
-                    </div>
-                    <div class="w-full md:w-2/3">
-                        <img src="/api/placeholder/800/400" alt="Quality Control 2019" class="w-full h-64 object-cover rounded-lg shadow-lg">
-                    </div>
-                </div>
-
-                <!-- 2020 -->
-                <div class="flex flex-col md:flex-row gap-8 items-start">
-                    <div class="w-full md:w-1/3">
-                        <h2 class="text-2xl font-bold mb-2 text-gray-800">2020</h2>
-                        <h3 class="text-xl text-gray-700 mb-4">ขยายตลาดต่างประเทศ</h3>
-                        <p class="text-gray-600">
-                            ด้วยการเปลี่ยนแปลงของเศรษฐกิจโลก บริษัทได้ขยายตลาดต่างประเทศอย่างแข็งขัน และสร้างความร่วมมือที่แข็งแกร่งกับหลายประเทศและภูมิภาค
-                        </p>
-                    </div>
-                    <div class="w-full md:w-2/3 grid grid-cols-2 gap-4">
-                        <img src="/api/placeholder/400/300" alt="International Meeting 2020" class="w-full h-48 object-cover rounded-lg shadow-lg">
-                        <img src="/api/placeholder/400/300" alt="Global Partners 2020" class="w-full h-48 object-cover rounded-lg shadow-lg">
-                    </div>
-                </div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-8">ข้อมูลโดยสรุป</h2>
+            <div class="grid grid-cols-1">
+                <?php include './components/charts.php'; ?>
             </div>
         </div>
-
         <!-- Calendar Section -->
         <div class="bg-white shadow-lg rounded-lg p-8 calendar-section">
             <h2 class="text-3xl font-bold text-gray-800 mb-8">ปฏิทิน</h2>
