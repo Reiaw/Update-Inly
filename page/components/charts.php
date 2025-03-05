@@ -28,13 +28,13 @@ $revenueSql = "SELECT c.id_customer, c.name_customer, SUM(o.all_price) as total_
                JOIN package_list pl ON sc.id_service = pl.id_service
                JOIN product_list pr ON pl.id_package = pr.id_package
                JOIN overide o ON pr.id_product = o.id_product
-               GROUP BY c.id_customer, c.name_customer";
+               GROUP BY c.id_customer, c.name_customer
+               ORDER BY total_revenue DESC";
 $revenueResult = $conn->query($revenueSql);
 $revenues = [];
 while($row = $revenueResult->fetch_assoc()) {
     $revenues[] = $row;
 }
-
 // เพิ่มส่วนดึงข้อมูลประเภทบริการ
 $serviceTypeSql = "SELECT type_service, COUNT(*) as count FROM service_customer GROUP BY type_service";
 $serviceTypeResult = $conn->query($serviceTypeSql);
@@ -195,20 +195,33 @@ const chartConfigs = {
         }
     },
     billStatusChart: {
-        type: 'pie',
+        type: 'bar',
         data: {
             labels: <?= json_encode(array_column($billStatuses, 'status_bill')) ?>,
             datasets: [{
+                label: 'จำนวนบิล',
                 data: <?= json_encode(array_column($billStatuses, 'count')) ?>,
-                backgroundColor: balancedColorPalette.slice(2, 2 + <?= count($billStatuses) ?>)
+                backgroundColor: [
+                balancedColorPalette[0],  
+                balancedColorPalette[4],  
+            ],
+                borderColor: '#1D4ED8',
+                borderWidth: 1
             }]
         },
         options: {
-            plugins: {
-                legend: {
-                    position: 'bottom'
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {display: true, text: 'จำนวนบิล'},
+                    ticks: {precision: 0}
+                },
+                x: {
+                    title: {display: true, text: 'สถานะบิล'}
                 }
-            }
+            },
+            plugins: {legend: {display: false}}
         }
     },
     customerTypeChart: {
@@ -233,10 +246,10 @@ const chartConfigs = {
         data: {
             labels: <?= json_encode(array_column($revenues, 'name_customer')) ?>,
             datasets: [{
-                label: 'รายได้',
+                label: 'รายได้ (บาท)',
                 data: <?= json_encode(array_column($revenues, 'total_revenue')) ?>,
-                backgroundColor: '#3B82F6',
-                borderColor: '#1D4ED8',
+                backgroundColor: '#6366F1',
+                borderColor: '#4F46E5',
                 borderWidth: 1
             }]
         },
@@ -245,21 +258,28 @@ const chartConfigs = {
             scales: {
                 y: {
                     beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'รายได้ (บาท)'
+                    title: {display: true, text: 'รายได้ (บาท)'},
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('th-TH') + ' บาท';
+                        }
                     }
                 },
                 x: {
-                    title: {
-                        display: true,
-                        text: 'ลูกค้า'
+                    ticks: {
+                        autoSkip: false,
+                        maxRotation: 45,
+                        minRotation: 45
                     }
                 }
             },
             plugins: {
-                legend: {
-                    display: false
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'รายได้: ' + context.parsed.y.toLocaleString('th-TH') + ' บาท';
+                        }
+                    }
                 }
             }
         }
@@ -282,22 +302,36 @@ const chartConfigs = {
         }
     },
     deviceTypeChart: {
-        type: 'pie',
+        type: 'bar',
         data: {
             labels: <?= json_encode(array_column($deviceTypes, 'type_gadget')) ?>,
             datasets: [{
+                label: 'จำนวนอุปกรณ์',
                 data: <?= json_encode(array_column($deviceTypes, 'count')) ?>,
-                backgroundColor: balancedColorPalette.slice(1, 1 + <?= count($deviceTypes) ?>)
+                backgroundColor: [
+                balancedColorPalette[2],  // Purple (#8B5CF6)
+                balancedColorPalette[6],  // Orange (#F97316)
+                balancedColorPalette[1]   // Green (#10B981)
+            ],
+                borderColor: '#047857',
+                borderWidth: 1
             }]
         },
         options: {
-            plugins: {
-                legend: {
-                    position: 'bottom'
+            indexAxis: 'y', // แนวนอน
+            responsive: true,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: {display: true, text: 'จำนวน'}
+                },
+                y: {
+                    title: {display: true, text: 'ประเภทอุปกรณ์'}
                 }
-            }
+            },
+            plugins: {legend: {display: false}}
         }
-    }
+    },
 };
 const chartInstances = {};
 // Initialize all charts
