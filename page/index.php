@@ -4,21 +4,34 @@ if (!isset($_SESSION['email'])) {
     header('Location: login.php');
     exit;
 }
-
 require_once '../config/config.php';
 require_once '../function/functions.php';
-// Get bills data
-$sql = "
+// ดึงบิลทั้งหมด
+$sql_all = "
     SELECT bc.number_bill, bc.end_date, bc.type_bill, bc.status_bill, c.name_customer, c.phone_customer 
     FROM bill_customer bc
     JOIN customers c ON bc.id_customer = c.id_customer
 ";
-$result = $conn->query($sql);
+$result_all = $conn->query($sql_all);
+$bills_all = [];
+if ($result_all->num_rows > 0) {
+    while ($row = $result_all->fetch_assoc()) {
+        $bills_all[] = $row;
+    }
+}
+// ดึงบิลที่หมดอายุใน 60 วัน
+$sql_near_expiry = "
+    SELECT bc.number_bill, bc.end_date, bc.type_bill, bc.status_bill, c.name_customer, c.phone_customer 
+    FROM bill_customer bc
+    JOIN customers c ON bc.id_customer = c.id_customer
+    WHERE bc.end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)
+";
+$result_near_expiry = $conn->query($sql_near_expiry);
 
-$bills = [];
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $bills[] = $row;
+$bills_near_expiry = [];
+if ($result_near_expiry->num_rows > 0) {
+    while ($row = $result_near_expiry->fetch_assoc()) {
+        $bills_near_expiry[] = $row;
     }
 }
 // Get tasks for the logged-in user
@@ -41,7 +54,6 @@ if ($task_result->num_rows > 0) {
         $tasks[] = $row;
     }
 }
-
 if (isset($_POST['task_id'])) {
     $task_id = intval($_POST['task_id']);
 
@@ -92,7 +104,7 @@ if (isset($_POST['task_id'])) {
 
         #calendar {
             max-width: 100%;
-            height: 600px;
+            height: 100%;
             margin: 0 auto;
         }
         .main-content {
@@ -107,45 +119,146 @@ if (isset($_POST['task_id'])) {
         .calendar-section {
             flex: 1;
         }
+        charts-container .chart-card {
+            cursor: pointer;
+            transition: transform 0.5s ease;
+        }
+        .charts-container .chart-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body class="bg-gray-100">
     <!-- Navbar -->
     <?php include './components/navbar.php'; ?>
-
-    <!-- Hero Section -->
-    <div class="bg-gray-900 text-yellow-500 py-24">
-        <div class="container mx-auto px-4">
-            <h1 class="text-4xl font-bold mb-4">ยินดีต้อนรับ, <?php echo htmlspecialchars($_SESSION['name']); ?></h1>
-            <p class="text-lg max-w-2xl">
-                นี่คือแดชบอร์ดของคุณ คุณสามารถใช้เมนูด้านบนเพื่อนำทาง
-            </p>
-        </div>
-    </div>
-
+    
     <!-- Main Content -->
-    <div class="container mx-auto px-4 py-12 main-content">
-        <div class="bg-white shadow-lg rounded-lg p-8 timeline-section">
-            <h2 class="text-3xl font-bold text-gray-800 mb-8">ข้อมูลโดยสรุป</h2>
-            <div class="grid grid-cols-1">
-                <?php include './components/charts.php'; ?>
+    <div class="container mx-auto px-4 py-8 main-content">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column -->
+            <div class="col-span-1 lg:col-span-2">
+                <!-- Hero Section -->
+                <div class="bg-white text-black py-12 rounded-xl shadow-lg mb-6">
+                    <div class="container mx-auto px-4">
+                        <h1 class="text-3xl md:text-4xl font-bold mb-2">ยินดีต้อนรับ, <?php echo htmlspecialchars($_SESSION['name']); ?></h1>
+                        <p class="text-lg text-black-100">
+                            จัดการและติดตามงานทั้งหมดของคุณได้ในที่เดียว
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-yellow-400">
+                    <?php include './components/charts.php'; ?>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-span-1 space-y-6">
+                <!-- Calendar Section -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">ปฏิทิน</h2>
+                        <button onclick="openTaskModal()" class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg transition-all">
+                            <i class="fas fa-plus mr-2"></i>เพิ่มงานใหม่
+                        </button>
+                    </div>
+                    <div id="calendar" class="w-full"></div>
+                </div>
+
+                <!-- Tasks Section -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="border-b-2 border-yellow-400 pb-2 mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">งานล่าสุด</h3>
+                    </div>
+                    <div class="space-y-4">
+                        <?php if (!empty($tasks)): ?>
+                            <?php $taskCount = count($tasks); $page = $_GET['task_page'] ?? 1; $limit = 3; ?>
+                            <?php $tasksToShow = array_slice($tasks, ($page - 1) * $limit, $limit); ?>
+                            
+                            <?php foreach ($tasksToShow as $veiwtask): ?>
+                                <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-yellow-400 hover:bg-gray-100 transition-colors">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-800"><?php echo htmlspecialchars($veiwtask['name_task']); ?></h4>
+                                            <p class="text-sm text-gray-600 mt-1"><?php echo htmlspecialchars($veiwtask['detail_task']); ?></p>
+                                        </div>
+                                        <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full"><?php echo date('d/m/Y', strtotime($veiwtask['end_date'])); ?></span>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+
+                            <!-- Pagination -->
+                            <?php if ($taskCount > $limit): ?>
+                                <div class="flex justify-center gap-2 mt-4">
+                                    <a href="?task_page=<?php echo max(1, $page - 1); ?>" class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg transition-all text-sm">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                    <a href="?task_page=<?php echo min(ceil($taskCount / $limit), $page + 1); ?>" class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg transition-all text-sm">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <div class="text-center py-4 text-gray-500">
+                                <i class="fas fa-tasks fa-2x mb-2"></i>
+                                <p>ไม่มีงานในขณะนี้</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Bills Section -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="border-b-2 border-red-400 pb-2 mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">บิลใกล้หมดสัญญา</h3>
+                    </div>
+                    <div class="space-y-4">
+                        <?php if (!empty($bills_near_expiry)): ?>
+                            <?php $billCount = count($bills_near_expiry); $billPage = $_GET['bill_page'] ?? 1; ?>
+                            <?php $billsToShow = array_slice($bills_near_expiry, ($billPage - 1) * $limit, $limit); ?>
+                            
+                            <?php foreach ($billsToShow as $bill): ?>
+                                <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500 hover:bg-red-100 transition-colors">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-semibold text-red-800">
+                                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                                <?php echo htmlspecialchars($bill['number_bill']); ?>
+                                            </h4>
+                                            <p class="text-sm text-gray-600 mt-1">
+                                                <?php echo htmlspecialchars($bill['name_customer']); ?> · 
+                                                <?php echo htmlspecialchars($bill['type_bill']); ?>
+                                            </p>
+                                        </div>
+                                        <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full"><?php echo date('d/m/Y', strtotime($bill['end_date'])); ?></span>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+
+                            <!-- Pagination -->
+                            <?php if ($billCount > $limit): ?>
+                                <div class="flex justify-center gap-2 mt-4">
+                                    <a href="?bill_page=<?php echo max(1, $billPage - 1); ?>" class="px-4 py-2 bg-red-400 hover:bg-red-500 text-white rounded-lg transition-all text-sm">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                    <a href="?bill_page=<?php echo min(ceil($billCount / $limit), $billPage + 1); ?>" class="px-4 py-2 bg-red-400 hover:bg-red-500 text-white rounded-lg transition-all text-sm">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <div class="text-center py-4 text-gray-500">
+                                <i class="fas fa-file-invoice fa-2x mb-2"></i>
+                                <p>ไม่มีบิลใกล้หมดสัญญา</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
         </div>
-        <!-- Calendar Section -->
-        <div class="bg-white shadow-lg rounded-lg p-8 calendar-section">
-            <h2 class="text-3xl font-bold text-gray-800 mb-8">ปฏิทิน</h2>
-            <button onclick="openTaskModal()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">เพิ่มงานใหม่</button>
-            <div id="calendar"></div>
-        </div>
     </div>
-
-    <!-- Footer -->
-    <footer class="footer bg-gray-800 text-white">
-        <div class="container mx-auto px-4">
-            <span>© 2023 บริษัทของคุณ สงวนลิขสิทธิ์.</span>
-        </div>
-    </footer>
-
     <!-- Include Modal -->
     <?php include './components/info_calender.php'; ?>
     <?php include './components/info_task.php'; ?>
@@ -166,7 +279,7 @@ if (isset($_POST['task_id'])) {
                 initialView: 'dayGridMonth',
                 events: [
                     // Bill events
-                    <?php foreach ($bills as $bill): ?>
+                    <?php foreach ($bills_all as $bill): ?>
                     {
                         title: 'หมดสัญญาบิล',
                         start: '<?php echo $bill['end_date']; ?>',
