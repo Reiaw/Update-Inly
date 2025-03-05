@@ -21,14 +21,14 @@ $customerTypes = [];
 while($row = $customerTypeResult->fetch_assoc()) {
     $customerTypes[] = $row;
 }
-$revenueSql = "SELECT c.id_customer, c.name_customer, SUM(o.all_price) as total_revenue
+$revenueSql = "SELECT c.id_customer, c.name_customer, SUM(o.all_price) as total_revenue, bc.status_bill
                FROM customers c
                JOIN bill_customer bc ON c.id_customer = bc.id_customer
                JOIN service_customer sc ON bc.id_bill = sc.id_bill
                JOIN package_list pl ON sc.id_service = pl.id_service
                JOIN product_list pr ON pl.id_package = pr.id_package
                JOIN overide o ON pr.id_product = o.id_product
-               GROUP BY c.id_customer, c.name_customer
+               GROUP BY c.id_customer, c.name_customer, bc.status_bill
                ORDER BY total_revenue DESC";
 $revenueResult = $conn->query($revenueSql);
 $revenues = [];
@@ -85,14 +85,20 @@ while($row = $topCustomerTypesResult->fetch_assoc()) {
 }
 ?>
 <style>
-#chartModal .chart-container {
+#chartModal .modal-content {
+    width: 90%;
+    height: 90%;
+    margin: 2% auto;
     position: relative;
-    width: 100%;
-    height: 100%;
 }
 #fullScreenChart {
-    width: 100%;
-    height: 100%;
+    width: 100% !important;
+    height: 85% !important; /* ไว้พื้นที่สำหรับหัวข้อและปุ่มปิด */
+    min-height: 0; /* ป้องกันการล้นใน Flex container */
+}
+#modalChartTitle {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
 }
 </style>
 <div class="summary-stats grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -164,18 +170,35 @@ while($row = $topCustomerTypesResult->fetch_assoc()) {
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 <script>
+Chart.register(ChartDataLabels);
 const balancedColorPalette = [
-    '#3B82F6',   // Blue
-    '#10B981',   // Green
-    '#8B5CF6',   // Purple
-    '#EC4899',   // Pink
-    '#F43F5E',   // Rose
-    '#6366F1',   // Indigo
-    '#F97316',   // Orange
-    '#22D3EE'    // Cyan
-];
+    // Cool Blues and Teals
+    '#0070F3',   // Vibrant Blue
+    '#17A5A5',   // Teal
+    '#4299E1',   // Soft Azure
 
+    // Greens
+    '#10B981',   // Mint Green
+    '#48BB78',   // Fresh Green
+    '#2ECC71',   // Emerald
+
+    // Purples and Violets
+    '#8A4FFF',   // Bright Purple
+    '#9C27B0',   // Deep Magenta
+    '#7E22CE',   // Rich Violet
+
+    // Warm Tones
+    '#F97316',   // Bright Orange
+    '#DC2626',   // Vivid Red
+    '#FF5722',   // Deep Orange
+
+    // Neutrals and Contrasts
+    '#6B7280',   // Cool Gray
+    '#FFD700',   // Gold
+    '#1E3A8A'    // Navy Blue
+];
 const chartConfigs = {
     billTypeChart: {
         type: 'pie',
@@ -190,6 +213,11 @@ const chartConfigs = {
             plugins: {
                 legend: {
                     position: 'bottom'
+                },
+                datalabels: {
+                    color: '#fff',
+                    font: { size: 14 },
+                    formatter: (value) => value
                 }
             }
         }
@@ -203,7 +231,7 @@ const chartConfigs = {
                 data: <?= json_encode(array_column($billStatuses, 'count')) ?>,
                 backgroundColor: [
                 balancedColorPalette[0],  
-                balancedColorPalette[4],  
+                balancedColorPalette[10],  
             ],
                 borderColor: '#1D4ED8',
                 borderWidth: 1
@@ -221,7 +249,15 @@ const chartConfigs = {
                     title: {display: true, text: 'สถานะบิล'}
                 }
             },
-            plugins: {legend: {display: false}}
+            plugins: {
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: '#000',
+                    font: { size: 12 },
+                    formatter: (value) => value
+                },
+                legend: {display: false}}
         }
     },
     customerTypeChart: {
@@ -237,6 +273,11 @@ const chartConfigs = {
             plugins: {
                 legend: {
                     position: 'bottom'
+                },
+                datalabels: {
+                    color: '#fff',
+                    font: { size: 14 },
+                    formatter: (value) => value
                 }
             }
         }
@@ -248,8 +289,12 @@ const chartConfigs = {
             datasets: [{
                 label: 'รายได้ (บาท)',
                 data: <?= json_encode(array_column($revenues, 'total_revenue')) ?>,
-                backgroundColor: '#6366F1',
-                borderColor: '#4F46E5',
+                backgroundColor: <?= json_encode(array_map(function($row) {
+                    return $row['status_bill'] == 'ใช้งาน' ? '#0070F3' : '#DC2626';
+                }, $revenues)) ?>,
+                borderColor: <?= json_encode(array_map(function($row) {
+                    return $row['status_bill'] == 'ใช้งาน' ? '#4F46E5' : '#E11D48';
+                }, $revenues)) ?>,
                 borderWidth: 1
             }]
         },
@@ -277,10 +322,32 @@ const chartConfigs = {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return 'รายได้: ' + context.parsed.y.toLocaleString('th-TH') + ' บาท';
+                            // Get the original data point
+                            const dataPoint = <?= json_encode($revenues) ?>[context.dataIndex];
+                            return [
+                                'รายได้: ' + context.parsed.y.toLocaleString('th-TH') + ' บาท',
+                                'สถานะบิล: ' + dataPoint.status_bill
+                            ];
                         }
                     }
-                }
+                },
+                legend: {
+                    display: false
+                },
+                datalabels: {
+            anchor: 'end',
+            align: 'top',
+            rotation: -90, // หมุนตัวเลขเล็กน้อยให้ไม่ทับกัน
+            color: '#000',
+            font: {
+                size: 12, // ลดขนาดให้พอดี
+                weight: 'bold'
+            },
+            offset: 4, // ขยับตัวเลขให้ห่างจากแท่ง
+            formatter: (value) => {
+                return parseFloat(value).toFixed(2).toLocaleString('th-TH');
+            }
+        }
             }
         }
     },
@@ -297,6 +364,11 @@ const chartConfigs = {
             plugins: {
                 legend: {
                     position: 'bottom'
+                },
+                datalabels: {
+                    color: '#fff',
+                    font: { size: 14 },
+                    formatter: (value) => value
                 }
             }
         }
@@ -329,7 +401,15 @@ const chartConfigs = {
                     title: {display: true, text: 'ประเภทอุปกรณ์'}
                 }
             },
-            plugins: {legend: {display: false}}
+            plugins: {
+                legend: {display: false},
+                datalabels: {
+                    anchor: 'end',
+                    align: 'right',
+                    color: '#000',
+                    font: { size: 12 },
+                    formatter: (value) => value
+            }}
         }
     },
 };
@@ -369,17 +449,29 @@ function openFullScreenChart(chartId) {
         options: {
             ...originalChart.options,
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: false, // สำคัญ! ป้องกันการรักษาสัดส่วนเดิม
+            animation: {
+                duration: 800, // เพิ่ม animation duration
+                easing: 'easeOutQuart'
+            },
             plugins: {
                 ...originalChart.options?.plugins,
                 legend: {
-                    ...originalChart.options?.plugins?.legend,
-                    position: 'top' // Change legend position for full-screen view
+                    position: 'top',
+                    labels: {
+                        boxWidth: 20,
+                        font: {
+                            size: 14 // ปรับขนาดตัวอักษรสำหรับ full screen
+                        }
+                    }
                 }
+            },
+            layout: {
+                padding: 10 // เพิ่ม padding ให้กราฟ
             }
         }
     });
-    
+
     // Show modal
     chartModal.classList.remove('hidden');
 }

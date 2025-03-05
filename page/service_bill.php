@@ -49,7 +49,7 @@ if ($id_bill > 0  ) {
 
     // ดึงข้อมูลบริการที่เกี่ยวข้องกับบิล
     $sql = "SELECT sc.id_service, sc.code_service, sc.type_service, sc.type_gadget, sc.status_service,
-    COALESCE(SUM(o.mainpackage_price + o.ict_price), 0) AS total_price
+        COALESCE(ROUND(SUM(o.mainpackage_price + o.ict_price), 2), 0) AS total_price
     FROM service_customer sc
     LEFT JOIN package_list pl ON sc.id_service = pl.id_service AND pl.status_package = 'ใช้งาน'
     LEFT JOIN product_list pr ON pl.id_package = pr.id_package AND pr.status_product = 'ใช้งาน'

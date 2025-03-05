@@ -96,9 +96,15 @@ try {
                 throw new Exception("Failed to create package");
             }
         }
-
-        // Add new products
+        // ก่อนที่เราจะเพิ่มข้อมูลใหม่ใน product_list ลบข้อมูลเก่าออกก่อน
         if ($id_package && !empty($data['products'])) {
+            // ลบ products เก่าที่เกี่ยวข้องกับ package นี้
+            $deleteProductSql = "DELETE FROM product_list WHERE id_package = ?";
+            $stmt = $conn->prepare($deleteProductSql);
+            $stmt->bind_param("i", $id_package);
+            $stmt->execute();
+
+            // เพิ่ม products ใหม่
             foreach ($data['products'] as $product) {
                 $productData = [
                     'name_product' => $product['name_product'],
@@ -119,7 +125,7 @@ try {
                 
                 if ($stmt->execute()) {
                     $id_product = $stmt->insert_id;
-        
+            
                     // Save new overide data
                     $overideData = [
                         'mainpackage_price' => $product['mainpackage_price'],
@@ -128,7 +134,7 @@ try {
                         'info_overide' => $product['info_overide'],
                         'id_product' => $id_product
                     ];
-        
+            
                     $sql = "INSERT INTO overide (mainpackage_price, ict_price, all_price, info_overide, id_product) 
                             VALUES (?, ?, ?, ?, ?)";
                     $stmt = $conn->prepare($sql);
@@ -139,7 +145,7 @@ try {
                         $overideData['info_overide'], 
                         $overideData['id_product']
                     );
-        
+            
                     if (!$stmt->execute()) {
                         throw new Exception("Failed to create overide data");
                     }
@@ -148,6 +154,7 @@ try {
                 }
             }
         }
+
         $conn->commit();
         echo json_encode(['success' => true]);
     } else {

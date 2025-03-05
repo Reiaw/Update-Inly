@@ -123,7 +123,7 @@
         const productField = input.closest('.product-field');
         const mainpackagePrice = parseFloat(productField.querySelector('input[name="mainpackage_price[]"]').value) || 0;
         const ictPrice = parseFloat(productField.querySelector('input[name="ict_price[]"]').value) || 0;
-        const allPrice = mainpackagePrice + ictPrice;
+        const allPrice = Number((mainpackagePrice + ictPrice).toFixed(2)); // บวกและให้ทศนิยม 2 หลัก
         // ไม่ต้องแสดง all_price ในฟอร์ม แต่จะส่งค่าไปยังเซิร์ฟเวอร์
     }
 </script>

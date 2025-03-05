@@ -40,15 +40,149 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ลืมรหัสผ่าน</title>
+    <title>Fogot Password</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.23/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <html data-theme="cyberpunk"></html>
     <style>
-        .forgot-password-form {
+         .container {
+        padding-left:800px; 
+       }
+        .form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+            padding: 20px;
+            border-radius: 20px;
+            position: relative;
+            background-color: #1a1a1a;
+            color: #fff;
+            border: 1px solid #333;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -1px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding-left: 30px;
+            color:rgb(237, 229, 87);
+        }
+
+        .title::before {
+            width: 18px;
+            height: 18px;
+        }
+
+        .title::after {
+            width: 18px;
+            height: 18px;
+            animation: pulse 1s linear infinite;
+        }
+
+        .title::before,
+        .title::after {
             position: absolute;
-            top: 180px;
-            right: 220px;
+            content: "";
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            left: 0px;
+            background-color:rgb(237, 229, 87);
+        }
+
+        .message, 
+        .signin {
+            font-size: 14.5px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .signin {
+            text-align: center;
+        }
+
+        .signin a:hover {
+            text-decoration: underline royalblue;
+        }
+
+        .signin a {
+            color:rgb(237, 229, 87);
+        }
+
+        .flex {
+            display: flex;
+            width: 100%;
+            gap: 6px;
+        }
+
+        .form label {
+            position: relative;
+        }
+
+        .form label .input {
+            background-color: #333;
+            color: #fff;
+            width: 100%;
+            padding: 20px 05px 05px 10px;
+            outline: 0;
+            border: 1px solid rgba(105, 105, 105, 0.397);
+            border-radius: 10px;
+        }
+
+        .form label .input + span {
+            color: rgba(255, 255, 255, 0.5);
+            position: absolute;
+            left: 10px;
+            top: 0px;
+            font-size: 0.9em;
+            cursor: text;
+            transition: 0.3s ease;
+        }
+
+        .form label .input:placeholder-shown + span {
+            top: 12.5px;
+            font-size: 0.9em;
+        }
+
+        .form label .input:focus + span,
+        .form label .input:valid + span {
+            color:rgb(237, 229, 87);
+            top: 0px;
+            font-size: 0.7em;
+            font-weight: 600;
+        }
+
+        .input {
+            font-size: medium;
+        }
+
+        .submit {
+            border: none;
+            outline: none;
+            padding: 10px;
+            border-radius: 10px;
+            color: #000;
+            font-size: 16px;
+            transform: .3s ease;
+            background-color:rgb(237, 229, 87);
+        }
+
+        .submit:hover {
+            background-color: rgb(237, 229, 87);
+        }
+
+        @keyframes pulse {
+            from {
+                transform: scale(0.9);
+                opacity: 1;
+            }
+
+            to {
+                transform: scale(1.8);
+                opacity: 0;
+            }
         }
     </style>
 </head>
@@ -57,22 +191,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="hero bg-base-200 min-h-screen">
         <div class="hero-content flex-col lg:flex-row-reverse">
         </div>
-        <div class="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl forgot-password-form">
-            <form method="POST" class="card-body">
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">อีเมลล์</span>
-                    </label>
-                    <input type="email" name="email" placeholder="อีเมลล์" class="input input-bordered" required />
-                </div>
-                <div class="form-control mt-6">
-                    <button type="submit" class="btn btn-primary">ส่ง OTP</button>
-                </div>
+        <div class="container">
+        <div class="card  w-full max-w-sm shrink-0  forgot-password-form">
+            <form method="POST" class="form">
+                <p class="title">Fogot Your Password</p>
+                <p class="message">Please Enter Yor Email for get OTP</p>
+                <label>
+                    <input class="input" type="email" name="email" placeholder="" required="">
+                    <span>Email</span>
+                </label>
+                <button type="submit" class="submit">Send OTP</button>
+                <p class="signin">Already have an account? <a href="../page/login.php">Login</a></p>
             </form>
-            <p class="text-center mt-3">
-                <a href="../page/login.php" class="link link-hover">กลับไปหน้าเข้าสู่ระบบ</a>
-            </p>
         </div>
     </div>
+</div>
 </body>
 </html> 

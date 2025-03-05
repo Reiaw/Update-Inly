@@ -160,24 +160,23 @@ $customer_types = $conn->query("SELECT * FROM customer_types")->fetch_all(MYSQLI
                         ct.type_customer, 
                         CONCAT(a.info_address, ' ต.', t.name_tambons, ' อ.', am.name_amphures) AS full_address,
                         COUNT(DISTINCT b.id_bill) AS total_bills,
-                        COALESCE(SUM(CASE WHEN sc.status_service = 'ใช้งาน' AND pl.status_package = 'ใช้งาน' 
-                            AND pr.status_product = 'ใช้งาน' THEN o.mainpackage_price ELSE 0 END), 0) AS mainpackage_price,
-                        COALESCE(SUM(CASE WHEN sc.status_service = 'ใช้งาน' AND pl.status_package = 'ใช้งาน' 
-                            AND pr.status_product = 'ใช้งาน' THEN o.ict_price ELSE 0 END), 0) AS ict_price,
-                        COALESCE(SUM(CASE WHEN sc.status_service = 'ใช้งาน' AND pl.status_package = 'ใช้งาน' 
-                            AND pr.status_product = 'ใช้งาน' THEN o.all_price ELSE 0 END), 0) AS all_price
-                    FROM customers c 
-                    LEFT JOIN customer_types ct ON c.id_customer_type = ct.id_customer_type
-                    LEFT JOIN bill_customer b ON c.id_customer = b.id_customer 
-                    LEFT JOIN address a ON c.id_address = a.id_address 
-                    LEFT JOIN tambons t ON a.id_tambons = t.id_tambons 
-                    LEFT JOIN amphures am ON a.id_amphures = am.id_amphures 
-                    LEFT JOIN service_customer sc ON b.id_bill = sc.id_bill 
-                    LEFT JOIN package_list pl ON sc.id_service = pl.id_service 
-                    LEFT JOIN product_list pr ON pl.id_package = pr.id_package 
-                    LEFT JOIN overide o ON pr.id_product = o.id_product 
-                    WHERE b.status_bill = 'ใช้งาน'";
-        
+                        COALESCE(ROUND(SUM(CASE WHEN sc.status_service = 'ใช้งาน' AND pl.status_package = 'ใช้งาน' 
+                            AND pr.status_product = 'ใช้งาน' THEN o.mainpackage_price ELSE 0 END), 2), 0) AS mainpackage_price,
+                        COALESCE(ROUND(SUM(CASE WHEN sc.status_service = 'ใช้งาน' AND pl.status_package = 'ใช้งาน' 
+                            AND pr.status_product = 'ใช้งาน' THEN o.ict_price ELSE 0 END), 2), 0) AS ict_price,
+                        COALESCE(ROUND(SUM(CASE WHEN sc.status_service = 'ใช้งาน' AND pl.status_package = 'ใช้งาน' 
+                            AND pr.status_product = 'ใช้งาน' THEN o.all_price ELSE 0 END), 2), 0) AS all_price
+                            FROM customers c 
+                            LEFT JOIN customer_types ct ON c.id_customer_type = ct.id_customer_type
+                            LEFT JOIN bill_customer b ON c.id_customer = b.id_customer 
+                            LEFT JOIN address a ON c.id_address = a.id_address 
+                            LEFT JOIN tambons t ON a.id_tambons = t.id_tambons 
+                            LEFT JOIN amphures am ON a.id_amphures = am.id_amphures 
+                            LEFT JOIN service_customer sc ON b.id_bill = sc.id_bill 
+                            LEFT JOIN package_list pl ON sc.id_service = pl.id_service 
+                            LEFT JOIN product_list pr ON pl.id_package = pr.id_package 
+                            LEFT JOIN overide o ON pr.id_product = o.id_product 
+                            WHERE b.status_bill = 'ใช้งาน'";
             if (!empty($filter_customer_type)) {
                 $sql .= " AND c.id_customer_type = " . intval($filter_customer_type);
             }
@@ -234,9 +233,9 @@ $customer_types = $conn->query("SELECT * FROM customer_types")->fetch_all(MYSQLI
                 echo "<tr class='bg-gray-100 font-bold'>
                         <td class='p-2 border border-gray-300' colspan='4'>รวม</td>
                         <td class='p-2 border border-gray-300'>$total_customers ลูกค้า</td>
-                        <td class='p-2 border border-gray-300'>$total_mainpackage</td>
-                        <td class='p-2 border border-gray-300'>$total_ict</td>
-                        <td class='p-2 border border-gray-300'>$total_allprice</td>
+                        <td class='p-2 border border-gray-300'>$total_mainpackage บาท</td>
+                        <td class='p-2 border border-gray-300'>$total_ict บาท</td>
+                        <td class='p-2 border border-gray-300'>$total_allprice บาท</td>
                       </tr>";
             
                 echo "</tbody></table></div>";
@@ -256,18 +255,18 @@ $customer_types = $conn->query("SELECT * FROM customer_types")->fetch_all(MYSQLI
                     sc.type_service, 
                     sc.code_service,
                     sc.type_gadget,
-                    COALESCE(SUM(CASE WHEN pl.status_package = 'ใช้งาน' AND pr.status_product = 'ใช้งาน' THEN o.mainpackage_price ELSE 0 END), 0) AS mainpackage_price,
-                    COALESCE(SUM(CASE WHEN pl.status_package = 'ใช้งาน' AND pr.status_product = 'ใช้งาน' THEN o.ict_price ELSE 0 END), 0) AS ict_price,
-                    COALESCE(SUM(CASE WHEN pl.status_package = 'ใช้งาน' AND pr.status_product = 'ใช้งาน' THEN o.all_price ELSE 0 END), 0) AS all_price
-                 FROM customers c 
-                LEFT JOIN customer_types ct ON c.id_customer_type = ct.id_customer_type
-                LEFT JOIN bill_customer b ON c.id_customer = b.id_customer 
-                LEFT JOIN service_customer sc ON b.id_bill = sc.id_bill 
-                LEFT JOIN package_list pl ON sc.id_service = pl.id_service 
-                LEFT JOIN product_list pr ON pl.id_package = pr.id_package 
-                LEFT JOIN overide o ON pr.id_product = o.id_product 
-                LEFT JOIN address a ON c.id_address = a.id_address 
-                WHERE b.status_bill = 'ใช้งาน'";
+                    COALESCE(ROUND(SUM(CASE WHEN pl.status_package = 'ใช้งาน' AND pr.status_product = 'ใช้งาน' THEN o.mainpackage_price ELSE 0 END), 2), 0) AS mainpackage_price,
+                    COALESCE(ROUND(SUM(CASE WHEN pl.status_package = 'ใช้งาน' AND pr.status_product = 'ใช้งาน' THEN o.ict_price ELSE 0 END), 2), 0) AS ict_price,
+                    COALESCE(ROUND(SUM(CASE WHEN pl.status_package = 'ใช้งาน' AND pr.status_product = 'ใช้งาน' THEN o.all_price ELSE 0 END), 2), 0) AS all_price
+                            FROM customers c 
+                            LEFT JOIN customer_types ct ON c.id_customer_type = ct.id_customer_type
+                            LEFT JOIN bill_customer b ON c.id_customer = b.id_customer 
+                            LEFT JOIN service_customer sc ON b.id_bill = sc.id_bill 
+                            LEFT JOIN package_list pl ON sc.id_service = pl.id_service 
+                            LEFT JOIN product_list pr ON pl.id_package = pr.id_package 
+                            LEFT JOIN overide o ON pr.id_product = o.id_product 
+                            LEFT JOIN address a ON c.id_address = a.id_address 
+                            WHERE b.status_bill = 'ใช้งาน'";
         
             // เพิ่มเงื่อนไขกรอง type_customer
             if (!empty($filter_customer_type)) {
@@ -385,9 +384,9 @@ $customer_types = $conn->query("SELECT * FROM customer_types")->fetch_all(MYSQLI
                 echo "<tr class='bg-gray-100 font-bold'>
                         <td class='p-2 border border-gray-300' colspan='8'>รวม</td>
                         <td class='p-2 border border-gray-300'>$total_customers ลูกค้า</td>
-                        <td class='p-2 border border-gray-300'>$total_mainpackage</td>
-                        <td class='p-2 border border-gray-300'>$total_ict</td>
-                        <td class='p-2 border border-gray-300'>$total_allprice</td>
+                        <td class='p-2 border border-gray-300'>$total_mainpackage บาท</td>
+                        <td class='p-2 border border-gray-300'>$total_ict บาท</td>
+                        <td class='p-2 border border-gray-300'>$total_allprice บาท</td>
                       </tr>";
             } else {
                 echo "<p class='mt-4'>ไม่พบข้อมูลสำหรับรายงาน 2</p>";
