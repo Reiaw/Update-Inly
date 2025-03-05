@@ -50,166 +50,318 @@ $deviceTypes = [];
 while($row = $deviceTypeResult->fetch_assoc()) {
     $deviceTypes[] = $row;
 }
-?>
-<div class="charts-carousel relative">
-    <!-- แต่ละกราฟอยู่ในสไลด์ -->
-    <div class="chart-slide active">
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-bold mb-4">สัดส่วนประเภทบิล</h3>
-            <canvas id="billTypeChart" class="w-full h-64"></canvas>
-        </div>
-    </div>
+// New query to get total customer count
+$totalCustomerSql = "SELECT COUNT(*) as total_customers FROM customers";
+$totalCustomerResult = $conn->query($totalCustomerSql);
+$totalCustomers = $totalCustomerResult->fetch_assoc()['total_customers'];
 
-    <div class="chart-slide">
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-bold mb-4">สถานะบิลทั้งหมด</h3>
-            <canvas id="billStatusChart" class="w-full h-64"></canvas>
-        </div>
-    </div>
-    <div class="chart-slide">
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-bold mb-4">ประเภทลูกค้า</h3>
-            <canvas id="customerTypeChart" class="w-full h-64"></canvas>
-        </div>
-    </div>
-    <div class="chart-slide">
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-bold mb-4">รายได้ต่อลูกค้า</h3>
-            <canvas id="revenueChart" class="w-full h-64"></canvas>
-        </div>
-    </div>
-    <div class="chart-slide">
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-bold mb-4">ประเภทของบริการ</h3>
-            <canvas id="serviceTypeChart" class="w-full h-64"></canvas>
-        </div>
-    </div>
-    <div class="chart-slide">
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-bold mb-4">ประเภทของอุปกรณ์</h3>
-            <canvas id="deviceTypeChart" class="w-full h-64"></canvas>
-        </div>
-    </div>
-</div>
-<div class="flex justify-center mt-4 space-x-4">
-    <button id="prevBtn" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">ก่อนหน้า</button>
-    <button id="nextBtn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">ถัดไป</button>
-</div>
+// New query to get total active bills
+$totalBillsSql = "SELECT COUNT(*) as total_bills FROM bill_customer WHERE status_bill = 'ใช้งาน'";
+$totalBillsResult = $conn->query($totalBillsSql);
+$totalBills = $totalBillsResult->fetch_assoc()['total_bills'];
 
-<style>
-.chart-slide {
-    display: none;
+// New query to get total revenue from active bills
+$totalRevenueSql = "SELECT SUM(o.all_price) as total_revenue
+                    FROM bill_customer bc
+                    JOIN service_customer sc ON bc.id_bill = sc.id_bill
+                    JOIN package_list pl ON sc.id_service = pl.id_service
+                    JOIN product_list pr ON pl.id_package = pr.id_package
+                    JOIN overide o ON pr.id_product = o.id_product
+                    WHERE bc.status_bill = 'ใช้งาน'";
+$totalRevenueResult = $conn->query($totalRevenueSql);
+$totalRevenue = $totalRevenueResult->fetch_assoc()['total_revenue'];
+
+// Query to get top 3 customer types by count
+$topCustomerTypesSql = "SELECT ct.type_customer, COUNT(c.id_customer) as count 
+                        FROM customers c 
+                        JOIN customer_types ct ON c.id_customer_type = ct.id_customer_type 
+                        GROUP BY ct.type_customer
+                        ORDER BY count DESC
+                        LIMIT 3";
+$topCustomerTypesResult = $conn->query($topCustomerTypesSql);
+$topCustomerTypes = [];
+while($row = $topCustomerTypesResult->fetch_assoc()) {
+    $topCustomerTypes[] = $row;
 }
-.chart-slide.active {
-    display: block;
+?>
+<style>
+#chartModal .chart-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+#fullScreenChart {
+    width: 100%;
+    height: 100%;
 }
 </style>
+<div class="summary-stats grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="stat-card bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500">
+        <h4 class="text-gray-600 text-sm mb-2">จำนวนลูกค้าทั้งหมด</h4>
+        <p class="text-2xl font-bold text-blue-800"><?= number_format($totalCustomers) ?></p>
+    </div>
+    <div class="stat-card bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500">
+        <h4 class="text-gray-600 text-sm mb-2">จำนวนบิลที่ใช้งาน</h4>
+        <p class="text-2xl font-bold text-green-800"><?= number_format($totalBills) ?></p>
+    </div>
+    <div class="stat-card bg-white p-4 rounded-lg shadow-md border-l-4 border-purple-500">
+        <h4 class="text-gray-600 text-sm mb-2">รายได้รวมทั้งหมด</h4>
+        <p class="text-2xl font-bold text-purple-800"><?= number_format($totalRevenue, 2) ?> บาท</p>
+    </div>
+    <div class="stat-card bg-white p-4 rounded-lg shadow-md border-l-4 border-indigo-500">
+        <h4 class="text-gray-600 text-sm mb-2">ประเภทลูกค้าสูงสุด 3 อันดับ</h4>
+        <ul class="text-sm">
+            <?php foreach($topCustomerTypes as $type): ?>
+                <li class="flex justify-between">
+                    <span class="text-gray-700"><?= $type['type_customer'] ?></span>
+                    <span class="font-bold text-indigo-800"><?= number_format($type['count']) ?></span>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+</div>
+
+<div class="charts-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="chart-card bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-xl font-bold mb-4 text-gray-800">สัดส่วนประเภทบิล</h3>
+        <canvas id="billTypeChart" class="w-full h-64"></canvas>
+    </div>
+
+    <div class="chart-card bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-xl font-bold mb-4 text-gray-800">สถานะบิลทั้งหมด</h3>
+        <canvas id="billStatusChart" class="w-full h-64"></canvas>
+    </div>
+
+    <div class="chart-card bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-xl font-bold mb-4 text-gray-800">ประเภทลูกค้า</h3>
+        <canvas id="customerTypeChart" class="w-full h-64"></canvas>
+    </div>
+
+    <div class="chart-card bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-xl font-bold mb-4 text-gray-800">รายได้ต่อลูกค้า</h3>
+        <canvas id="revenueChart" class="w-full h-64"></canvas>
+    </div>
+
+    <div class="chart-card bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-xl font-bold mb-4 text-gray-800">ประเภทของบริการ</h3>
+        <canvas id="serviceTypeChart" class="w-full h-64"></canvas>
+    </div>
+
+    <div class="chart-card bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-xl font-bold mb-4 text-gray-800">ประเภทของอุปกรณ์</h3>
+        <canvas id="deviceTypeChart" class="w-full h-64"></canvas>
+    </div>
+</div>
+
+<!-- Modal for Full Screen Chart -->
+<div id="chartModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg w-11/12 h-5/6 relative">
+        <button id="closeModalBtn" class="absolute top-4 right-4 text-2xl font-bold text-gray-700 hover:text-gray-900">
+            &times;
+        </button>
+        <h2 id="modalChartTitle" class="text-2xl font-bold mb-4 text-center text-gray-800"></h2>
+        <canvas id="fullScreenChart" class="w-full h-full"></canvas>
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const chartInstances = {};
+const balancedColorPalette = [
+    '#3B82F6',   // Blue
+    '#10B981',   // Green
+    '#8B5CF6',   // Purple
+    '#EC4899',   // Pink
+    '#F43F5E',   // Rose
+    '#6366F1',   // Indigo
+    '#F97316',   // Orange
+    '#22D3EE'    // Cyan
+];
 
-function initChart(canvasId, config) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    chartInstances[canvasId] = new Chart(ctx, config);
-}
-
-// การตั้งค่ากราฟทั้งหมด
-initChart('billTypeChart', {
-    type: 'pie',
-    data: {
-        labels: <?= json_encode(array_column($billTypes, 'type_bill')) ?>,
-        datasets: [{
-            data: <?= json_encode(array_column($billTypes, 'count')) ?>,
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
-        }]
-    }
-});
-initChart('billStatusChart', {
-    type: 'pie',
-    data: {
-        labels: <?= json_encode(array_column($billStatuses, 'status_bill')) ?>,
-        datasets: [{
-            data: <?= json_encode(array_column($billStatuses, 'count')) ?>,
-            backgroundColor: ['#FF6384', '#36A2EB']
-        }]
-    }
-});
-initChart('customerTypeChart', {
-    type: 'pie',
-    data: {
-        labels: <?= json_encode(array_column($customerTypes, 'type_customer')) ?>,
-        datasets: [{
-            data: <?= json_encode(array_column($customerTypes, 'count')) ?>,
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
-        }]
-    }
-});
-initChart('revenueChart', {
-    type: 'bar',
-    data: {
-        labels: <?= json_encode(array_column($revenues, 'name_customer')) ?>,
-        datasets: [{
-            label: 'รายได้',
-            data: <?= json_encode(array_column($revenues, 'total_revenue')) ?>,
-            backgroundColor: '#36A2EB'
-        }]
+const chartConfigs = {
+    billTypeChart: {
+        type: 'pie',
+        data: {
+            labels: <?= json_encode(array_column($billTypes, 'type_bill')) ?>,
+            datasets: [{
+                data: <?= json_encode(array_column($billTypes, 'count')) ?>,
+                backgroundColor: balancedColorPalette.slice(0, <?= count($billTypes) ?>)
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
     },
-    options: {
-        scales: {
-            y: {
-                beginAtZero: true
+    billStatusChart: {
+        type: 'pie',
+        data: {
+            labels: <?= json_encode(array_column($billStatuses, 'status_bill')) ?>,
+            datasets: [{
+                data: <?= json_encode(array_column($billStatuses, 'count')) ?>,
+                backgroundColor: balancedColorPalette.slice(2, 2 + <?= count($billStatuses) ?>)
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    },
+    customerTypeChart: {
+        type: 'pie',
+        data: {
+            labels: <?= json_encode(array_column($customerTypes, 'type_customer')) ?>,
+            datasets: [{
+                data: <?= json_encode(array_column($customerTypes, 'count')) ?>,
+                backgroundColor: balancedColorPalette.slice(4, 4 + <?= count($customerTypes) ?>)
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    },
+    revenueChart: {
+        type: 'bar',
+        data: {
+            labels: <?= json_encode(array_column($revenues, 'name_customer')) ?>,
+            datasets: [{
+                label: 'รายได้',
+                data: <?= json_encode(array_column($revenues, 'total_revenue')) ?>,
+                backgroundColor: '#3B82F6',
+                borderColor: '#1D4ED8',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'รายได้ (บาท)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'ลูกค้า'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    },
+    serviceTypeChart: {
+        type: 'pie',
+        data: {
+            labels: <?= json_encode(array_column($serviceTypes, 'type_service')) ?>,
+            datasets: [{
+                data: <?= json_encode(array_column($serviceTypes, 'count')) ?>,
+                backgroundColor: balancedColorPalette.slice(6, 6 + <?= count($serviceTypes) ?>)
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    },
+    deviceTypeChart: {
+        type: 'pie',
+        data: {
+            labels: <?= json_encode(array_column($deviceTypes, 'type_gadget')) ?>,
+            datasets: [{
+                data: <?= json_encode(array_column($deviceTypes, 'count')) ?>,
+                backgroundColor: balancedColorPalette.slice(1, 1 + <?= count($deviceTypes) ?>)
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
             }
         }
     }
+};
+const chartInstances = {};
+// Initialize all charts
+Object.keys(chartConfigs).forEach(chartId => {
+    const ctx = document.getElementById(chartId).getContext('2d');
+    chartInstances[chartId] = new Chart(ctx, chartConfigs[chartId]);
+    
+    // Add click event to each chart to open full screen
+    document.getElementById(chartId).addEventListener('click', () => openFullScreenChart(chartId));
 });
-initChart('serviceTypeChart', {
-    type: 'pie',
-    data: {
-        labels: <?= json_encode(array_column($serviceTypes, 'type_service')) ?>,
-        datasets: [{
-            data: <?= json_encode(array_column($serviceTypes, 'count')) ?>,
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
-        }]
-    }
-});
-initChart('deviceTypeChart', {
-    type: 'pie',
-    data: {
-        labels: <?= json_encode(array_column($deviceTypes, 'type_gadget')) ?>,
-        datasets: [{
-            data: <?= json_encode(array_column($deviceTypes, 'count')) ?>,
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
-        }]
-    }
-});
-let currentSlide = 0;
-const slides = document.querySelectorAll('.chart-slide');
 
-function updateSlide() {
-    slides.forEach((slide, index) => {
-        slide.classList.toggle('active', index === currentSlide);
-        const canvas = slide.querySelector('canvas');
-        if (index === currentSlide) {
-            chartInstances[canvas.id].resize();
+// Full Screen Chart Functionality
+const chartModal = document.getElementById('chartModal');
+const fullScreenChart = document.getElementById('fullScreenChart');
+const modalChartTitle = document.getElementById('modalChartTitle');
+const closeModalBtn = document.getElementById('closeModalBtn');
+
+function openFullScreenChart(chartId) {
+    const originalChart = chartConfigs[chartId];
+    const modalCtx = fullScreenChart.getContext('2d');
+    
+    // Clear previous chart if exists
+    if (window.fullScreenChartInstance) {
+        window.fullScreenChartInstance.destroy();
+    }
+    
+    // Get chart title
+    const chartTitle = document.querySelector(`#${chartId}`).closest('.chart-card').querySelector('h3').textContent;
+    modalChartTitle.textContent = chartTitle;
+    
+    // Create new chart instance in modal with modified options
+    window.fullScreenChartInstance = new Chart(modalCtx, {
+        type: originalChart.type,
+        data: originalChart.data,
+        options: {
+            ...originalChart.options,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                ...originalChart.options?.plugins,
+                legend: {
+                    ...originalChart.options?.plugins?.legend,
+                    position: 'top' // Change legend position for full-screen view
+                }
+            }
         }
     });
+    
+    // Show modal
+    chartModal.classList.remove('hidden');
 }
 
-document.getElementById('prevBtn').addEventListener('click', () => {
-    if (currentSlide > 0) {
-        currentSlide--;
-        updateSlide();
+// Additional event listener to handle modal resizing
+window.addEventListener('resize', () => {
+    if (!chartModal.classList.contains('hidden') && window.fullScreenChartInstance) {
+        window.fullScreenChartInstance.resize();
     }
 });
 
-document.getElementById('nextBtn').addEventListener('click', () => {
-    if (currentSlide < slides.length - 1) {
-        currentSlide++;
-        updateSlide();
+// Close modal
+closeModalBtn.addEventListener('click', () => {
+    chartModal.classList.add('hidden');
+    if (window.fullScreenChartInstance) {
+        window.fullScreenChartInstance.destroy();
     }
 });
-
-// เริ่มต้นแสดงสไลด์แรก
-updateSlide();
-   
 </script>
