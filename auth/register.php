@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['otp_expiry'] = $otp_expiry;
         header('Location: verify.php');
     } else {
-        echo "<script>alert('Error sending OTP email'); window.history.back();</script>";
+        echo "<script>alert('เกิดข้อผิดพลาดในการส่ง OTP email'); window.history.back();</script>";
     }
 }
 ?>
@@ -59,147 +59,205 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-       .container {
-        padding-left:800px; 
-       }
-        
-        .form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 350px;
-            padding: 20px;
-            border-radius: 20px;
-            position: relative;
-            background-color: #1a1a1a;
-            color: #fff;
-            border: 1px solid #333;
-        }
+   .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
 
-        .title {
-            font-size: 28px;
-            font-weight: 600;
-            letter-spacing: -1px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            padding-left: 30px;
-            color:rgb(237, 229, 87);
-        }
+/* Desktop */
+@media (min-width: 1024px) {
+    .container {
+        justify-content: flex-end;
+        padding-right: 10%;
+    }
+}
 
-        .title::before {
-            width: 18px;
-            height: 18px;
-        }
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .container {
+        justify-content: flex-end;
+        padding-right: 5%;
+    }
+}
 
-        .title::after {
-            width: 18px;
-            height: 18px;
-            animation: pulse 1s linear infinite;
-        }
+/* Mobile */
+@media (max-width: 767px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .form {
+        width: 100%;
+        margin: 10px;
+    }
+    
+    .title {
+        font-size: 24px;
+    }
+    
+    .message, 
+    .signin {
+        font-size: 14px;
+    }
+}
 
-        .title::before,
-        .title::after {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            left: 0px;
-            background-color:rgb(237, 229, 87);
-        }
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 350px;
+    padding: 20px;
+    border-radius: 20px;
+    position: relative;
+    background-color: #1a1a1a;
+    color: #fff;
+    border: 1px solid #333;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
 
-        .message, 
-        .signin {
-            font-size: 14.5px;
-            color: rgba(255, 255, 255, 0.7);
-        }
+.title {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -1px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding-left: 30px;
+    color: rgb(237, 229, 87);
+    margin-bottom: 10px;
+}
 
-        .signin {
-            text-align: center;
-        }
+.title::before,
+.title::after {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    left: 0px;
+    background-color: rgb(237, 229, 87);
+}
 
-        .signin a:hover {
-            text-decoration: underline royalblue;
-        }
+.title::after {
+    animation: pulse 1s linear infinite;
+}
 
-        .signin a {
-            color:rgb(237, 229, 87);
-        }
+.message, 
+.signin {
+    font-size: 14.5px;
+    color: rgba(255, 255, 255, 0.7);
+}
 
-        .flex {
-            display: flex;
-            width: 100%;
-            gap: 6px;
-        }
+.signin {
+    text-align: center;
+    margin-top: 10px;
+}
 
-        .form label {
-            position: relative;
-        }
+.signin a {
+    color: rgb(237, 229, 87);
+    text-decoration: none;
+}
 
-        .form label .input {
-            background-color: #333;
-            color: #fff;
-            width: 100%;
-            padding: 20px 05px 05px 10px;
-            outline: 0;
-            border: 1px solid rgba(105, 105, 105, 0.397);
-            border-radius: 10px;
-        }
+.signin a:hover {
+    text-decoration: underline royalblue;
+}
 
-        .form label .input + span {
-            color: rgba(255, 255, 255, 0.5);
-            position: absolute;
-            left: 10px;
-            top: 0px;
-            font-size: 0.9em;
-            cursor: text;
-            transition: 0.3s ease;
-        }
+.flex {
+    display: flex;
+    width: 100%;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
 
-        .form label .input:placeholder-shown + span {
-            top: 12.5px;
-            font-size: 0.9em;
-        }
+.form label {
+    position: relative;
+    width: 100%;
+}
 
-        .form label .input:focus + span,
-        .form label .input:valid + span {
-            color:rgb(237, 229, 87);
-            top: 0px;
-            font-size: 0.7em;
-            font-weight: 600;
-        }
+.form label .input {
+    background-color: #333;
+    color: #fff;
+    width: 100%;
+    padding: 20px 5px 5px 10px;
+    outline: 0;
+    border: 1px solid rgba(105, 105, 105, 0.397);
+    border-radius: 10px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
 
-        .input {
-            font-size: medium;
-        }
+.form label .input:focus {
+    border-color: rgb(237, 229, 87);
+}
 
-        .submit {
-            border: none;
-            outline: none;
-            padding: 10px;
-            border-radius: 10px;
-            color: #000;
-            font-size: 16px;
-            transform: .3s ease;
-            background-color:rgb(237, 229, 87);
-        }
+.form label .input + span {
+    color: rgba(255, 255, 255, 0.5);
+    position: absolute;
+    left: 10px;
+    top: 0px;
+    font-size: 0.9em;
+    cursor: text;
+    transition: 0.3s ease;
+    pointer-events: none;
+}
 
-        .submit:hover {
-            background-color:rgb(237, 229, 87);
-        }
+.form label .input:placeholder-shown + span {
+    top: 12.5px;
+    font-size: 0.9em;
+}
 
-        @keyframes pulse {
-            from {
-                transform: scale(0.9);
-                opacity: 1;
-            }
+.form label .input:focus + span,
+.form label .input:valid + span {
+    color: rgb(237, 229, 87);
+    top: 0px;
+    font-size: 0.7em;
+    font-weight: 600;
+}
 
-            to {
-                transform: scale(1.8);
-                opacity: 0;
-            }
-        }
+.submit {
+    border: none;
+    outline: none;
+    padding: 12px;
+    border-radius: 10px;
+    color: #000;
+    font-size: 16px;
+    background-color: rgb(237, 229, 87);
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.submit:hover {
+    opacity: 0.9;
+}
+
+@keyframes pulse {
+    from {
+        transform: scale(0.9);
+        opacity: 1;
+    }
+    to {
+        transform: scale(1.8);
+        opacity: 0;
+    }
+}
+
+/* ปรับแต่งเพิ่มเติมสำหรับความสวยงาม */
+.form label .input:hover {
+    border-color: rgba(237, 229, 87, 0.5);
+}
+
+.form label .input:focus {
+    box-shadow: 0 0 0 2px rgba(237, 229, 87, 0.2);
+}
     </style>
 </head>
 <body>
@@ -209,8 +267,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
         <div class="container">
             <form method="POST" class="form">
-                <p class="title">Sign Up</p>
-                <p class="message">Signup now and get full access to our web app.</p>
+                <p class="title">สมัครสมาชิก</p>
+                <p class="message">กรุณากรอกรายละเอียดเพื่อสมัครสมาชิก</p>
                 <div class="form-control">
                     <label>
                         <input class="input" type="email" name="email" placeholder="" required />
@@ -220,23 +278,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="form-control">
                     <label>
                         <input class="input" type="text" name="name" placeholder="" required />
-                        <span>Username</span>
+                        <span>ชื่อผู้ใช้</span>
                     </label>
                 </div>
                 <div class="form-control">
                     <label>
                         <input id="password" class="input" type="password" name="password" placeholder="" required />
-                        <span>Password</span>
+                        <span>รหัสผ่าน</span>
                     </label>
                 </div>
                 <div class="form-control">
                     <label>
                         <input class="input" type="password" name="confirm_password" placeholder="" required />
-                        <span>Confirm Your Password</span>
+                        <span>ยืนยันรหัสผ่านอีกครั้ง</span>
                     </label>
                 </div>
-                <button type="submit" class="submit">Submit</button>
-                <p class="signin">Have you sign in alredy? <a href="../page/login.php">login</a></p>
+                <button type="submit" class="submit">ส่ง</button>
+                <p class="signin">หากเป็นสมาชิกแล้ว? <a href="../page/login.php">login</a></p>
              </form>
             </div>
         </div>

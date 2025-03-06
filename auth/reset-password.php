@@ -218,8 +218,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
         <div class="card w-full max-w-sm shrink-0 reset-password-form">
             <form method="POST" class="form">
-                <p class="title">Reset Your Password</p>
-                <p class="message">Enter OTP and set your password</p>
+                <p class="title">รีเช็ตรหัสผ่าน</p>
+                <p class="message">กรุณาใส่ OTP เพื่อรีเช็ตรหัสผ่าน</p></p>
                 <div class="form-control">
                     <label>
                         <input class="input" type="text" name="otp" placeholder="" required />
@@ -230,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <label>
                         <div class="password-container">
                             <input id="password" class="input" type="password" name="new_password" placeholder="" required />
-                            <span>New Password</span>
+                            <span>รหัสผ่านใหม่</span>
                             <button type="button" class="toggle-password" onclick="togglePassword('password')">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -240,12 +240,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="form-control">
                     <label>
                         <input class="input" type="password" name="confirm_password" placeholder="" required />
-                        <span>Confirm Your New Password</span>
+                        <span>ยืนยันรหัสผ่านใหม่</span>
                     </label>
                 </div>
-                <button type="submit" class="submit">Reset Password</button>
-                <p class="signin">Bact to <a href="../page/login.php">Login</a></p>
-                <p class="timer-style text-center mt-3">Timer: <span id="timer"></span></p>
+                <button type="submit" class="submit">รีเช็ตรหัสผ่าน</button>
+                <p class="signin">ต้องการกลับไปหน้า <a href="../page/login.php">Login</a></p>
+                <p class="timer-style text-center mt-3">เวลาคงเหลือ: <span id="timer"></span></p>
             </form>
         </div>
     <script>
@@ -273,7 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if (--timer < 0) {
                     clearInterval(interval);
                     alert('OTP หมดอายุแล้ว กรุณาลองใหม่อีกครั้ง');
-                    window.location.href = '../login.php';
+                    window.location.href = '../page/login.php';
                 }
             }, 1000);
         }

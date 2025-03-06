@@ -44,146 +44,206 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.23/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-         .container {
-        padding-left:800px; 
-       }
-        .form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 350px;
-            padding: 20px;
-            border-radius: 20px;
-            position: relative;
-            background-color: #1a1a1a;
-            color: #fff;
-            border: 1px solid #333;
-        }
+    .container {
+    display: flex;
+    justify-content: center; /* เริ่มต้นจัดกึ่งกลางสำหรับมือถือ */
+    align-items: center;
+    min-height: 100vh;
+    width: 100%;
+    padding: 20px;
+}
 
-        .title {
-            font-size: 28px;
-            font-weight: 600;
-            letter-spacing: -1px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            padding-left: 30px;
-            color:rgb(237, 229, 87);
-        }
+/* Desktop และหน้าจอใหญ่ */
+@media (min-width: 1024px) {
+    .container {
+        justify-content: flex-end;
+        padding-right: 15%; /* ระยะห่างจากขอบขวา */
+    }
+}
 
-        .title::before {
-            width: 18px;
-            height: 18px;
-        }
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .container {
+        justify-content: flex-end;
+        padding-right: 10%;
+    }
+}
 
-        .title::after {
-            width: 18px;
-            height: 18px;
-            animation: pulse 1s linear infinite;
-        }
+/* มือถือ */
+@media (max-width: 767px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .form {
+        width: 100%;
+        max-width: 100%;
+        margin: 10px;
+    }
+}
 
-        .title::before,
-        .title::after {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            left: 0px;
-            background-color:rgb(237, 229, 87);
-        }
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 350px;
+    padding: 20px;
+    border-radius: 20px;
+    position: relative;
+    background-color: #1a1a1a;
+    color: #fff;
+    border: 1px solid #333;
+}
 
-        .message, 
-        .signin {
-            font-size: 14.5px;
-            color: rgba(255, 255, 255, 0.7);
-        }
+.title {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -1px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding-left: 30px;
+    color: rgb(237, 229, 87);
+}
 
-        .signin {
-            text-align: center;
-        }
+.title::before {
+    width: 18px;
+    height: 18px;
+}
 
-        .signin a:hover {
-            text-decoration: underline royalblue;
-        }
+.title::after {
+    width: 18px;
+    height: 18px;
+    animation: pulse 1s linear infinite;
+}
 
-        .signin a {
-            color:rgb(237, 229, 87);
-        }
+.title::before,
+.title::after {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    left: 0px;
+    background-color: rgb(237, 229, 87);
+}
 
-        .flex {
-            display: flex;
-            width: 100%;
-            gap: 6px;
-        }
+.message, 
+.signin {
+    font-size: 14.5px;
+    color: rgba(255, 255, 255, 0.7);
+}
 
-        .form label {
-            position: relative;
-        }
+.signin {
+    text-align: center;
+}
 
-        .form label .input {
-            background-color: #333;
-            color: #fff;
-            width: 100%;
-            padding: 20px 05px 05px 10px;
-            outline: 0;
-            border: 1px solid rgba(105, 105, 105, 0.397);
-            border-radius: 10px;
-        }
+.signin a:hover {
+    text-decoration: underline royalblue;
+}
 
-        .form label .input + span {
-            color: rgba(255, 255, 255, 0.5);
-            position: absolute;
-            left: 10px;
-            top: 0px;
-            font-size: 0.9em;
-            cursor: text;
-            transition: 0.3s ease;
-        }
+.signin a {
+    color: rgb(237, 229, 87);
+}
 
-        .form label .input:placeholder-shown + span {
-            top: 12.5px;
-            font-size: 0.9em;
-        }
+.flex {
+    display: flex;
+    width: 100%;
+    gap: 6px;
+    flex-wrap: wrap; /* เพิ่มการรองรับการขึ้นบรรทัดใหม่บนมือถือ */
+}
 
-        .form label .input:focus + span,
-        .form label .input:valid + span {
-            color:rgb(237, 229, 87);
-            top: 0px;
-            font-size: 0.7em;
-            font-weight: 600;
-        }
+.form label {
+    position: relative;
+    width: 100%;
+}
 
-        .input {
-            font-size: medium;
-        }
+.form label .input {
+    background-color: #333;
+    color: #fff;
+    width: 100%;
+    padding: 20px 05px 05px 10px;
+    outline: 0;
+    border: 1px solid rgba(105, 105, 105, 0.397);
+    border-radius: 10px;
+}
 
-        .submit {
-            border: none;
-            outline: none;
-            padding: 10px;
-            border-radius: 10px;
-            color: #000;
-            font-size: 16px;
-            transform: .3s ease;
-            background-color:rgb(237, 229, 87);
-        }
+.form label .input + span {
+    color: rgba(255, 255, 255, 0.5);
+    position: absolute;
+    left: 10px;
+    top: 0px;
+    font-size: 0.9em;
+    cursor: text;
+    transition: 0.3s ease;
+}
 
-        .submit:hover {
-            background-color: rgb(237, 229, 87);
-        }
+.form label .input:placeholder-shown + span {
+    top: 12.5px;
+    font-size: 0.9em;
+}
 
-        @keyframes pulse {
-            from {
-                transform: scale(0.9);
-                opacity: 1;
-            }
+.form label .input:focus + span,
+.form label .input:valid + span {
+    color: rgb(237, 229, 87);
+    top: 0px;
+    font-size: 0.7em;
+    font-weight: 600;
+}
 
-            to {
-                transform: scale(1.8);
-                opacity: 0;
-            }
-        }
+.input {
+    font-size: 16px; /* ปรับขนาดตัวอักษรให้อ่านง่ายบนมือถือ */
+}
+
+.submit {
+    border: none;
+    outline: none;
+    padding: 12px; /* เพิ่มพื้นที่กดสำหรับมือถือ */
+    border-radius: 10px;
+    color: #000;
+    font-size: 16px;
+    transform: .3s ease;
+    background-color: rgb(237, 229, 87);
+    width: 100%;
+    cursor: pointer;
+}
+
+.submit:hover {
+    background-color: rgb(237, 229, 87);
+    opacity: 0.9;
+}
+
+@keyframes pulse {
+    from {
+        transform: scale(0.9);
+        opacity: 1;
+    }
+    to {
+        transform: scale(1.8);
+        opacity: 0;
+    }
+}
+
+/* ปรับปรุงการแสดงผลบนมือถือ */
+@media (max-width: 480px) {
+    .title {
+        font-size: 24px;
+    }
+    
+    .message,
+    .signin {
+        font-size: 14px;
+    }
+    
+    .form label .input {
+        padding: 18px 05px 05px 10px;
+    }
+    
+    .submit {
+        padding: 14px;
+    }
+}
     </style>
 </head>
 <body>
@@ -194,14 +254,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="container">
         <div class="card  w-full max-w-sm shrink-0  forgot-password-form">
             <form method="POST" class="form">
-                <p class="title">Fogot Your Password</p>
-                <p class="message">Please Enter Yor Email for get OTP</p>
+                <p class="title">ลืมรหัสผ่าน</p>
+                <p class="message">กรุณาใส่อีเมลเพื่อขอรับ OTP</p>
                 <label>
                     <input class="input" type="email" name="email" placeholder="" required="">
                     <span>Email</span>
                 </label>
-                <button type="submit" class="submit">Send OTP</button>
-                <p class="signin">Already have an account? <a href="../page/login.php">Login</a></p>
+                <button type="submit" class="submit">ส่ง OTP</button>
+                <p class="signin">ต้องการกลับไปหน้า <a href="../page/login.php">Login</a></p>
             </form>
         </div>
     </div>

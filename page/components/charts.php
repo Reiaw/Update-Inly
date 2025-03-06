@@ -8,10 +8,14 @@ while($row = $billTypeResult->fetch_assoc()) {
 }
 $billStatusSql = "SELECT status_bill, COUNT(*) as count FROM bill_customer GROUP BY status_bill";
 $billStatusResult = $conn->query($billStatusSql);
+
 $billStatuses = [];
-while($row = $billStatusResult->fetch_assoc()) {
-    $billStatuses[] = $row;
+while ($row = $billStatusResult->fetch_assoc()) {
+    $billStatuses[$row['status_bill']] = $row['count'];
 }
+// กำหนดค่าให้แน่ใจว่ามีครบทุกสถานะ
+$activeCount = $billStatuses['ใช้งาน'] ?? 0;
+$inactiveCount = $billStatuses['ยกเลิกใช้งาน'] ?? 0;
 $customerTypeSql = "SELECT ct.type_customer, COUNT(c.id_customer) as count 
                    FROM customers c 
                    JOIN customer_types ct ON c.id_customer_type = ct.id_customer_type 
@@ -21,19 +25,25 @@ $customerTypes = [];
 while($row = $customerTypeResult->fetch_assoc()) {
     $customerTypes[] = $row;
 }
-$revenueSql = "SELECT c.id_customer, c.name_customer, SUM(o.all_price) as total_revenue, bc.status_bill
+$revenueSql = "SELECT c.id_customer, c.name_customer, 
+                      SUM(CASE WHEN bc.status_bill = 'ใช้งาน' THEN o.all_price ELSE 0 END) as active_revenue,
+                      SUM(CASE WHEN bc.status_bill = 'ยกเลิกใช้งาน' THEN o.all_price ELSE 0 END) as inactive_revenue
                FROM customers c
                JOIN bill_customer bc ON c.id_customer = bc.id_customer
                JOIN service_customer sc ON bc.id_bill = sc.id_bill
                JOIN package_list pl ON sc.id_service = pl.id_service
                JOIN product_list pr ON pl.id_package = pr.id_package
                JOIN overide o ON pr.id_product = o.id_product
-               GROUP BY c.id_customer, c.name_customer, bc.status_bill
-               ORDER BY total_revenue DESC";
+               GROUP BY c.id_customer, c.name_customer
+               ORDER BY active_revenue DESC, inactive_revenue DESC";
 $revenueResult = $conn->query($revenueSql);
-$revenues = [];
-while($row = $revenueResult->fetch_assoc()) {
-    $revenues[] = $row;
+$customers = [];
+$activeRevenues = [];
+$inactiveRevenues = [];
+while ($row = $revenueResult->fetch_assoc()) {
+    $customers[] = $row['name_customer'];
+    $activeRevenues[] = $row['active_revenue'];
+    $inactiveRevenues[] = $row['inactive_revenue'];
 }
 // เพิ่มส่วนดึงข้อมูลประเภทบริการ
 $serviceTypeSql = "SELECT type_service, COUNT(*) as count FROM service_customer GROUP BY type_service";
@@ -44,12 +54,25 @@ while($row = $serviceTypeResult->fetch_assoc()) {
 }
 
 // เพิ่มส่วนดึงข้อมูลประเภทอุปกรณ์
-$deviceTypeSql = "SELECT type_gadget, COUNT(*) as count FROM service_customer GROUP BY type_gadget";
+$deviceTypeSql = "SELECT type_gadget, COUNT(*) as count 
+                  FROM service_customer 
+                  GROUP BY type_gadget";
 $deviceTypeResult = $conn->query($deviceTypeSql);
+
 $deviceTypes = [];
-while($row = $deviceTypeResult->fetch_assoc()) {
+while ($row = $deviceTypeResult->fetch_assoc()) {
     $deviceTypes[] = $row;
 }
+
+// จัดกลุ่มข้อมูลให้อยู่ในโครงสร้างที่ใช้กับ Chart.js
+$labels = array_unique(array_column($deviceTypes, 'type_gadget'));  // ค่าของ labels คือชื่อของแต่ละประเภท gadget
+
+// สร้าง array ที่ใช้เก็บข้อมูลตาม type_gadget
+$formattedData = [];
+foreach ($deviceTypes as $row) {
+    $formattedData[$row['type_gadget']] = (int) $row['count'];
+}
+
 // New query to get total customer count
 $totalCustomerSql = "SELECT COUNT(*) as total_customers FROM customers";
 $totalCustomerResult = $conn->query($totalCustomerSql);
@@ -174,30 +197,18 @@ while($row = $topCustomerTypesResult->fetch_assoc()) {
 <script>
 Chart.register(ChartDataLabels);
 const balancedColorPalette = [
-    // Cool Blues and Teals
-    '#0070F3',   // Vibrant Blue
-    '#17A5A5',   // Teal
-    '#4299E1',   // Soft Azure
-
-    // Greens
-    '#10B981',   // Mint Green
-    '#48BB78',   // Fresh Green
-    '#2ECC71',   // Emerald
-
-    // Purples and Violets
-    '#8A4FFF',   // Bright Purple
-    '#9C27B0',   // Deep Magenta
-    '#7E22CE',   // Rich Violet
-
-    // Warm Tones
-    '#F97316',   // Bright Orange
-    '#DC2626',   // Vivid Red
-    '#FF5722',   // Deep Orange
-
-    // Neutrals and Contrasts
-    '#6B7280',   // Cool Gray
-    '#FFD700',   // Gold
-    '#1E3A8A'    // Navy Blue
+    '#8dd3c7',
+    '#ffffb3',
+    '#bebada',
+    '#fb8072',
+    '#80b1d3',
+    '#fdb462',
+    '#b3de69',
+    '#fccde5',
+    '#d9d9d9',
+    '#bc80bd',
+    '#ccebc5',
+    '#ffed6f'
 ];
 const chartConfigs = {
     billTypeChart: {
@@ -225,39 +236,40 @@ const chartConfigs = {
     billStatusChart: {
         type: 'bar',
         data: {
-            labels: <?= json_encode(array_column($billStatuses, 'status_bill')) ?>,
-            datasets: [{
-                label: 'จำนวนบิล',
-                data: <?= json_encode(array_column($billStatuses, 'count')) ?>,
-                backgroundColor: [
-                balancedColorPalette[0],  
-                balancedColorPalette[10],  
-            ],
-                borderColor: '#1D4ED8',
-                borderWidth: 1
-            }]
+            labels: ["สถานะบิล"], // ใช้ label กลางเดียวกัน
+            datasets: [
+                {
+                    label: "ใช้งาน",
+                    data: [<?= $activeCount ?>], // ใช้งาน
+                    backgroundColor: balancedColorPalette[4],
+                    borderColor: '#1D4ED8',
+                    borderWidth: 1
+                },
+                {
+                    label: "ไม่ใช้งาน",
+                    data: [<?= $inactiveCount ?>], // ไม่ใช้งาน
+                    backgroundColor: balancedColorPalette[3],
+                    borderColor: '#DC2626',
+                    borderWidth: 1
+                }
+            ]
         },
         options: {
             responsive: true,
             scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {display: true, text: 'จำนวนบิล'},
-                    ticks: {precision: 0}
-                },
-                x: {
-                    title: {display: true, text: 'สถานะบิล'}
-                }
+                y: { beginAtZero: true, title: { display: true, text: 'จำนวนบิล' }, ticks: { precision: 0 } },
+                x: { title: { display: true, text: 'สถานะบิล' } }
             },
             plugins: {
-                datalabels: {
-                    anchor: 'end',
-                    align: 'top',
-                    color: '#000',
+                legend: { display: true }, // เปิด Legend เพื่อให้เห็น "ใช้งาน" กับ "ไม่ใช้งาน"
+                datalabels: { 
+                    anchor: 'end', 
+                    align: 'top', 
+                    color: '#000', 
                     font: { size: 12 },
-                    formatter: (value) => value
-                },
-                legend: {display: false}}
+                    formatter: (value) => value // แสดงค่าเลขปกติ
+                }
+            }
         }
     },
     customerTypeChart: {
@@ -285,18 +297,23 @@ const chartConfigs = {
     revenueChart: {
         type: 'bar',
         data: {
-            labels: <?= json_encode(array_column($revenues, 'name_customer')) ?>,
-            datasets: [{
-                label: 'รายได้ (บาท)',
-                data: <?= json_encode(array_column($revenues, 'total_revenue')) ?>,
-                backgroundColor: <?= json_encode(array_map(function($row) {
-                    return $row['status_bill'] == 'ใช้งาน' ? '#0070F3' : '#DC2626';
-                }, $revenues)) ?>,
-                borderColor: <?= json_encode(array_map(function($row) {
-                    return $row['status_bill'] == 'ใช้งาน' ? '#4F46E5' : '#E11D48';
-                }, $revenues)) ?>,
-                borderWidth: 1
-            }]
+            labels: <?= json_encode($customers) ?>,
+            datasets: [
+                {
+                    label: 'รายได้จากบิลที่ใช้งาน',
+                    data: <?= json_encode($activeRevenues) ?>,
+                    backgroundColor: '#80b1d3',
+                    borderColor: '#4F46E5',
+                    borderWidth: 1
+                },
+                {
+                    label: 'รายได้จากบิลที่ยกเลิกใช้งาน',
+                    data: <?= json_encode($inactiveRevenues) ?>,
+                    backgroundColor: '#fb8072',
+                    borderColor: '#E11D48',
+                    borderWidth: 1
+                }
+            ]
         },
         options: {
             responsive: true,
@@ -322,32 +339,33 @@ const chartConfigs = {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            // Get the original data point
-                            const dataPoint = <?= json_encode($revenues) ?>[context.dataIndex];
-                            return [
-                                'รายได้: ' + context.parsed.y.toLocaleString('th-TH') + ' บาท',
-                                'สถานะบิล: ' + dataPoint.status_bill
-                            ];
+                            const datasetLabel = context.dataset.label || '';
+                            const value = context.parsed.y || 0;
+                            return datasetLabel + ': ' + value.toLocaleString('th-TH') + ' บาท';
                         }
                     }
                 },
                 legend: {
-                    display: false
+                    display: true,
+                    position: 'top'
                 },
                 datalabels: {
-            anchor: 'end',
-            align: 'top',
-            rotation: -90, // หมุนตัวเลขเล็กน้อยให้ไม่ทับกัน
-            color: '#000',
-            font: {
-                size: 12, // ลดขนาดให้พอดี
-                weight: 'bold'
-            },
-            offset: 4, // ขยับตัวเลขให้ห่างจากแท่ง
-            formatter: (value) => {
-                return parseFloat(value).toFixed(2).toLocaleString('th-TH');
-            }
-        }
+                    anchor: 'end',
+                    align: 'top',
+                    rotation: -90,
+                    color: '#000',
+                    font: {
+                        size: 10,
+                        weight: 'bold'
+                    },
+                    offset: 4,
+                    formatter: (value) => {
+                        return parseFloat(value).toLocaleString('th-TH');
+                    },
+                    display: function(context) {
+                        return context.dataset.data[context.dataIndex] > 0; // Only show labels for non-zero values
+                    }
+                }
             }
         }
     },
@@ -366,7 +384,7 @@ const chartConfigs = {
                     position: 'bottom'
                 },
                 datalabels: {
-                    color: '#fff',
+                    color: '#fff', 
                     font: { size: 14 },
                     formatter: (value) => value
                 }
@@ -376,42 +394,69 @@ const chartConfigs = {
     deviceTypeChart: {
         type: 'bar',
         data: {
-            labels: <?= json_encode(array_column($deviceTypes, 'type_gadget')) ?>,
-            datasets: [{
-                label: 'จำนวนอุปกรณ์',
-                data: <?= json_encode(array_column($deviceTypes, 'count')) ?>,
-                backgroundColor: [
-                balancedColorPalette[2],  // Purple (#8B5CF6)
-                balancedColorPalette[6],  // Orange (#F97316)
-                balancedColorPalette[1]   // Green (#10B981)
-            ],
-                borderColor: '#047857',
+            labels: ["ประเภทอุปกรณ์"], // ใช้ label กลางเดียวกัน
+            datasets: Object.keys(<?= json_encode($formattedData) ?>).map((label, index) => ({
+                label: label,
+                data: [<?= json_encode($formattedData) ?>[label]],
+                backgroundColor: balancedColorPalette[index % balancedColorPalette.length],
+                borderColor: balancedColorPalette[index % balancedColorPalette.length],
                 borderWidth: 1
-            }]
+            }))
         },
         options: {
-            indexAxis: 'y', // แนวนอน
+            indexAxis: 'y',
             responsive: true,
             scales: {
                 x: {
+                    stacked: false, // ปรับให้ไม่ซ้อนกัน
                     beginAtZero: true,
-                    title: {display: true, text: 'จำนวน'}
+                    title: { 
+                        display: true, 
+                        text: 'จำนวน',
+                        font: { weight: 'bold' }
+                    },
+                    ticks: { precision: 0 }
                 },
                 y: {
-                    title: {display: true, text: 'ประเภทอุปกรณ์'}
+                    stacked: false, // ปรับให้ไม่ซ้อนกัน
+                    title: { 
+                        display: false
+                    }
                 }
             },
             plugins: {
-                legend: {display: false},
+                legend: { 
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 15
+                    }
+                },
                 datalabels: {
                     anchor: 'end',
                     align: 'right',
-                    color: '#000',
-                    font: { size: 12 },
-                    formatter: (value) => value
-            }}
+                    color: '#000000',
+                    font: { 
+                        size: 12, 
+                        weight: 'bold' 
+                    },
+                    formatter: (value) => value > 0 ? value : '',
+                    offset: 0
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            return tooltipItems[0].dataset.label;
+                        },
+                        label: function(context) {
+                            return 'จำนวน: ' + context.parsed.x + ' เครื่อง';
+                        }
+                    }
+                }
+            }
         }
     },
+
 };
 const chartInstances = {};
 // Initialize all charts
