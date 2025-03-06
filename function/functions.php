@@ -238,15 +238,32 @@ function createGedget($data) {
 
     $status_gedget = 'ใช้งาน'; // กำหนดให้เป็น 'ใช้งาน' โดยอัตโนมัติ
     $note = $data['note'] ?? null; // รับค่า note จากฟอร์ม (ถ้ามี)
+    $base_name = $data['name_gedget']; // ชื่อพื้นฐานของ Gedget
     $quantity_gedget = $data['quantity_gedget']; // จำนวน gedget ที่ต้องการเพิ่ม
 
+    // ดึงจำนวนสูงสุดที่มีอยู่แล้ว
+    $sql_check = "SELECT name_gedget FROM gedget WHERE name_gedget LIKE ? ORDER BY name_gedget DESC LIMIT 1";
+    $stmt_check = $conn->prepare($sql_check);
+    $search_pattern = $base_name . "%";
+    $stmt_check->bind_param("s", $search_pattern);
+    $stmt_check->execute();
+    $result = $stmt_check->get_result();
+
+    $start_index = 1;
+    if ($row = $result->fetch_assoc()) {
+        preg_match('/ตัวที่ (\d+)$/', $row['name_gedget'], $matches);
+        if (!empty($matches[1])) {
+            $start_index = (int)$matches[1] + 1;
+        }
+    }
+
     // เพิ่มข้อมูล Gedget ตามจำนวนที่ระบุ
-    for ($i = 1; $i <= $quantity_gedget; $i++) {
-        $gedget_name = $data['name_gedget'] . " ตัวที่ " . $i; // เพิ่มลำดับที่ต่อท้ายชื่อ
-        $sql = "INSERT INTO gedget (name_gedget, id_bill, create_at, status_gedget, note) VALUES (?, ?, ?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sisss", $gedget_name, $data['id_bill'], $data['create_at'], $status_gedget, $note);
-        $stmt->execute();
+    for ($i = 0; $i < $quantity_gedget; $i++) {
+        $gedget_name = $base_name . " ตัวที่ " . ($start_index + $i);
+        $sql_insert = "INSERT INTO gedget (name_gedget, id_bill, create_at, status_gedget, note) VALUES (?, ?, ?, ?, ?)";
+        $stmt_insert = $conn->prepare($sql_insert);
+        $stmt_insert->bind_param("sisss", $gedget_name, $data['id_bill'], $data['create_at'], $status_gedget, $note);
+        $stmt_insert->execute();
     }
 
     return true;
