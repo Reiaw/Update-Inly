@@ -240,12 +240,13 @@ function createGedget($data) {
     $note = $data['note'] ?? null; // รับค่า note จากฟอร์ม (ถ้ามี)
     $base_name = $data['name_gedget']; // ชื่อพื้นฐานของ Gedget
     $quantity_gedget = $data['quantity_gedget']; // จำนวน gedget ที่ต้องการเพิ่ม
+    $id_bill = $data['id_bill']; // id_bill
 
-    // ดึงจำนวนสูงสุดที่มีอยู่แล้ว
-    $sql_check = "SELECT name_gedget FROM gedget WHERE name_gedget LIKE ? ORDER BY name_gedget DESC LIMIT 1";
+    // ดึงจำนวนสูงสุดที่มีอยู่แล้วสำหรับ id_bill นั้น ๆ
+    $sql_check = "SELECT name_gedget FROM gedget WHERE name_gedget LIKE ? AND id_bill = ? ORDER BY name_gedget DESC LIMIT 1";
     $stmt_check = $conn->prepare($sql_check);
     $search_pattern = $base_name . "%";
-    $stmt_check->bind_param("s", $search_pattern);
+    $stmt_check->bind_param("ss", $search_pattern, $id_bill);
     $stmt_check->execute();
     $result = $stmt_check->get_result();
 
@@ -262,13 +263,12 @@ function createGedget($data) {
         $gedget_name = $base_name . " ตัวที่ " . ($start_index + $i);
         $sql_insert = "INSERT INTO gedget (name_gedget, id_bill, create_at, status_gedget, note) VALUES (?, ?, ?, ?, ?)";
         $stmt_insert = $conn->prepare($sql_insert);
-        $stmt_insert->bind_param("sisss", $gedget_name, $data['id_bill'], $data['create_at'], $status_gedget, $note);
+        $stmt_insert->bind_param("sisss", $gedget_name, $id_bill, $data['create_at'], $status_gedget, $note);
         $stmt_insert->execute();
     }
 
     return true;
 }
-
 function updateGedget($data) {
     global $conn;
     $sql = "UPDATE gedget SET name_gedget = ?, status_gedget = ?, note = ? WHERE id_gedget = ?";

@@ -198,9 +198,9 @@ while($row = $topCustomerTypesResult->fetch_assoc()) {
 Chart.register(ChartDataLabels);
 const balancedColorPalette = [
     '#8dd3c7',
-    '#ffffb3',
-    '#bebada',
     '#fb8072',
+    '#bebada',
+    '#ffffb3',
     '#80b1d3',
     '#fdb462',
     '#b3de69',
@@ -248,7 +248,7 @@ const chartConfigs = {
                 {
                     label: "ไม่ใช้งาน",
                     data: [<?= $inactiveCount ?>], // ไม่ใช้งาน
-                    backgroundColor: balancedColorPalette[3],
+                    backgroundColor: balancedColorPalette[1],
                     borderColor: '#DC2626',
                     borderWidth: 1
                 }
